@@ -1,0 +1,84 @@
+# 新專案工作環境 Bootstrap 模板庫
+
+本目錄是新專案建立時的受版控模板庫；通用發行版必須附帶同一份 `template/` 目錄。
+
+## 固定結構
+
+```text
+<project-root>/
+├─ Workflow.md
+├─ AGENTS.md
+├─ CONTEXT.md
+├─ PRD.md                         # active requirement root index
+├─ ProjectSchedule.md
+├─ modules/
+│  ├─ spec/
+│  ├─ tickets/
+│  └─ element/{typescript,python,java}/
+└─ doc/
+   ├─ context/                    # architecture feature Context leaves
+   ├─ requirements/
+   │  └─ active/<year>/<domain>/
+   ├─ archive/
+   │  └─ requirements/<year>/
+   ├─ reviews/
+   ├─ adr/
+   ├─ handoffs/
+   │  └─ <year>/governance/
+   │     ├─ integration.json      # from integration.TEMPLATE.json
+   │     ├─ MERGE-QUEUE.json      # from MERGE-QUEUE.TEMPLATE.json; lives on the queue branch only
+   │     ├─ <receipt>.md          # from RECEIPT.TEMPLATE.md, at the path a ticket's state row names
+   │     └─ usage-expectation.json # from usage-expectation.TEMPLATE.json; read by skills/johnny-project-takeover/scripts/usage_report.py
+   ├─ RequirementChangeLog.md
+   ├─ WorkProgressReport.md
+   └─ security-agent-boundary.md
+```
+
+## 建置順序
+
+1. 從通用發行版複製 `Workflow.md` 與 `AGENTS.md` 至新專案根目錄。
+2. 建立上方固定目錄；不得建立 `doc/specs/` 或 `doc/tickets/`。
+3. 複製並填寫 `CONTEXT.TEMPLATE.md`、`doc/context/TEMPLATE.md`、`doc/RequirementChangeLog.TEMPLATE.md`、
+   `doc/requirements/REQ.TEMPLATE.md`、`doc/archive/requirements/ARCH-REQ.TEMPLATE.md`、`modules/spec/TEMPLATE.md`、
+   `modules/tickets/TEMPLATE.md`、`doc/reviews/TEMPLATE.md`、`doc/adr/TEMPLATE.md` 與相符語言的 element 模板。
+4. Copy the state-file templates (see "State files" below) before the first ticket needs them.
+5. 先完成 `CONTEXT.md`、`PRD.md`、`ProjectSchedule.md`、需求變更與安全邊界的最小內容，再開始第一個 Grill。
+
+## State files
+
+A project starts with the five files the gates and the integration script read, so the first
+ticket needs no hand-made file:
+
+| Template | Copy to | Holds |
+| --- | --- | --- |
+| `modules/tickets/TEMPLATE.md` | `modules/tickets/<feature>/<ticket>.md` | the ticket; its state row reads `<STATE>`; dispatch=sha256:<hex of the dispatch file>; receipt `<path>` |
+| `doc/handoffs/governance/RECEIPT.TEMPLATE.md` | the receipt path the ticket's state row names | one run cell per command, one statement cell per choice made where the work was silent, one `USAGE` cell per seat |
+| `doc/handoffs/governance/usage-expectation.TEMPLATE.json` | `doc/handoffs/<year>/governance/usage-expectation.json` | the token-use expectation per semantic profile (`model`, `effort`, `output_tokens_max`, `processed_tokens_max`; the template holds the placeholders `<host-model>` and `<host-effort>`, which the project replaces with its host values before the report reads the file) that `skills/johnny-project-takeover/scripts/usage_report.py` compares each seat's `USAGE` cell with |
+| `doc/handoffs/governance/integration.TEMPLATE.json` | `doc/handoffs/<year>/governance/integration.json` | the integration configuration: remote, branch, queue branch, queue path, the spec, invariant and CI-status commands, the timeout |
+| `doc/handoffs/governance/MERGE-QUEUE.TEMPLATE.json` | the `queue_path` key of the copied configuration, on the queue branch | the empty merge queue, `{"entries": []}` |
+
+The queue file lives on the queue branch, not on the integration branch: copy it to `queue_path`
+on the queue branch (by default `<branch>-queue`), never to the integration branch, so a queue
+write never moves the integration tip. The configuration and the receipt live on the integration
+branch like any other project file.
+
+The ticket template carries four rows that the ticket review requires: `Closure revision` (the revision of the
+finite Acceptance Closure Set), `Strict checker` (the command and version), `Profile / resource` (the semantic profile
+reference and the resource-plan reference) and `XSS classification` (the classification and the exact matrix
+reference, or the reason it does not apply). Its state row lists `INTEGRATED`, which is set when the integration script has
+landed the candidate and its readback matches; `DONE` is for a ticket that closes without an integration candidate. The
+receipt part holds one receipt per closure revision, in revision order, written as receipt `<path>`; receipt `<path>`,
+separated by `; ` like the other parts of the row.
+
+The `STATEMENT` cell of the receipt template begins with two lines, before any prose: `return:` with one of `COMPLETED`,
+`BLOCKED` or `CHANGE_DETECTED`, and `items:` followed by a list of items, which is empty for `COMPLETED`. It is a line pair
+inside the existing informational cell, not a cell of its own, so the evidence gate reads it as it reads any statement.
+
+## Policy and dispatch safety
+
+Templates keep policy reads metadata-only: raw document text, prompts, paths,
+URIs, secrets and PII do not enter Router models or handoff evidence. A fixed
+dispatch response is produced from the ticket's state row and the digest of its dispatch file
+(workflow-governance Revision 04 R4-1). `COMMERCIAL` is not an implied
+objective; use `POC` unless an approved Profile and change record establish
+another stage.

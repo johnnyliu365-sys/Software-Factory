@@ -1,0 +1,28 @@
+{
+  "name": "software-factory",
+  "owner": {
+    "name": "Johnny Liu",
+    "url": "https://github.com/johnnyliu365-sys"
+  },
+  "description": "Software Factory: a governed project workflow with gate scripts, and reusable-module selection.",
+  "plugins": [
+    {
+      "name": "software-factory",
+      "version": "0.5.0",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/johnnyliu365-sys/software-factory-plugin.git",
+        "sha": "0000000000000000000000000000000000000000"
+      },
+      "description": "A governed project workflow whose gate scripts decide each step, with reusable-module selection.",
+      "author": {
+        "name": "Johnny Liu",
+        "url": "https://github.com/johnnyliu365-sys"
+      },
+      "homepage": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+      "repository": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+      "license": "Apache-2.0",
+      "keywords": ["workflow", "project-takeover", "governance", "reusable-modules"]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "implementation-standard": {"model": "<host-model>", "effort": "<host-effort>", "output_tokens_max": 130000, "processed_tokens_max": 24000000},
+  "implementation-elevated": {"model": "<host-model>", "effort": "<host-effort>", "output_tokens_max": 130000, "processed_tokens_max": 24000000},
+  "ticket-review": {"model": "<host-model>", "effort": "<host-effort>", "output_tokens_max": 110000, "processed_tokens_max": 23000000}
+}

@@ -1,0 +1,50 @@
+{
+  "name": "software-factory",
+  "version": "0.5.0",
+  "description": "A governed project workflow whose gate scripts decide each step, with reusable-module selection.",
+  "author": {
+    "name": "Johnny Liu",
+    "url": "https://github.com/johnnyliu365-sys"
+  },
+  "homepage": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+  "repository": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+  "license": "Apache-2.0",
+  "keywords": ["workflow", "project-takeover", "governance", "reusable-modules"],
+  "skills": [
+    "./skills/apply-reusable-modules",
+    "./skills/johnny-project-takeover"
+  ],
+  "commands": [
+    "./commands/apply-reusable-modules.md",
+    "./commands/johnny-project-takeover.md"
+  ],
+  "payload": {
+    "note": "Level 1 publication allowlist. Claude Code ignores this key at load time; the publication step and tests/test_plugin_payload_boundary.py are its consumers. Anything not enumerated here is not published, so a new development directory defaults to not shipping.",
+    "schemaVersion": 1,
+    "trees": [
+      ".claude-plugin",
+      "commands",
+      "skills",
+      "template",
+      "library/NLP",
+      "library/功能集群",
+      "library/金流串接",
+      "library/catalog",
+      "library/workflow_router"
+    ],
+    "files": [
+      "AGENTS.md",
+      "CodeReview.md",
+      "Defined_wayfinder.md",
+      "LICENSE",
+      "NOTICE",
+      "README.md",
+      "Workflow.md",
+      "hooks/hooks.json",
+      "library/__init__.py",
+      "library/MODULE_CATALOG.md"
+    ],
+    "excludedSegments": ["__pycache__", ".git"],
+    "excludedSuffixes": [".pyc", ".pyo"]
+  }
+}
