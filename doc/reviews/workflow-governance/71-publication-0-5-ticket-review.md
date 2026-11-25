@@ -35,8 +35,39 @@ Revision03 also carries the owner decisions of 2026-11-20: the rename to Softwar
 | S71R-15 | Low (note) | A backticked `johnny-router.ps1` in `SKILL.md` would break the payload test | The new sentence has no path token in backticks |
 | S71R-16 | Low (note) | Changelog form | Rows in the table, plus a `## 0.5.0` section |
 
+## Revision03 (commit `fbff6742`), same seat, resumed
+
+**verdict: CHANGES_REQUESTED**
+
+The seat treated ticket 79 revision03 as landed and modified nothing. Since `b22a4db8` nothing it pins has drifted. It closed S71R-01 to S71R-12, S71R-15 and S71R-16; S71R-13 and S71R-14 stay accepted notes. Three closures left a residual, each filed again as a new finding: S71R-03 (S71R-22), S71R-04 (S71R-23), S71R-07 and S71R-09 (S71R-26).
+
+On the questions put to it:
+- No test or file outside the boundary pins `johnny-ai-skill` for the shipped Claude manifest. Item 10's list is right but incomplete (S71R-25).
+- Claude Code reading a raw marketplace URL on a non-default branch has a precedent: the 0.4.14 candidate route.
+- Codex `--ref` with a same-repository `url`+`sha` source can only be shown by running the CLI, so it is a ticket-77 item.
+- The new `marketplace add` line passes the route check if it starts at column 0.
+- No force push is needed except the owner's own move of publication `main`.
+
+Revision04 applies the reviewer's exact fixes. Under the strict tier there is no third rule-only round (L-19).
+
+| id | severity | finding | revision04 |
+| --- | --- | --- | --- |
+| S71R-17 | Medium | `test_l1` pins `_PUBLICATION_URL` to the old repository, and `_RAW_PUBLICATION_MAIN_MARKETPLACE_URL` names it too | Item 5 names both constants and their new values |
+| S71R-18 | Medium | `test_references_qualify_receipt_bridge_by_lifetime` pins two README sentences about the retired bridge | The README drops them; item 5 removes the test's two README assertions and keeps its router and authority assertions |
+| S71R-19 | Medium | The public install path cannot be checked before release, and step 8 has no failure branch | Item 8 makes Codex `--ref` with a same-repository `url`+`sha` source a ticket-77 item; step 8, on failure, holds any announcement, stops before step 9 and reports; deleting the `marketplace` branch is the owner's |
+| S71R-20 | Medium | No source supports the `.agents/plugins/marketplace.json` copy on the public branch, and its schema differs | Dropped from step 4. Which local file Codex reads, and its schema, is a ticket-77 item |
+| S71R-21 | Low (note) | `--plugin-dir` never reads the local marketplace file; the target directory is not required to be empty | The directory must be absent or empty; the Claude marketplace flow is a ticket-77 item |
+| S71R-22 | Low | "Exactly these three commands" conflicts with keeping `update` and `uninstall` | Five commands, listed, each at column 0 |
+| S71R-23 | Low | The closure scan also reads markdown link targets | Link targets are payload paths only; section (10) keeps the links to `LICENSE` and `NOTICE` |
+| S71R-24 | Low | Keywords and the two `marketplace.json` descriptions were unspecified | Exact `description` and `keywords` for `plugin.json`; exact marketplace description; the plugin entry copies `plugin.json` |
+| S71R-25 | Low (note) | Shipped prose still names Johnny | Item 10: it stays until wave 4 |
+| S71R-26 | Low | Three revision02 leftovers: 責任邊界, defect class 3, "four publication rows" | All three aligned |
+| S71R-27 | Low | "Its target is teams" had no source; the roadmap cited only REQ-043 | "From 1.0 its target is enterprises", citing REQ-045, which is added to the decisions line |
+| S71R-28 | Low (note) | Step 4 did not say what the `marketplace` commit is | One parentless commit whose tree is only `.claude-plugin/marketplace.json` |
+
 ## Seat token use
 
 | seat | model | effort | input | cache write | cache read | output |
 | --- | --- | --- | --- | --- | --- | --- |
 | rule-only review, revision02 | claude-opus-5-5 | high | 108 | 186923 | 6831654 | 44106 |
+| rule-only review, revision03 (stopped run and resumed run) | claude-opus-5-5 | high | 38 | 443345 | 3419101 | 23596 |
