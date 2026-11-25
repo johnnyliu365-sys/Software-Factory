@@ -148,7 +148,8 @@ def parse_frontmatter(text: str) -> dict[str, str]:
 
 
 def read_utf8(root: Path, name: str, defects: list[str]) -> str | None:
-    """Read a named file as UTF-8; a missing or non-UTF-8 file is a defect that names it."""
+    """Read a named file as UTF-8 with LF line ends (a Windows checkout may hold CRLF); a missing or
+    non-UTF-8 file is a defect that names it."""
     path = root / name
     try:
         raw = path.read_bytes()
@@ -156,7 +157,7 @@ def read_utf8(root: Path, name: str, defects: list[str]) -> str | None:
         defects.append(f"{name}: cannot be read ({type(error).__name__})")
         return None
     try:
-        return raw.decode("utf-8")
+        return raw.decode("utf-8").replace("\r\n", "\n")
     except UnicodeDecodeError:
         defects.append(f"{name}: is not UTF-8")
         return None
@@ -275,7 +276,7 @@ def copy_texts(root: Path) -> None:
     for name in (AGENTS, SKILL):
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((REPO / name).read_bytes())
+        target.write_bytes((REPO / name).read_bytes().decode("utf-8").replace("\r\n", "\n").encode("utf-8"))
 
 
 def damage(root: Path, name: str, edit: Callable[[str], str]) -> None:
@@ -319,7 +320,7 @@ class EntryReadOnlyLookupTests(unittest.TestCase):
         self.assertEqual(find_defects(REPO), [])
 
     def test_the_skill_frontmatter_parses_and_names_the_skill(self) -> None:
-        meta = parse_frontmatter((REPO / SKILL).read_bytes().decode("utf-8"))
+        meta = parse_frontmatter((REPO / SKILL).read_bytes().decode("utf-8").replace("\r\n", "\n"))
         self.assertEqual(meta["name"], "johnny-project-takeover")
         self.assertEqual(meta["description"], DESCRIPTION)
 
