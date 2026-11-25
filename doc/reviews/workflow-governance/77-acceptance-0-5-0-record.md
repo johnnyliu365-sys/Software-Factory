@@ -13,7 +13,7 @@ Host CLI versions read with `--version` by the script, against the pins of `ci/a
 | claude | 2.1.316 (Claude Code) | 2.1.316 | yes |
 | codex | codex-cli 0.166.0 | 0.166.0 | yes |
 
-The lines below come from the run at the commit before this record. The receipt's cells L1 and L2 are the same two runs repeated at the candidate, which holds this record and no other change; their verdicts are the same.
+The lines below come from runs at commit `d91c7447`. The candidate of the receipt has the same `lifecycle.py` and adds this record and a repair of the test's temporary path (CI showed that a Windows runner's 8.3 short temp path differs from the resolved run root the script reports). The receipt's cells L1 and L2 are the same two runs repeated at the candidate; their verdicts are the same.
 
 ### Run 1: `--host both --steps build,fresh,upgrade,uninstall,recover,level2` (condition 3)
 

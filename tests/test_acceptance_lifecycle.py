@@ -368,7 +368,8 @@ class LifecycleCase(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory(prefix="jas77-case-")
         self.addCleanup(self._tmp.cleanup)
-        self.tmp = Path(self._tmp.name)
+        # resolved, because the script resolves its run root and a runner's temp path has an 8.3 short form
+        self.tmp = Path(self._tmp.name).resolve()
         self.cli = self.tmp / "fake_cli.py"
         self.cli.write_text(FAKE_CLI, encoding="utf-8")
         self.level2 = self.tmp / "fake_level2.py"
