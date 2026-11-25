@@ -8,9 +8,9 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision04 / receipt under `.worktrees/71-publication-out/` / owner implementation seat / worktree `.worktrees/71-publication` / branch `cp/wave3-71-publication` / baseline the wave-3 branch after ticket 79 is integrated |
+| Agent Context binding | ticket revision05 / receipt under `.worktrees/71-publication-out/` / owner implementation seat / worktree `.worktrees/71-publication` / branch `cp/wave3-71-publication` / baseline the wave-3 branch after ticket 79 is integrated |
 | 實作語言 | JSON manifests; Python 3.11 for the tests（CONTEXT.md Implementation language） |
-| 狀態 | `PLANNED`（revision04; strict tier; rule-only reviews of revision02 and revision03 CHANGES_REQUESTED; revision04 applies the reviewer's exact fixes; the last wave-3 code ticket, after ticket 79） |
+| 狀態 | `PLANNED`（revision05; strict tier; rule-only reviews of revision02 and revision03 CHANGES_REQUESTED; revision04 applies the reviewer's exact fixes; revision05 changes only release step 6, per the owner decision of 2026-11-26, and no seat item; the last wave-3 code ticket, after ticket 79） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/71-publication` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/71-publication-review` |
@@ -52,6 +52,7 @@ Owner decisions this ticket carries out. Each is quoted in `REQ-20261103-043`, w
   - `marketplace.json` moves into the public publication repository;
   - the owner renames that repository to `software-factory-plugin` before the release;
   - the README is rewritten in full.
+- **2026-11-26 "B":** the development `main` is fast-forwarded to `cp/wave3` before ticket 77's cloud run, because a `workflow_dispatch` workflow must be on the default branch.
 
 **Revision03** answers the rule-only review of revision02, and **revision04** applies the exact fixes of the review of revision03 (S71R-17 to S71R-28), both in `doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md`.
 
@@ -188,7 +189,7 @@ After this ticket:
 3. Push the publication commit to the publication repository with tag `plugin-v0.5.0`. The publication repository's `main` is the owner's to move, by force-with-lease from `0b3afd36`.
 4. Push a branch `marketplace` to the publication repository. It holds one parentless commit whose tree is only `.claude-plugin/marketplace.json`, the development `marketplace.json` at this ticket's integration. Later releases add commits to it, so it never needs a force push.
 5. Push `refs/heads/publication-0.5.0` to the development repository.
-6. Fast-forward the development `main` to `cp/wave3`, and tag `v0.5.0` there.
+6. Fast-forward the development `main` to `cp/wave3` again (it first moved before ticket 77's cloud run, by the owner decision of 2026-11-26), and tag `v0.5.0` there.
 7. Read back from a fresh clone made with `--no-hardlinks`: check out `v0.5.0`, run `git branch publication-0.5.0 origin/publication-0.5.0`, then run `--verify-only --ref refs/heads/publication-0.5.0`.
 8. Run one smoke install through the public path of the README's sections (3) and (4). If it fails: hold any announcement, stop before step 9, and report to the owner; deleting the `marketplace` branch is the owner's.
 9. Remove the eight rows from `ci/registered-failures.json` in an additive commit. The CI run after the anchor push is expected to be red with `REGISTERED_NOW_PASSING` until that commit lands.
