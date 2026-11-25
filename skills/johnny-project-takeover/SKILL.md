@@ -110,7 +110,7 @@ same-lifetime Codex native lane above has `NOT_REQUIRED` bridge disposition and 
 runner, subscription or wake probe.
 
 Every other wake, automatic continuation or supervision effect this skill describes is a **protocol**.
-No runner, subscription or wake capability exists: they were retired in wave 3 (tickets 65 and 66). No automatic effect may be stated. The honest statement is: *the handoff is committed; no automation is armed for this project, so the owner must notify the reviewer.* The kept launcher commands `status` and `uninstall` run through the exact launcher path `<runtime root>\launcher\johnny-router.ps1`, where `<runtime root>` is `JOHNNY_ROOT` when set, else `%LOCALAPPDATA%\JohnnyRouter`; never invoke a bare `johnny-router` name. Never report a wake you did
+No runner, subscription or wake capability exists: they were retired in wave 3 (tickets 65 and 66). No automatic effect may be stated. The honest statement is: *the handoff is committed; no automation is armed for this project, so the owner must notify the reviewer.* A 0.4.x Level 2 runtime is removed by its own `uninstall`, as the README describes. Never report a wake you did
 not observe: a committed handoff leaf is evidence of a commit, not of a delivery. Reporting an
 unobserved wake manufactures a false completion narrative, which is precisely the failure this
 workflow exists to prevent.

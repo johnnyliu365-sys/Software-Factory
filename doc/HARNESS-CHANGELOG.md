@@ -6,6 +6,41 @@ One row per change that altered what the plugin does. Working history lives in G
 | --- | --- | --- | --- |
 | 2026-11-03 | Gates-first control plane: state in files, transitions by scripts; integration by script; stages by intake mode; four test layers; CI invariants only | `PRD-20261103-043` | `modules/spec/workflow-governance.md` Revision 04, `Workflow.md` section 0, `CodeReview.md` |
 | 2026-11-03 | Commit identity of the wave-1 branch rewritten to the repository identity (owner decision); trees unchanged; old-to-new map committed | project owner, 2026-11-03 | `doc/reviews/workflow-governance/evidence/47/commit-identity-rewrite-2026-11-03.txt` |
+| 2026-11-26 | The router library was retired: the flow engine, the private router and the profile (ticket 65), the cross-lifetime bridge (ticket 66), and the seven router-era SPECs were archived and nine ADRs marked `SUPERSEDED` (ticket 68) | `REQ-20261103-043`, owner decision 2026-11-18 "1A" | `modules/tickets/workflow-governance/65-retire-engine-and-private-router.md`, `66-retire-bridge.md`, `68-archive-router-specs-and-adrs.md` |
+| 2026-11-26 | The documents were cleared of retired surfaces (ticket 67) | `REQ-20261103-043` | `modules/tickets/workflow-governance/67-governance-document-sweep.md` |
+| 2026-11-26 | The gate scripts are the default path: each step is decided by a script reading the state files | `REQ-20261103-043` | `skills/johnny-project-takeover/scripts/` |
+| 2026-11-26 | The USAGE cell reports token use per seat (ticket 69); the model and the effort are bound to each profile (ticket 76) | `REQ-20261103-043` | `modules/tickets/workflow-governance/69-token-use-per-seat.md`, `76-seat-model-and-effort-bound.md` |
+| 2026-11-26 | The template follow-ups (ticket 70); the repository's own tickets follow the template, with dispatch lint R7 (ticket 75) | `REQ-20261103-043` | `modules/tickets/workflow-governance/70-wave2-template-and-hygiene.md`, `75-own-tickets-follow-the-harness.md` |
+| 2026-11-26 | The wave-3 rule texts (ticket 74) | `REQ-20261103-043` | `modules/tickets/workflow-governance/74-wave3-rule-texts.md` |
+| 2026-11-26 | Review rounds and the cause of each rework are recorded (ticket 73) | `REQ-20261103-043` | `modules/tickets/workflow-governance/73-review-rounds-and-rework-cause.md` |
+| 2026-11-26 | A read-only lookup goes to the leaf document and does not load the workflow (ticket 79) | `REQ-20261103-043` | `modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md` |
+| 2026-11-26 | The licence is Apache License 2.0, and the author is Johnny Liu | owner decision 2026-11-18 "2A" | `LICENSE`, `NOTICE` |
+| 2026-11-26 | The plugin is renamed from `johnny-ai-skill` to `software-factory` (Software Factory), version 0.5.0; the marketplace moves into the public publication repository; the README is rewritten | owner decision 2026-11-20 | `modules/tickets/workflow-governance/71-publication-0-5.md` |
+
+## 0.5.0
+
+Version 0.5.0 is the first release as Software Factory. This section is for readers outside the project.
+
+### What was retired
+
+- The flow engine was retired in 0.5.0.
+- The private router was retired in 0.5.0, and so was the profile that selected a router.
+- Router telemetry was retired in 0.5.0.
+- The cross-lifetime bridge was retired in 0.5.0: the runner, wake, dispatch and review CLI families, and the live descriptor.
+- The Level 2 runtime is no longer shipped. A 0.4.x Level 2 runtime is removed by its own `uninstall`, as the README describes.
+
+### What to read instead
+
+- The seven router-era SPECs are in `doc/archive/specs/2026/` as `ARCH-SPEC-20261118-001` to `007`, and nine ADRs are `SUPERSEDED`.
+- To learn how the workflow runs now, read `AGENTS.md`, `Workflow.md`, `CodeReview.md` and `modules/spec/workflow-governance.md`.
+
+### The move from `johnny-ai-skill` to `software-factory`
+
+- The plugin id is now `software-factory`, and the marketplace is `software-factory`. The old id was `johnny-ai-skill`.
+- To switch, remove the old plugin with each host's remove command for `johnny-ai-skill@johnny-ai-skill`, then install as the README's sections 3 and 4 describe.
+- Codex installs through `codex plugin marketplace add` and `codex plugin add`.
+- The licence is Apache License 2.0, and the author is Johnny Liu.
+- The skill id `johnny-project-takeover` keeps its name, because renaming it would break every project that names it.
 
 ## Checklist items carried from revision 135
 
