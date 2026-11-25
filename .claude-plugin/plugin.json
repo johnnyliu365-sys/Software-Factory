@@ -1,15 +1,15 @@
 {
-  "name": "johnny-ai-skill",
-  "version": "0.4.14",
-  "description": "A detachable project-takeover workflow with safe automatic stage continuation, context-load telemetry, and reusable-module selection for Claude Code.",
+  "name": "software-factory",
+  "version": "0.5.0",
+  "description": "A governed project workflow whose gate scripts decide each step, with reusable-module selection.",
   "author": {
-    "name": "Johnny AI Skill",
+    "name": "Johnny Liu",
     "url": "https://github.com/johnnyliu365-sys"
   },
-  "homepage": "https://github.com/johnnyliu365-sys/Johnny_AI_Skill",
-  "repository": "https://github.com/johnnyliu365-sys/Johnny_AI_Skill.git",
-  "license": "Proprietary",
-  "keywords": ["workflow", "project-takeover", "router", "reusable-modules"],
+  "homepage": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+  "repository": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+  "license": "Apache-2.0",
+  "keywords": ["workflow", "project-takeover", "governance", "reusable-modules"],
   "skills": [
     "./skills/apply-reusable-modules",
     "./skills/johnny-project-takeover"

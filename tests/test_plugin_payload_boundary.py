@@ -43,8 +43,10 @@ from library.local_orchestration.plugin_publication import (
     _is_forbidden,
     commit_exists,
     declared_payload_files,
+    declared_payload_paths,
     is_payload_path,
     load_payload_declaration,
+    materialise_publication_tree,
     pinned_plugin_source,
 )
 
@@ -90,7 +92,6 @@ _REFERENCES_OUTSIDE_PAYLOAD: Final[dict[str, str]] = {
     "doc/RequirementChangeLog.md": "TARGET_OWNED",
     "doc/archive/specs/README.md": "TARGET_OWNED",
     "doc/runbooks/dispatch-model-profile.md": "DEVELOPMENT_ONLY",
-    "johnny-install.cmd": "DEVELOPMENT_ONLY",
     "modules/element/": "TARGET_OWNED",
     "modules/spec/README.md": "TARGET_OWNED",
 }
@@ -644,6 +645,261 @@ class CommittedPinTests(unittest.TestCase):
         market = json.loads(_MARKETPLACE_MANIFEST.read_text(encoding="utf-8"))
         self.assertIsNotNone(_SEMVER.fullmatch(str(plugin["version"])))
         self.assertEqual(plugin["version"], market["plugins"][0]["version"])
+
+
+_RELEASE_VERSION: Final[str] = "0.5.0"
+_PLUGIN_ID: Final[str] = "software-factory"
+_AUTHOR_NAME: Final[str] = "Johnny Liu"
+_PUBLICATION_REPOSITORY: Final[str] = (
+    "https://github.com/johnnyliu365-sys/software-factory-plugin"
+)
+_CLAUDE_COMMANDS: Final[tuple[str, ...]] = (
+    "claude plugin marketplace add https://raw.githubusercontent.com/johnnyliu365-sys/"
+    "software-factory-plugin/marketplace/.claude-plugin/marketplace.json",
+    "claude plugin install software-factory@software-factory --scope user",
+    "claude plugin update software-factory@software-factory --scope user",
+    "claude plugin uninstall software-factory@software-factory --scope user",
+    "claude plugin marketplace remove software-factory",
+)
+_LEVEL_TWO_FILES: Final[tuple[str, ...]] = (
+    "install.ps1",
+    "johnny-install.cmd",
+    "johnny-router.ps1",
+    "requirements-runtime.lock",
+)
+_EMAIL: Final[re.Pattern[str]] = re.compile(r"[^\s@\"]+@[^\s@\"]+\.[^\s@\"]+")
+_FENCE: Final[re.Pattern[str]] = re.compile(r"^```[a-z]*\n(.*?)^```$", re.M | re.S)
+_SECTION_HEADING: Final[re.Pattern[str]] = re.compile(r"^## ([0-9]+)\. ", re.M)
+
+
+def _field(document: object, *steps: str | int) -> object:
+    """Walk a parsed JSON document, failing loudly when a step is absent."""
+
+    current = document
+    for step in steps:
+        if isinstance(step, int):
+            if not isinstance(current, list) or step >= len(current):
+                raise AssertionError(f"manifest has no element {step} at {steps}")
+            current = current[step]
+        else:
+            if not isinstance(current, dict) or step not in current:
+                raise AssertionError(f"manifest has no field {step} at {steps}")
+            current = current[step]
+    return current
+
+
+def _with_field(document: object, value: object, *steps: str | int) -> object:
+    """A deep copy of ``document`` with the field at ``steps`` set to ``value``."""
+
+    copy = json.loads(json.dumps(document))
+    parent = _field(copy, *steps[:-1])
+    last = steps[-1]
+    if isinstance(last, int) and isinstance(parent, list):
+        parent[last] = value
+    elif isinstance(last, str) and isinstance(parent, dict):
+        parent[last] = value
+    else:
+        raise AssertionError(f"cannot set {steps}")
+    return copy
+
+
+def _strings_under(document: object) -> list[str]:
+    if isinstance(document, str):
+        return [document]
+    if isinstance(document, dict):
+        return [text for value in document.values() for text in _strings_under(value)]
+    if isinstance(document, list):
+        return [text for value in document for text in _strings_under(value)]
+    return []
+
+
+def _assert_shipped_manifests(plugin: object, market: object) -> None:
+    """The identity, version, licence and author both shipped manifests must carry."""
+
+    entry = _field(market, "plugins", 0)
+    expected: tuple[tuple[object, tuple[str | int, ...], str], ...] = (
+        (plugin, ("name",), _PLUGIN_ID),
+        (plugin, ("version",), _RELEASE_VERSION),
+        (plugin, ("license",), "Apache-2.0"),
+        (plugin, ("author", "name"), _AUTHOR_NAME),
+        (plugin, ("homepage",), _PUBLICATION_REPOSITORY),
+        (plugin, ("repository",), _PUBLICATION_REPOSITORY),
+        (market, ("name",), _PLUGIN_ID),
+        (market, ("owner", "name"), _AUTHOR_NAME),
+        (entry, ("name",), _PLUGIN_ID),
+        (entry, ("version",), _RELEASE_VERSION),
+        (entry, ("license",), "Apache-2.0"),
+        (entry, ("author", "name"), _AUTHOR_NAME),
+    )
+    for document, steps, wanted in expected:
+        found = _field(document, *steps)
+        if found != wanted:
+            raise AssertionError(f"{'.'.join(map(str, steps))} is {found!r}, not {wanted!r}")
+    for holder in (
+        _field(plugin, "author"),
+        _field(market, "owner"),
+        _field(entry, "author"),
+    ):
+        for text in _strings_under(holder):
+            if "@" in text:
+                raise AssertionError(f"an author or owner field holds an address: {text!r}")
+    for key in ("description", "keywords", "homepage", "repository", "license", "version"):
+        if _field(plugin, key) != _field(entry, key):
+            raise AssertionError(f"the marketplace entry differs from plugin.json at {key}")
+
+
+def _section_three_commands(readme: str) -> tuple[str, ...]:
+    """The lines at column 0 of fenced blocks in section 3 that start a claude command."""
+
+    start = readme.index("## 3. ")
+    end = readme.index("## 4. ")
+    lines: list[str] = []
+    for block in _FENCE.findall(readme[start:end]):
+        lines.extend(line for line in block.splitlines() if line.startswith("claude plugin "))
+    return tuple(lines)
+
+
+def _assert_readme_is_software_factory(readme: str) -> None:
+    numbers = [int(number) for number in _SECTION_HEADING.findall(readme)]
+    if numbers != list(range(1, 11)):
+        raise AssertionError(f"the README sections are {numbers}, not 1 to 10 in order")
+    if _section_three_commands(readme) != _CLAUDE_COMMANDS:
+        raise AssertionError("section 3 does not hold exactly the five Claude Code commands")
+    if "codex plugin add software-factory@software-factory --json" not in readme:
+        raise AssertionError("the README lacks the Codex plugin add step")
+    if "johnny-install.cmd" in readme:
+        raise AssertionError("the README names johnny-install.cmd")
+    for heading in re.findall(r"^#+ .*$", readme, re.M):
+        if re.search(r"Level 2", heading) and re.search(r"安裝|install", heading, re.I):
+            raise AssertionError(f"a Level 2 install section is back: {heading}")
+
+
+class ShippedManifestTests(unittest.TestCase):
+    """Software Factory 0.5.0: the id, the version, the licence and the author."""
+
+    def setUp(self) -> None:
+        self.plugin: object = json.loads(_PLUGIN_MANIFEST.read_text(encoding="utf-8"))
+        self.market: object = json.loads(_MARKETPLACE_MANIFEST.read_text(encoding="utf-8"))
+        self.readme = (_REPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+    def test_the_shipped_manifests_carry_the_id_version_licence_and_author(self) -> None:
+        _assert_shipped_manifests(self.plugin, self.market)
+
+    def test_the_pin_source_names_the_publication_repository(self) -> None:
+        source = pinned_plugin_source(_MARKETPLACE_MANIFEST)
+        self.assertEqual(source["url"], _PUBLICATION_REPOSITORY + ".git")
+
+    def test_no_shipped_manifest_holds_an_email_address(self) -> None:
+        for manifest in (_PLUGIN_MANIFEST, _MARKETPLACE_MANIFEST):
+            with self.subTest(manifest=manifest.name):
+                self.assertIsNone(_EMAIL.search(manifest.read_text(encoding="utf-8")))
+
+    def test_a_wrong_manifest_value_is_red_and_the_real_pair_is_restored_green(self) -> None:
+        mutations: tuple[tuple[str, tuple[str | int, ...], object], ...] = (
+            ("plugin", ("license",), "Proprietary"),
+            ("market", ("plugins", 0, "license"), "Proprietary"),
+            ("plugin", ("name",), "johnny-ai-skill"),
+            ("market", ("name",), "johnny-ai-skill"),
+            ("market", ("plugins", 0, "name"), "johnny-ai-skill"),
+            ("plugin", ("version",), "0.4.14"),
+            ("market", ("plugins", 0, "version"), "0.5.1"),
+            ("plugin", ("author", "name"), "Johnny AI Skill"),
+            ("plugin", ("author", "name"), ""),
+            ("market", ("owner", "name"), ""),
+            ("market", ("plugins", 0, "author", "name"), "Someone Else"),
+            ("plugin", ("author", "email"), "johnny@example.org"),
+            ("market", ("owner", "email"), "johnny@example.org"),
+            ("market", ("plugins", 0, "author", "email"), "johnny@example.org"),
+        )
+        for which, steps, value in mutations:
+            with self.subTest(manifest=which, steps=steps, value=value):
+                plugin = self.plugin
+                market = self.market
+                if which == "plugin":
+                    plugin = _with_field(plugin, value, *steps)
+                else:
+                    market = _with_field(market, value, *steps)
+                with self.assertRaises(AssertionError):
+                    _assert_shipped_manifests(plugin, market)
+        _assert_shipped_manifests(self.plugin, self.market)
+
+    def test_the_readme_is_the_software_factory_readme(self) -> None:
+        _assert_readme_is_software_factory(self.readme)
+
+    def test_a_level_two_install_step_or_a_missing_codex_step_in_the_readme_is_red(self) -> None:
+        old_section = (
+            "## Level 2：安裝完整 Router Runtime\n\n"
+            "1. 把 johnny-install.cmd 和 release 的 zip 下載到同一個資料夾\n"
+        )
+        mutations = (
+            self.readme + "\n" + old_section,
+            self.readme + "\n## Level 2：安裝完整 Runtime\n",
+            self.readme + "\nRun johnny-install.cmd to install.\n",
+            self.readme.replace(
+                "codex plugin add software-factory@software-factory --json", "codex plugin list"
+            ),
+            self.readme.replace(
+                "claude plugin install software-factory@software-factory --scope user",
+                "claude plugin install johnny-ai-skill@johnny-ai-skill --scope user",
+            ),
+            self.readme.replace("## 6. ", "## 7. ", 1),
+        )
+        for index, mutated in enumerate(mutations):
+            with self.subTest(mutation=index):
+                self.assertNotEqual(mutated, self.readme)
+                with self.assertRaises(AssertionError):
+                    _assert_readme_is_software_factory(mutated)
+        _assert_readme_is_software_factory(self.readme)
+
+    def test_notice_names_the_product_and_the_publication_repository(self) -> None:
+        notice = (_REPO_ROOT / "NOTICE").read_text(encoding="utf-8")
+        self.assertEqual(notice.splitlines()[0], "Software Factory")
+        self.assertIn(f"Repository: {_PUBLICATION_REPOSITORY}\n", notice)
+        self.assertIn("Copyright 2026 Johnny Liu", notice)
+
+
+class PublicationTreeContentTests(unittest.TestCase):
+    """The publication tree carries the licence texts and no Level 2 file."""
+
+    _CARRIED: Final[tuple[str, ...]] = ("LICENSE", "NOTICE", "README.md")
+
+    def _assert_carried(self, payload: dict[str, object]) -> None:
+        declared = set(declared_payload_paths(_REPO_ROOT, payload))
+        for required in self._CARRIED:
+            if required not in declared:
+                raise AssertionError(f"the publication tree does not carry {required}")
+
+    def test_the_publication_tree_carries_license_notice_and_readme(self) -> None:
+        self._assert_carried(load_payload_declaration(_PLUGIN_MANIFEST))
+
+    def test_dropping_notice_from_the_payload_is_red_and_restores_green(self) -> None:
+        payload = load_payload_declaration(_PLUGIN_MANIFEST)
+        files = [entry for entry in _payload_entries(payload, "files") if entry != "NOTICE"]
+        self.assertNotEqual(files, list(_payload_entries(payload, "files")))
+        with self.assertRaises(AssertionError):
+            self._assert_carried({**payload, "files": files})
+        self._assert_carried(payload)
+
+    def test_the_publication_tree_holds_no_codex_manifest_and_no_level_two_file(self) -> None:
+        payload = load_payload_declaration(_PLUGIN_MANIFEST)
+        declared = declared_payload_paths(_REPO_ROOT, payload)
+        for path in declared:
+            with self.subTest(path=path):
+                self.assertFalse(path.startswith(".codex-plugin"))
+                self.assertFalse(path.startswith("library/local_orchestration/"))
+                self.assertNotIn(path, _LEVEL_TWO_FILES)
+
+    def test_the_materialised_tree_carries_the_licence_texts(self) -> None:
+        payload = load_payload_declaration(_PLUGIN_MANIFEST)
+        with TemporaryDirectory(ignore_cleanup_errors=True) as raw:
+            destination = Path(raw) / "payload"
+            materialise_publication_tree(_REPO_ROOT, payload, destination)
+            for required in self._CARRIED:
+                with self.subTest(path=required):
+                    self.assertEqual(
+                        (destination / required).read_bytes(),
+                        (_REPO_ROOT / required).read_bytes(),
+                    )
 
 
 class ManifestIndependenceTests(unittest.TestCase):

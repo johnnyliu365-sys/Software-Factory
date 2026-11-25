@@ -1,28 +1,28 @@
 {
-  "name": "johnny-ai-skill",
+  "name": "software-factory",
   "owner": {
-    "name": "Johnny AI Skill",
+    "name": "Johnny Liu",
     "url": "https://github.com/johnnyliu365-sys"
   },
-  "description": "Detachable project-takeover workflow, context-load telemetry, and reusable-module skills.",
+  "description": "Software Factory: a governed project workflow with gate scripts, and reusable-module selection.",
   "plugins": [
     {
-      "name": "johnny-ai-skill",
-      "version": "0.4.14",
+      "name": "software-factory",
+      "version": "0.5.0",
       "source": {
         "source": "url",
-        "url": "https://github.com/johnnyliu365-sys/Johnny_AI_Skill_publication.git",
+        "url": "https://github.com/johnnyliu365-sys/software-factory-plugin.git",
         "sha": "0b3afd3645946f97662c336f0e6ac0dcae502e69"
       },
-      "description": "A detachable project-takeover workflow, context-load telemetry, and reusable-module selector.",
+      "description": "A governed project workflow whose gate scripts decide each step, with reusable-module selection.",
       "author": {
-        "name": "Johnny AI Skill",
+        "name": "Johnny Liu",
         "url": "https://github.com/johnnyliu365-sys"
       },
-      "homepage": "https://github.com/johnnyliu365-sys/Johnny_AI_Skill",
-      "repository": "https://github.com/johnnyliu365-sys/Johnny_AI_Skill.git",
-      "license": "Proprietary",
-      "keywords": ["workflow", "project-takeover", "router", "reusable-modules"]
+      "homepage": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+      "repository": "https://github.com/johnnyliu365-sys/software-factory-plugin",
+      "license": "Apache-2.0",
+      "keywords": ["workflow", "project-takeover", "governance", "reusable-modules"]
     }
   ]
 }

@@ -103,9 +103,9 @@ _CODEX_NATIVE_REFERENCE: Final[Path] = (
     / "references"
     / "codex-native-same-lifetime-delegation.md"
 )
-_RELEASE_VERSION: Final[str] = "0.4.14"
+_RELEASE_VERSION: Final[str] = "0.5.0"
 _PUBLICATION_URL: Final[str] = (
-    "https://github.com/johnnyliu365-sys/Johnny_AI_Skill_publication.git"
+    "https://github.com/johnnyliu365-sys/software-factory-plugin.git"
 )
 _DEVELOPMENT_URL: Final[str] = "https://github.com/johnnyliu365-sys/Johnny_AI_Skill.git"
 _RAW_CANDIDATE_MARKETPLACE_URL: Final[str] = (
@@ -122,7 +122,7 @@ _RAW_SUSPENDED_CANDIDATE_MARKETPLACE_URL: Final[str] = (
     "claude-publication-08-v0411-live-cutover/.claude-plugin/marketplace.json"
 )
 _RAW_PUBLICATION_MAIN_MARKETPLACE_URL: Final[str] = (
-    "https://raw.githubusercontent.com/johnnyliu365-sys/Johnny_AI_Skill_publication/main/"
+    "https://raw.githubusercontent.com/johnnyliu365-sys/software-factory-plugin/marketplace/"
     ".claude-plugin/marketplace.json"
 )
 _PUBLICATION_ANCHOR_REF: Final[str] = f"refs/heads/publication-{_RELEASE_VERSION}"
@@ -741,10 +741,7 @@ class CandidateMetadataTests(unittest.TestCase):
         )
         self.assertEqual(
             commands,
-            (
-                f"claude plugin marketplace add {_RAW_CANDIDATE_MARKETPLACE_URL}",
-                f"claude plugin marketplace add {_RAW_MAIN_MARKETPLACE_URL}",
-            ),
+            (f"claude plugin marketplace add {_RAW_PUBLICATION_MAIN_MARKETPLACE_URL}",),
         )
 
     def test_l1_candidate_metadata_names_release_and_publication_source(self) -> None:
@@ -768,20 +765,24 @@ class CandidateMetadataTests(unittest.TestCase):
             "claude plugin marketplace add johnnyliu365-sys/Johnny_AI_Skill", readme
         )
         self.assertIn(
-            "claude plugin install johnny-ai-skill@johnny-ai-skill --scope user", readme
+            "claude plugin install software-factory@software-factory --scope user", readme
         )
         self.assertIn(
-            "claude plugin update johnny-ai-skill@johnny-ai-skill --scope user", readme
+            "claude plugin update software-factory@software-factory --scope user", readme
         )
         self.assertIn(
-            "claude plugin uninstall johnny-ai-skill@johnny-ai-skill --scope user", readme
+            "claude plugin uninstall software-factory@software-factory --scope user", readme
         )
-        self.assertIn("claude plugin marketplace remove johnny-ai-skill", readme)
+        self.assertIn("claude plugin marketplace remove software-factory", readme)
 
     def test_l3_rejects_suspended_or_publication_routes_and_restores_green(self) -> None:
         readme = (_REPO_ROOT / "README.md").read_text(encoding="utf-8")
-        allowed_main = f"claude plugin marketplace add {_RAW_MAIN_MARKETPLACE_URL}"
+        allowed_main = (
+            f"claude plugin marketplace add {_RAW_PUBLICATION_MAIN_MARKETPLACE_URL}"
+        )
         for forbidden in (
+            _RAW_CANDIDATE_MARKETPLACE_URL,
+            _RAW_MAIN_MARKETPLACE_URL,
             _RAW_SUSPENDED_CANDIDATE_MARKETPLACE_URL,
             _RAW_PUBLICATION_MAIN_MARKETPLACE_URL,
         ):
@@ -936,7 +937,7 @@ class SynchronousDispatchGuidanceTests(unittest.TestCase):
 
     def test_t6_manifest_and_materialised_payload_carry_the_guidance(self) -> None:
         plugin = json.loads(_PLUGIN_MANIFEST.read_text(encoding="utf-8"))
-        self.assertEqual(plugin["version"], "0.4.14")
+        self.assertEqual(plugin["version"], "0.5.0")
         payload = load_payload_declaration(_PLUGIN_MANIFEST)
         declared = set(declared_payload_paths(_REPO_ROOT, payload))
         expected = {
@@ -991,7 +992,6 @@ class SynchronousDispatchGuidanceTests(unittest.TestCase):
     def test_references_qualify_receipt_bridge_by_lifetime(self) -> None:
         router = _ROUTER_CONTROL_REFERENCE.read_text(encoding="utf-8")
         authority = _IMPLEMENTATION_AUTHORITY_REFERENCE.read_text(encoding="utf-8")
-        readme = (_REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
         for disposition in ("NOT_REQUIRED", "AVAILABLE", "UNAVAILABLE"):
             self.assertIn(disposition, router)
@@ -1003,11 +1003,6 @@ class SynchronousDispatchGuidanceTests(unittest.TestCase):
         self.assertIn("absent product/task host\nreadback", authority)
         self.assertIn("three-way normalized-root", authority)
         self.assertIn("fails\nclosed", authority)
-
-        self.assertIn(
-            "reviewer dispatch → wait → receive → review → guarded integration", readme
-        )
-        self.assertIn("不得因這些 bridge 缺席而被阻塞", readme)
 
 
 class FailClosedTests(unittest.TestCase):
