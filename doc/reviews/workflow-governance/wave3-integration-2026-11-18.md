@@ -182,3 +182,19 @@ The integration clone `C:/Temp/claude/jas-integ-73` was made from `7b25dabd`.
 | CI readback | run 44608980985 on `3cd4bf5d`: `test (linux)` and `test (windows)` both `success` |
 | USAGE | `.worktrees/73-rework-out-c1/RETURN.md` (sha256 `a98b9bb4711f9484bb6311cf618ed4bf87e4d8958fecac4973edc0137b5f624a`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=8 defects=0`); `usage_report.py` with the repository's expectation gives the implementation seat `OVER_PROCESSED` and the review seat `WITHIN`, explained in the review record |
 | Rework report, first run on the integrated tree | over the wave-3 code-review records: `TOTAL tickets=11 rounds=21 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=2 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=8`, exit 0 |
+
+## Ticket 79 (2026-11-26)
+
+| Ticket | Approved candidate | Approval | Integration commit |
+| --- | --- | --- | --- |
+| 79 a read-only question goes straight to its leaf | `74b637d5` | revision03 correction review `APPROVED` (S79-02 and S79-03 carried as out-of-scope hardening) | `41477f90` |
+
+The integration clone `C:/Temp/claude/jas-integ-79` was made from `35298bdf`.
+
+| Check | Result |
+| --- | --- |
+| Full suite under the host lock | 5 failed, 3419 passed, 22 skipped; every failure is a base name, so zero new red |
+| Pushed | `cp/wave3` at `41477f90`, a fast-forward from `35298bdf` |
+| CI readback | run 45662753511 on `41477f90`: `test (linux)` and `test (windows)` both `success` |
+| USAGE | `.worktrees/79-lookup-out/RETURN.md` (sha256 `9b7c176825b5b0821e7787c2f9c830eb7420dcc6fd95cb05b16215842d226704`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=6 defects=0`); `usage_report.py` with the repository's expectation gives both seats `WITHIN`, exit 0 |
+| Rework report over the wave-3 code-review records | `TOTAL tickets=12 rounds=23 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=3 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=8`, exit 0 |
