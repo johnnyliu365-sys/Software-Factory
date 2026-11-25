@@ -198,3 +198,21 @@ The integration clone `C:/Temp/claude/jas-integ-79` was made from `35298bdf`.
 | CI readback | run 45662753511 on `41477f90`: `test (linux)` and `test (windows)` both `success` |
 | USAGE | `.worktrees/79-lookup-out/RETURN.md` (sha256 `9b7c176825b5b0821e7787c2f9c830eb7420dcc6fd95cb05b16215842d226704`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=6 defects=0`); `usage_report.py` with the repository's expectation gives both seats `WITHIN`, exit 0 |
 | Rework report over the wave-3 code-review records | `TOTAL tickets=12 rounds=23 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=3 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=8`, exit 0 |
+
+## Ticket 71 (2026-11-26)
+
+| Ticket | Approved candidate | Approval | Integration commit |
+| --- | --- | --- | --- |
+| 71 publication 0.5.0 as Software Factory | `824d00b9` | revision05 correction review `CONVERGENCE_REVIEW_REQUIRED`, disposition `APPROVED` under rule B (S71-02 to S71-04 carried) | `f53ecc6a` |
+
+The integration clone `C:/Temp/claude/jas-integ-71` was made from `4ddea536`.
+
+| Check | Result |
+| --- | --- |
+| Full suite under the host lock | 5 failed, 3430 passed, 22 skipped. Every failure is a base name, so zero new red. The four publication tests and `test_the_pinned_sha_exists` fail here because the clone has no local `refs/heads/publication-0.5.0`; they stay registered until the anchor is pushed |
+| Pushed | `cp/wave3` at `f53ecc6a`, a fast-forward from `4ddea536` |
+| CI readback | run 45680692755 on `f53ecc6a`: `test (linux)` and `test (windows)` both `success` |
+| Publication commit | `d355b4a26336cebbe4e8e28650ce0120d4c39a13`, named by the local ref `refs/heads/publication-0.5.0` and pinned by the development `marketplace.json`; not pushed; the publication repository is untouched |
+| Local test marketplace | `C:/Temp/claude/sf-050-local/`, its plugin tree equal to the extracted publication commit |
+| USAGE | `.worktrees/71-publication-out/RETURN.md` (sha256 `2c7f81fbba33346a606a8dd8442d76829aa0531c4bdbe21d4636acdca8a5a5c7`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=11 defects=0`); `usage_report.py` with the repository's expectation gives both seats `WITHIN`, exit 0 |
+| Rework report over the wave-3 code-review records | `TOTAL tickets=13 rounds=25 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=3 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=9`, exit 0 |
