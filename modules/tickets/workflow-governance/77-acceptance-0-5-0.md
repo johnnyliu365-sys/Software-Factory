@@ -8,9 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision01 / receipt under `.worktrees/77-acceptance-out/` / owner implementation seat / worktree `.worktrees/77-acceptance` / branch `cp/wave3-77-acceptance` / baseline the wave-3 branch after ticket 71 is integrated |
+| Agent Context binding | ticket revision02 / receipt under `.worktrees/77-acceptance-out/` / owner implementation seat / worktree `.worktrees/77-acceptance` / branch `cp/wave3-77-acceptance` / baseline the wave-3 branch after ticket 71 is integrated |
 | 實作語言 | Python 3.11 for the lifecycle script and its test; YAML for the workflow（CONTEXT.md Implementation language） |
-| 狀態 | `PLANNED`（revision01; strict tier; rule-only review before dispatch; after ticket 71） |
+| Closure revision | 不適用 |
+| Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
+| Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
+| XSS classification | 不適用：no browser, WebView or DOM input |
+| 狀態 | `PLANNED`（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner decision of 2026-11-26 on S77R-01; after ticket 71） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/77-acceptance` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/77-acceptance-review` |
@@ -48,7 +52,8 @@ Owner decisions this ticket carries out. Each is quoted in `REQ-20261103-043`, w
   - A Codex session that loads 0.5.0, one test ticket through the new flow, and a resume from files after an interruption run on this host, with `CODEX_HOME` and `JOHNNY_ROOT` pointed at new empty directories. The Codex session uses the owner's login and starts only after the owner is told.
 - **2026-11-19:** Level 2 does not ship; ticket 77 also tests the removal of an old Level 2 runtime.
 - **2026-11-20, release order:** the cloud runner regenerates the same package from the candidate commit. For the upgrade step it first installs 0.4.14 from the public marketplace. Credentials are never copied into a new `CODEX_HOME`.
-- **2026-11-26 "B":** a `workflow_dispatch` workflow runs only from the default branch, so the development `main` is fast-forwarded to `cp/wave3` before the cloud run. From then on, `main`'s marketplace is 0.5.0's, so the upgrade step reads 0.4.14 at a fixed commit.
+- **2026-11-26 "B":** a `workflow_dispatch` workflow runs only from the default branch, so the development `main` is fast-forwarded to `cp/wave3` before the cloud run. From then on, `main`'s marketplace is 0.5.0's, so the upgrade step reads 0.4.14 at a fixed commit. Until the release, a 0.4.14 user whose marketplace updates from `main` reads the 0.5.0 marketplace, whose source repository is not yet pushed, so that update fails; the owner accepted this (option B).
+- **2026-11-26 "A" on S77R-01:** the 0.4.9 installer asks a person to type `INSTALL` (`v0.4.9` `install.ps1` line 100), and states that an agent's answer is not consent. The owner authorized `lifecycle.py` to answer that prompt on standard input, only for an install into an empty `JOHNNY_ROOT` made for this acceptance, on this host and on the runner. The authorization covers this test use only.
 
 Ticket 71's rule-only review handed this ticket three checks that only running the CLIs can settle (`doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md`, S71R-19, S71R-20, S71R-21).
 
@@ -56,50 +61,54 @@ After this ticket:
 
 1. **`ci/acceptance/lifecycle.py`.**
    - It uses only the standard library and passes `mypy --strict`.
-   - It takes `--candidate <commit>`, `--expected-publication <commit>`, `--host claude|codex|both`, `--steps <comma list>` and `--run-root <empty directory>`.
-   - Every step gets its own new directory under the run root. For Claude Code that directory is `CLAUDE_CONFIG_DIR`; for Codex it is `CODEX_HOME`; for Level 2 it is `JOHNNY_ROOT`. The script refuses a run root that is not empty, and it never reads or writes the user's own configuration directories.
+   - It takes `--candidate <commit>`, `--expected-publication <commit>`, `--host claude|codex|both`, `--steps <comma list>` and `--run-root <empty directory>`. `build` and `level2` run once with `host` `none`; `codex-ref` and `codex-files` run for `codex` only; any other pairing is refused.
+   - Every step gets its own new directory under the run root. For Claude Code that directory is `CLAUDE_CONFIG_DIR`; for Codex it is `CODEX_HOME`; for Level 2 it is `JOHNNY_ROOT`. The script refuses a run root that is not empty, and it never reads or writes the user's own configuration directories. The script also refuses a run root inside a Git work tree, and runs every command with its step directory as the working directory. Each host CLI runs with an environment built from an allow-list (`PATH`, `SYSTEMROOT`, `WINDIR`, `COMSPEC`, `PATHEXT`, `TEMP`, `TMP`, `LOCALAPPDATA`, `APPDATA`, `PROGRAMDATA`) plus the step's own variables, `HOME` and `USERPROFILE` set to `<step>/home`, `GIT_CONFIG_GLOBAL` set to an empty file there, `GIT_TERMINAL_PROMPT=0` and `DISABLE_AUTOUPDATER=1`; no other inherited variable reaches it. The receipt names the host state outside the step directory that a step may still write: the pip cache, `%TEMP%` staging, and the Codex update check.
    - Each step writes one JSON line to `<run-root>/report.jsonl` with `step`, `host`, `verdict` (`PASS`, `FAIL` or `NOT_SUPPORTED`), the commands run, their exit codes, and the evidence. It holds no credential and no e-mail address.
-   - The script exits 0 only when every requested step is `PASS`. `NOT_SUPPORTED` means a host CLI lacks a command; it is never a `PASS`.
+   - The script exits 0 only when every requested step is `PASS`. `NOT_SUPPORTED` means a host CLI lacks a command or refuses the `file://` URL form of `codex-ref`; it is never a `PASS`.
 2. **The steps.**
    - **build:**
-     - regenerate the publication commit from `--candidate` with the committed generator;
-     - require its id to equal `--expected-publication`;
-     - extract it, and build the local marketplace the way ticket 71 item 8 does.
+     - clone the repository with `--no-hardlinks` into `<run-root>/build/repo`, check out `--candidate` detached, and run there `python -m library.local_orchestration.plugin_publication --repo . --manifest .claude-plugin/plugin.json --marketplace .claude-plugin/marketplace.json --ref refs/heads/publication-0.5.0`;
+     - require the printed commit to equal `--expected-publication`;
+     - extract it and build the local marketplace in `<run-root>/build/marketplace/` with the layout of ticket 71 item 8;
+     - no other step runs without `build` in the same run.
    - **fresh:**
      - add the local marketplace, then install `software-factory@software-factory`;
-     - read the host's plugin list back. It shows `0.5.0`, installed and enabled.
+     - read the host's plugin list back. It shows `0.5.0`, installed and enabled. The read-back commands are `claude plugin list --json` and `codex plugin list --marketplace software-factory --json`; a pinned CLI without the first is `NOT_SUPPORTED` and a `CHANGE_DETECTED` return;
+     - then run the README's `claude plugin update software-factory@software-factory --scope user`, which must exit 0 and leave the list at `0.5.0`, installed and enabled.
    - **upgrade:**
-     - install `johnny-ai-skill@johnny-ai-skill` 0.4.14 from the public marketplace. For Claude Code, the URL is `https://raw.githubusercontent.com/johnnyliu365-sys/Software-Factory/01b810f096b1201005d26922e2c8a474bdd5a0a0/.claude-plugin/marketplace.json`, the last change to the 0.4.14 `main`'s marketplace. For Codex, it is `johnnyliu365-sys/Johnny_AI_Skill_publication`;
-     - follow README section (5) to move to `software-factory`;
-     - the list then shows `software-factory` 0.5.0 and no `johnny-ai-skill`.
+     - install `johnny-ai-skill@johnny-ai-skill` 0.4.14 from the public marketplace. For Claude Code, the URL is `https://raw.githubusercontent.com/johnnyliu365-sys/Software-Factory/01b810f096b1201005d26922e2c8a474bdd5a0a0/.claude-plugin/marketplace.json`, the last change to the 0.4.14 `main`'s marketplace. For Codex, it is `johnnyliu365-sys/Johnny_AI_Skill_publication`. That marketplace pins forty zeros, so the step records the commit Codex installed. `PASS` needs `0.4.14` installed from `0b3afd3645946f97662c336f0e6ac0dcae502e69`, the publication `main`; a refusal is `FAIL` and a `CHANGE_DETECTED` return. The record states whether Codex honoured or ignored `sha`, which `codex-ref` then settles;
+     - remove `johnny-ai-skill@johnny-ai-skill` and the marketplace `johnny-ai-skill` with the host's commands of README section (5), then install from the local marketplace as in `fresh`;
+     - the plugin list then shows `software-factory` `0.5.0` and no `johnny-ai-skill` plugin, and the marketplace list shows no `johnny-ai-skill`.
    - **uninstall:**
      - starting from the state of `fresh`, uninstall the plugin and remove the marketplace, with the README's commands;
-     - afterwards no file under the step's directory names `software-factory`, apart from a residue list the script prints with a reason for each entry, which the reviewer judges.
+     - afterwards no path segment and no line of a `.json` or `.toml` file under the step's directory names `software-factory` as a whole name, except the entries of a fixed allow-list in `ci/acceptance/README.md`, each with its reason; that list is reviewed under condition (4), and anything else is `FAIL`.
    - **recover:**
-     - install from a local marketplace whose plugin source names a missing directory, which must fail with a non-zero exit;
-     - then follow the README's removal commands and install from the good marketplace, which must succeed with no half-installed entry left.
+     - add a local marketplace named `software-factory` whose plugin source names a missing directory, then install; the first of the two that exits non-zero is the expected failure, and if both exit 0 the step is `FAIL`;
+     - then run the README's uninstall and marketplace-remove commands, recording their exits without judging them;
+     - then add the good marketplace and install, which must exit 0, and the list must show exactly one entry, `software-factory@software-factory` `0.5.0`, installed and enabled.
    - **level2:**
-     - download the `v0.4.9` release assets into the step's directory (`gh release download v0.4.9`);
-     - run its documented install with `JOHNNY_ROOT` set to the step's directory, then its own `uninstall`;
-     - compare what remains with README section (6).
-   - **codex-ref:** emulate a `marketplace` branch with a plugin source of `url` + `sha` pointing into the same repository, using a local bare repository and a `file://` URL. Run `codex plugin marketplace add <that URL> --ref marketplace`, then `plugin add`. If Codex does not take a `file://` URL, the verdict is `NOT_SUPPORTED`, and the check moves to release step 8.
-   - **codex-files:** in a local marketplace that holds both `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json`, with different plugin versions, record which one Codex reads.
+     - download `https://github.com/johnnyliu365-sys/Software-Factory/releases/download/v0.4.9/johnny-ai-skill-0.4.9.zip` and `…/v0.4.9/johnny-install.cmd` into the step's directory with `urllib`, without a token, and require sha256 `2365b6f70a06f00ae0aed008371f7cc0b5afd0cb148a77e7476416bf25854aef` and `906b067238f05841ba87b5c59d88d0a8a5499821d8ebc660df9cee17296f532b`; a mismatch is `FAIL`;
+     - run its documented install (`johnny-install.cmd`, its `INSTALL` prompt answered on standard input under the owner decision of 2026-11-26 on S77R-01) with `JOHNNY_ROOT` set to the step's directory, then its own `uninstall`;
+     - after `uninstall`, `JOHNNY_ROOT` holds no file except those on a list in `ci/acceptance/README.md` that quotes README section (6) for each entry; any other file is `FAIL`.
+   - **codex-ref:** emulate a `marketplace` branch with a plugin source of `url` + `sha` pointing into the same repository, using a local bare repository and a `file://` URL. Run `codex plugin marketplace add <that URL> --ref marketplace`, then `plugin add`. The bare repository's default branch tip differs from the pinned commit, and the `marketplace` branch holds only `.claude-plugin/marketplace.json`, as release step 4 pushes it. `PASS` needs the installed tree to equal the pinned commit's tree. `marketplace add` exiting non-zero on the `file://` URL is `NOT_SUPPORTED`, with its output recorded, and the check moves to release step 8; any later failure, or another tree, is `FAIL`.
+   - **codex-files:** three local marketplaces: both files with different plugin versions; only `.claude-plugin/marketplace.json` (source `./plugins/software-factory`); only `.agents/plugins/marketplace.json` (source `{"source": "local", "path": …}`). It records, for each, whether `plugin add` exits 0 and which version is listed. `PASS` when every command completes and each outcome is recorded; a crash or a timeout is `FAIL`.
 3. **`.github/workflows/acceptance.yml`.**
    - Its only trigger is `workflow_dispatch`, with inputs `candidate` and `expected_publication`.
    - It runs on `windows-latest`, `timeout-minutes: 60`, and has `permissions: contents: read`.
+   - Its checkout is the action and SHA of `ci.yml` with `fetch-depth: 0` and `persist-credentials: false`; every action is pinned to a full SHA with its version in a comment.
    - It installs the two host CLIs at the exact versions written in `ci/acceptance/README.md`.
-   - It runs `lifecycle.py` with `--host both` and the steps `build,fresh,upgrade,uninstall,recover,level2`. It uploads `report.jsonl` as an artifact.
+   - It runs `lifecycle.py` with `--host both` and the steps `build,fresh,upgrade,uninstall,recover,level2`. It runs with `--run-root "$RUNNER_TEMP/acceptance"`. It uploads `report.jsonl` as an artifact.
    - It uses no secret and does not log in to either host.
 4. **`ci/acceptance/README.md`.** It holds the host CLI versions, the commands for the local run, and the four conditions with where each one's evidence lives.
 5. **The local run (condition 3).**
-   - Before returning, the seat runs every step on this host with `--host both`, in a run root under its scratch directory.
+   - Before returning, the seat runs `--host both --steps build,fresh,upgrade,uninstall,recover,level2`, which must exit 0 (condition 3), then `--host codex --steps build,codex-ref,codex-files` in a second run root, whose report is recorded; a `NOT_SUPPORTED` there does not block `COMPLETED`. Both run roots are under its scratch directory. The seat runs only `claude --version`, `codex --version` and the `plugin` and `plugin marketplace` subcommands; never a prompt, `-p`, `exec` or a session, and never a login.
    - `report.jsonl` goes into the receipt as a cell.
-   - Host CLI versions are read with `claude --version` and `codex --version`, and named in the STATEMENT.
+   - Host CLI versions are read with `claude --version` and `codex --version`, and named in the STATEMENT, and, when they differ from `ci/acceptance/README.md`, the STATEMENT says so and the record carries both.
 6. **The acceptance record.** `doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md` starts with the local run. The control plane later adds the cloud run and the owner-assisted Codex session.
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
 
-1. With conditions (1), (2) and (4) checked and (3) in the receipt, the control plane asks the owner to confirm two things: the fast-forward push of the development `main` to `cp/wave3`, and then the one cloud run. It triggers that run with `gh workflow run acceptance.yml --ref main`, and records the run id and the artifact.
+1. With conditions (1), (2) and (4) checked and (3) in the receipt, the control plane asks the owner to confirm two things: the fast-forward push of the development `main` to `cp/wave3`, and then the one cloud run. It triggers that run with `gh workflow run acceptance.yml --ref main -f candidate=<the main commit after the fast-forward> -f expected_publication=<ticket 71's publication commit>`, and records the run id and the artifact. A failed run is recorded and reported to the owner; it is not re-run without a new owner decision.
 2. **The owner-assisted session on this host:**
    - The control plane tells the owner first.
    - The owner starts Codex with `CODEX_HOME` and `JOHNNY_ROOT` set to new empty directories, logs in anew, and installs 0.5.0 from the local marketplace.
@@ -138,7 +147,7 @@ After this ticket:
    - a fake CLI that exits non-zero fails the step;
    - a missing subcommand gives `NOT_SUPPORTED`, and the script exits non-zero;
    - the `recover` step fails when the broken install exits 0.
-4. 回歸保護：the workflow file is parsed. Its only trigger is `workflow_dispatch`; it has no `secrets.` reference; its permissions are `contents: read`.
+4. 回歸保護：the workflow file is parsed. Its only trigger is `workflow_dispatch`; it holds none of `secrets.`, `GITHUB_TOKEN`, `github.token`, `id-token`; every `uses:` is a full SHA; its permissions are `contents: read`. The test passes on both runners of `ci.yml` without a new row in `ci/registered-failures.json`; fake CLIs are Python files started through `sys.executable`; a case that needs Windows is skipped elsewhere, with its reason.
 
 ### 適用的缺陷類別
 
