@@ -39,6 +39,18 @@ CONDITION = "除下方唯讀查詢外，在讀取 target source、執行工具�
 ANCHOR = '<a id="read-only-lookup"></a>'
 STATE_PARAGRAPH_START = "狀態只保存"
 
+# The five steps of the start order, line for line as they are at the base commit 69b4cdfb (ticket item 1:
+# "The five steps stay as they are").
+START_ORDER_STEP_LINES: tuple[str, ...] = (
+    "1. 讀取 target project 自己的 `AGENTS.md` 與本次 authority。",
+    "2. 讀 [Workflow 流程圖](Workflow.md#workflow-flow) 定位目前 stage。",
+    "3. 讀 [Router 路由表](Workflow.md#workflow-router)，取得唯一 action、owner、必要",
+    "   artifact refs、skill reference、typed return 與 continuation。",
+    "4. 完整讀取被指定的 skill reference；不要載入完整 Workflow、全部 references、",
+    "   library 或聊天歷史。",
+    "5. 完成一個動作後把 typed event 寫進受據，由下一個閘門腳本讀取狀態檔判定（Revision 04）；不得自行選下一關。",
+)
+
 # The sentences the review fixed (S79R-07, S79R-03, S79R-16); the paragraph is also pinned whole.
 P0_SENTENCE = "P0 照常適用：不讀取或回覆 Secret、正式 Log，不讀 target repository 以外或其他 worktree 的檔案。"
 NO_PROGRAM_SENTENCE = "不為定位而讀 Workflow 或 Router，不載入整棵樹，不寫受據，不執行閘門腳本、測試或其他程式。"
@@ -100,7 +112,6 @@ START_STEPS = (
 )
 
 FRONTMATTER_LINE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):[ ]+(.*?)[ \t]*$")
-STEP_LINE = re.compile(r"^([1-9])\. ")
 YAML_INDICATORS = ",[]{}#&*!|>'\"%@`"
 
 
@@ -191,19 +202,12 @@ def check_agents(text: str, defects: list[str]) -> None:
         defects.append(f"{AGENTS}: a blank line must follow the condition line")
         return
 
-    # The five steps: each starts at its number; the block ends at the first blank line.
+    # The five steps stay as they were at the base: the block runs to the first blank line and is pinned whole.
     cursor = heading + 4
-    last_step = 0
-    step_5_line = -1
     while cursor < len(lines) and lines[cursor] != "":
-        match = STEP_LINE.match(lines[cursor])
-        if match is not None:
-            last_step = int(match.group(1))
-            if last_step == 5:
-                step_5_line = cursor
         cursor += 1
-    if last_step != 5 or step_5_line == -1:
-        defects.append(f"{AGENTS}: the start order must keep its five steps")
+    if lines[heading + 4 : cursor] != list(START_ORDER_STEP_LINES):
+        defects.append(f"{AGENTS}: the start order must keep its five steps exactly as they were (ticket item 1)")
         return
 
     expected_after_steps = ["", ANCHOR, "", PARAGRAPH, ""]
@@ -383,6 +387,12 @@ class EntryReadOnlyLookupTests(unittest.TestCase):
         first = START_STEPS.split("\n")[0]
         second = START_STEPS.split("\n")[1]
         self.assert_red(SKILL, lambda t: t.replace(first + "\n" + second, second + "\n" + first), "Start")
+
+    def test_a_start_order_step_reworded_is_red(self) -> None:
+        self.assert_red(AGENTS, lambda t: t.replace("取得唯一 action", "取得 action"), "five steps")
+
+    def test_a_start_order_step_deleted_is_red(self) -> None:
+        self.assert_red(AGENTS, lambda t: t.replace(START_ORDER_STEP_LINES[1] + "\n", ""), "five steps")
 
     def test_the_start_steps_not_renumbered_are_red(self) -> None:
         self.assert_red(
