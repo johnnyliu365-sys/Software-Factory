@@ -1,0 +1,121 @@
+# Acceptance of 0.5.0: the install lifecycle
+
+`lifecycle.py` installs, updates, upgrades, uninstalls and recovers the plugin with the real Claude Code and
+Codex command lines, each step in its own new directory, and writes one JSON line per step to
+`<run-root>/report.jsonl`. It uses only the standard library. `.github/workflows/acceptance.yml` runs the same
+script once on a GitHub-hosted Windows runner. Nothing here runs a prompt, `-p`, `exec`, a session or a login on
+either host: the only host commands are `--version`, `plugin` and `plugin marketplace`.
+
+## Host CLI versions
+
+The local run and the workflow use these exact versions. A run on another version is recorded with both
+versions (the acceptance record, and the receipt's STATEMENT).
+
+| Host | Version | npm package |
+| --- | --- | --- |
+| claude | 2.1.316 | `@anthropic-ai/claude-code@2.1.316` |
+| codex | 0.166.0 | `@openai/codex@0.166.0` |
+
+The 0.5.0 README says Codex needs the `plugin add` command, which `0.167.0-alpha.3.2` has and
+`0.130.0-alpha.5` lacks. `0.166.0` has it too.
+
+## The local run (condition 3)
+
+The run root is a new empty directory outside every Git work tree (the 0.4.9 installer refuses to run inside
+one). Use the interpreter that has `mypy` and `pytest` (`requirements-dev.txt`) or any Python 3.11.
+
+```
+python ci/acceptance/lifecycle.py --candidate <40 hex> --expected-publication <40 hex> --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root <new empty directory>
+python ci/acceptance/lifecycle.py --candidate <40 hex> --expected-publication <40 hex> --host codex --steps build,codex-ref,codex-files --run-root <another new empty directory>
+```
+
+The first run must exit 0. The second is recorded; a `NOT_SUPPORTED` there does not block completion.
+
+| Argument | Rule |
+| --- | --- |
+| `--candidate`, `--expected-publication` | 40 lower-case hexadecimal characters, compared exactly |
+| `--host` | `claude`, `codex` or `both` |
+| `--steps` | a comma list of `build`, `fresh`, `upgrade`, `uninstall`, `recover`, `level2`, `codex-ref`, `codex-files`; `build` comes first and no step runs without it |
+| `--run-root` | not empty as a path, not inside a Git work tree, not inside a configuration directory of the user, and empty or absent |
+
+`build` and `level2` run once with host `none`. `fresh`, `upgrade`, `uninstall` and `recover` run for each
+requested host. `codex-ref` and `codex-files` run for Codex only, and `--host claude` with either is refused.
+A refused argument exits 2 and starts nothing.
+
+Exit codes: 0 when every requested step is `PASS`; 1 when any step is `FAIL` or `NOT_SUPPORTED`; 2 when an
+argument is refused. `NOT_SUPPORTED` is never a `PASS`.
+
+## Isolation
+
+Each step runs in `<run-root>/<step>` (`<run-root>/<step>-<host>` for a host step) as its working directory.
+For Claude Code that directory is `CLAUDE_CONFIG_DIR`, for Codex it is `CODEX_HOME`. A host CLI runs with
+`PATH`, `SYSTEMROOT`, `WINDIR`, `COMSPEC`, `PATHEXT`, `TEMP`, `TMP`, `LOCALAPPDATA`, `APPDATA` and
+`PROGRAMDATA` from the caller, plus the step's own variables: `HOME` and `USERPROFILE` set to `<step>/home`,
+`GIT_CONFIG_GLOBAL` set to an empty file there, `GIT_TERMINAL_PROMPT=0` and `DISABLE_AUTOUPDATER=1`. Nothing
+else is inherited.
+
+The `level2` step runs the 0.4.9 installer, which is not a host CLI. Its downloads go to `<step>/download`,
+and `JOHNNY_ROOT` is `<step>/root`, a new empty directory. The `py` launcher that the installer calls exits
+109 under any `USERPROFILE` other than the real one, and the step must not expose the real profile, so this
+step leaves `USERPROFILE` out of the environment and keeps `HOME` as the step's own.
+
+The host state that a step may still write outside its step directory:
+
+- the pip cache (`%LOCALAPPDATA%\pip\Cache`), written by the 0.4.9 installer's hash-locked `pip install`;
+- `%TEMP%` staging: `johnny-install-wrapper-*`, `johnny-bootstrap-*` and `johnny-uninstall-*` directories, which
+  the 0.4.9 installer creates and removes itself;
+- the Codex update check, which the Codex CLI may run when it starts;
+- anything the host CLI keeps under `%LOCALAPPDATA%` and `%APPDATA%`, which are inherited because the host CLIs
+  and the installer need them.
+
+## The Level 2 step and the INSTALL prompt
+
+The 0.4.9 installer asks a person to type `INSTALL` and says an agent's answer is not consent. The owner
+decided on 2026-11-26 (S77R-01, option A) that `lifecycle.py` answers that prompt on standard input, only for an
+install into a `JOHNNY_ROOT` that is new and empty, made for this acceptance, on this host and on the runner.
+The script checks that `JOHNNY_ROOT` is empty before the install and answers nowhere else. The authorization
+covers this test use only.
+
+## Allow-lists
+
+`lifecycle.py` reads these two fenced blocks. Each entry is judged exactly; anything else is `FAIL`. The lists are
+reviewed under condition (4).
+
+The `uninstall` step scans every path and every line of a `.json` or `.toml` file under the step directory for
+the name `software-factory` as a whole name: a match is not preceded or followed by a letter, a digit, `_` or
+`-`, so `software-factory-plugin` and `my-software-factory` do not match, and `software-factory.json` does.
+Entry fields are `kind | host | path relative to the step directory | reason`. A `path` entry admits the path
+and everything below it, an `emptydir` entry admits a directory that holds no file at any depth, and a `line`
+entry admits the lines of one file.
+
+```lifecycle-allowlist
+path | claude | plugins/cache/software-factory | Claude Code keeps the uninstalled plugin's cache and marks the version directory with an .orphaned_at file, to remove it after a delay; it is the plugin's own copy, not a registration
+emptydir | codex | plugins/cache/software-factory | Codex removes the plugin's files and leaves the empty marketplace directory of its cache
+```
+
+The `level2` step requires that `JOHNNY_ROOT` holds no file after `uninstall`, apart from the entries below.
+Each entry is a path relative to `JOHNNY_ROOT`, then a quotation from section 6 of the repository `README.md`
+(`舊版 Level 2 runtime 的移除`) that says why it stays. The list is empty: on the local run, the 0.4.9
+`uninstall` reported `REMOVED` for the plugin, venv, launcher, queue and telemetry folders and deleted the root,
+as section 6 says ("全部移除後，再清掉安裝日誌與已空的根目錄"). The downloaded installer and zip are in
+`<step>/download`, not in the root ("下載來的安裝檔與 zip，它們在下載資料夾，不在根目錄").
+
+```lifecycle-level2-allowlist
+```
+
+## The four conditions
+
+The cloud run happens once, and only when all four hold. The control plane checks them, then asks the owner.
+
+| # | Condition | Where its evidence lives |
+| --- | --- | --- |
+| 1 | Ticket 71 is approved and integrated with its package check | `doc/reviews/workflow-governance/71-publication-0-5-code-review.md`, and the integration commit `f53ecc6a` on `cp/wave3` |
+| 2 | The job triggers by `workflow_dispatch` only, never on push | `.github/workflows/acceptance.yml`, pinned by `tests/test_acceptance_lifecycle.py` (`WorkflowTests`) |
+| 3 | Each lifecycle step has passed locally in isolated directories | `doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md`, section "The local run", and the receipt of ticket 77 (cell L1) |
+| 4 | The job itself has been reviewed | the review record of ticket 77 under `doc/reviews/workflow-governance/` |
+
+The trigger, once the conditions hold and the owner has confirmed the fast-forward of the development `main`:
+
+```
+gh workflow run acceptance.yml --ref main -f candidate=<the main commit after the fast-forward> -f expected_publication=<ticket 71's publication commit>
+```
