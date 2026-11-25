@@ -10,7 +10,7 @@
 | Sealed Context binding | 不適用 |
 | Agent Context binding | ticket revision03 / receipt under `.worktrees/79-lookup-out/` / owner implementation seat / worktree `.worktrees/79-lookup` / branch `cp/wave3-79-lookup` / baseline the wave-3 branch after ticket 73 is integrated |
 | 實作語言 | Markdown governance text; Python 3.11 for the test（CONTEXT.md Implementation language） |
-| 狀態 | `PLANNED`（revision03; strict tier; rule-only reviews of revision01 and revision02 CHANGES_REQUESTED; revision03 applies the reviewer's exact fixes; after ticket 73, before ticket 71） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:1a7465bc54e7390032b1b7c70312595cc0b29928d4026e28ec2444d3d5e7a318 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-79-1.yaml`)（revision03; strict tier; rule-only reviews of revision01 and revision02 CHANGES_REQUESTED; revision03 applies the reviewer's exact fixes; after ticket 73, before ticket 71） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/79-lookup` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/79-lookup-review` |
