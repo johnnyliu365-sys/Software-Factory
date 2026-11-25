@@ -1,6 +1,6 @@
 ---
 name: johnny-project-takeover
-description: Route a new, inherited, or active software project through Johnny's Wayfinder, architecture, requirements, specification, ticket, implementation, review, handoff, POC/MVP/commercial, and staging workflow. Use when Codex must take over or resume a project, select the next governed stage, dispatch or review an implementer, minimize Agent context, or apply Johnny workflow policy without adding a runtime dependency to the target project.
+description: Route an action that changes a software project's workflow state (Wayfinder, architecture, requirements, specification, tickets, implementation, review, handoff, integration, delivery maturity POC/MVP/commercial, staging) through Johnny's governed workflow. Use when Codex must take over or resume a project, select the next governed stage, dispatch or review an implementer, minimize Agent context, or apply Johnny workflow policy without adding a runtime dependency to the target project. Not for a read-only question about an existing document, ticket or rule; answer it as this plugin's AGENTS.md read-only-lookup paragraph says.
 ---
 
 # Johnny Project Takeover
@@ -10,11 +10,12 @@ target project's runtime, CI, hook, import, submodule or symlink dependency.
 
 ## Start
 
-1. Read the target project's own `AGENTS.md` and authority record.
-2. Read `../../Workflow.md` only far enough to identify the current stage and its routing row.
-3. Read exactly the reference named by that row, plus the minimum committed target artifacts it
+1. A read-only question (the content of a document, the state of a ticket, the wording of a rule) is not a workflow action, unless the target project's own governing files route it otherwise: resolve it as the [read-only-lookup paragraph](../../AGENTS.md#read-only-lookup) of this plugin's `AGENTS.md` says, answer, and stop. Do not read `Workflow.md` for it. Asking for the next step, or whether something can be dispatched, integrated or approved, is a workflow action.
+2. Read the target project's own `AGENTS.md` and authority record.
+3. Read `../../Workflow.md` only far enough to identify the current stage and its routing row.
+4. Read exactly the reference named by that row, plus the minimum committed target artifacts it
    requires. Do not load unrelated references, the full library or chat history.
-4. Execute one legal action, record its typed completion event in the receipt and let the next
+5. Execute one legal action, record its typed completion event in the receipt and let the next
    gate script read the state files (Revision 04: the Router is the gate scripts over the state
    files, not a process to re-enter). Do not select the next stage locally.
 

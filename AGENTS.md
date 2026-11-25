@@ -7,7 +7,7 @@
 
 ## 啟動順序
 
-在讀取 target source、執行工具或寫入前：
+除下方唯讀查詢外，在讀取 target source、執行工具或寫入前：
 
 1. 讀取 target project 自己的 `AGENTS.md` 與本次 authority。
 2. 讀 [Workflow 流程圖](Workflow.md#workflow-flow) 定位目前 stage。
@@ -16,6 +16,10 @@
 4. 完整讀取被指定的 skill reference；不要載入完整 Workflow、全部 references、
    library 或聊天歷史。
 5. 完成一個動作後把 typed event 寫進受據，由下一個閘門腳本讀取狀態檔判定（Revision 04）；不得自行選下一關。
+
+<a id="read-only-lookup"></a>
+
+唯讀查詢（只問某份文件的內容、某張票的狀態或某條規則的寫法，不要求改動）不走上面的啟動順序；target project 自己的治理檔另有規定時從其規定。P0 照常適用：不讀取或回覆 Secret、正式 Log，不讀 target repository 以外或其他 worktree 的檔案。使用者指名確切檔案時只讀該檔；否則從該類文件的索引一次解析一條路徑到確切的 leaf。本插件規則的查詢以本檔「流程索引」為索引，只讀含該規則的那一份（已安裝的插件版本），並註明檔案與版本。不為定位而讀 Workflow 或 Router，不載入整棵樹，不寫受據，不執行閘門腳本、測試或其他程式。票的狀態以目前 checkout 已提交的 leaf 為準，不以索引列、其他 worktree 或未提交的檔案為準；回答附上 leaf 路徑與 commit；需要受據或佇列才能判定時照實說明，不推斷。找不到該類索引、索引有歧義、leaf 不存在或索引與 leaf 記載的 revision 不符時，回答找不到並列出已查的路徑，不掃描、不憑記憶補答、不進入 Wayfinder。查詢中發現需要改動時，回報後停下；只有使用者要求改動，才走上面的啟動順序。問下一步、能否派工、整合或核准，屬於推進流程，不是唯讀查詢。
 
 狀態只保存 metadata（識別碼、revision、digest、repo 相對路徑）；pending implementation
 dispatch 以票面狀態列（含派工檔 digest）表示，並由受據與精確 artifact references 綁定；整合佇列列
