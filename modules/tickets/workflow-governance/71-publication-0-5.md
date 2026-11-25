@@ -1,4 +1,4 @@
-# 71｜Publication 0.5.0: manifests aligned (version, Apache-2.0, author), Level 1 only for Claude Code and Codex, the publication commit reachable from a ref, the marketplace re-pinned
+# 71｜Publication 0.5.0 as Software Factory: plugin id `software-factory`, Apache-2.0 and author in the manifests, the README rewritten, Level 1 for Claude Code and Codex, the marketplace in the public publication repository
 
 | 欄位 | 內容 |
 | --- | --- |
@@ -8,15 +8,15 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision02 / receipt under `.worktrees/71-publication-out/` / owner implementation seat / worktree `.worktrees/71-publication` / branch `cp/wave3-71-publication` / baseline the wave-3 branch after ticket 73 is integrated |
+| Agent Context binding | ticket revision03 / receipt under `.worktrees/71-publication-out/` / owner implementation seat / worktree `.worktrees/71-publication` / branch `cp/wave3-71-publication` / baseline the wave-3 branch after ticket 79 is integrated |
 | 實作語言 | JSON manifests; Python 3.11 for the tests（CONTEXT.md Implementation language） |
-| 狀態 | `PLANNED`（revision02; strict tier; rule-only review before dispatch; the last wave-3 code ticket, after ticket 73） |
+| 狀態 | `PLANNED`（revision03; strict tier; rule-only review of revision02 CHANGES_REQUESTED, revision03 under rule-only review; the last wave-3 code ticket, after ticket 79） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/71-publication` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/71-publication-review` |
 | 責任邊界 | the two shipped manifests, the README's install sections, one SKILL.md sentence, the publication test constants, the changelog entry, and the publication commit built locally with the committed generator |
 | 禁止修改 | `library/` code, the gate scripts, the governance documents; any push to the publication repository (the control plane pushes after the owner confirms) |
-| 環境 | `LOCAL`; the publication repository and the anchor ref only after the owner confirms |
+| 環境 | `LOCAL` and GitHub Actions on the development repository; the publication repository, the anchor ref and the tags only after the owner confirms |
 
 ## 邊界宣告（機器可讀，整合前由閘門讀取）
 
@@ -24,6 +24,7 @@
 modify = .claude-plugin/plugin.json
 modify = .claude-plugin/marketplace.json
 modify = README.md
+modify = NOTICE
 modify = skills/johnny-project-takeover/SKILL.md
 modify = tests/test_plugin_publication.py
 modify = tests/test_plugin_payload_boundary.py
@@ -38,79 +39,150 @@ forbid = CodeReview.md
 
 ## 使用者拍板與可觀察結果
 
-Owner decisions this ticket carries out:
-
-- **2026-11-07 "2.B":** the marketplace re-pin waits for the wave-3 publication.
-- **2026-11-18 "2A":** the plugin licence is Apache License 2.0, as `LICENSE` states, and the author is Johnny Liu.
-- **REQ-20261103-043, wave 3:** publication 0.5, with the publication commit reachable from a ref.
-
-Today `.claude-plugin/marketplace.json` pins `0b3afd36` (0.4.14). No ref of the development repository reaches that commit, so four publication tests are base failures:
-
-- `CommittedPinTests::test_the_pinned_sha_exists`;
-- `test_l5_stale_candidate_pin_is_named_before_generation`;
-- the two `PublicationReachabilityTests`.
-
 Process tier: strict.
 
-**Revision02** carries out three owner decisions of 2026-11-19:
-- the Level 2 runtime does not ship;
-- the Codex install path is the one the owner verified with `codex-cli 0.167.0-alpha.3.2`;
-- `.codex-plugin/plugin.json` is retired, because Codex reads the shared `.claude-plugin/plugin.json`.
+Owner decisions this ticket carries out. Each is quoted in `REQ-20261103-043`, which is authoritative:
 
-  The last decision rests on evidence: this host's Codex lists `johnny-ai-skill` at `0.4.14`, a version only the Claude manifest holds, and the 0.4.14 publication tree has no `.codex-plugin`. Deleting the file needs the Level 2 packaging code retired too, which is ticket 78. This ticket leaves the file untouched; it is not in the payload.
+- **2026-11-07 "2.B":** the marketplace re-pin waits for the wave-3 publication.
+- **2026-11-18 "2A":** the licence is Apache License 2.0, as `LICENSE` states; the author is Johnny Liu.
+- **2026-11-19:** the Level 2 runtime does not ship; Codex installs through `codex plugin marketplace add` and `codex plugin add`; `.codex-plugin/plugin.json` is retired, which ticket 78 does.
+- **2026-11-20, release order:** the candidate is tested from a local marketplace; nothing is pushed for testing; no release-candidate tag is made.
+- **2026-11-20, rename ("1A 2.A 3A 4可以", "發布前我來改就好", publication name "A"):**
+  - the plugin id becomes `software-factory`;
+  - `marketplace.json` moves into the public publication repository;
+  - the owner renames that repository to `software-factory-plugin` before the release;
+  - the README is rewritten in full.
+
+**Revision03** also answers the rule-only review of revision02 (`doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md`).
 
 After this ticket:
 
-- **Version:** `0.5.0` in `.claude-plugin/plugin.json` and in the plugin entry of `.claude-plugin/marketplace.json`.
-- **Licence:** `"Apache-2.0"` in both, replacing `"Proprietary"`.
-- **Author:** `author.name` is `Johnny Liu`, and so is the marketplace `owner.name`. The URLs stay `https://github.com/johnnyliu365-sys`. No e-mail address appears in any manifest.
-- **Descriptions and keywords:** they no longer name context-load telemetry or the router, which tickets 65 and 66 retired. They describe the project-takeover workflow with its gate scripts, and reusable-module selection.
-- **The README's install sections:**
-  - The Level 2 section ("Level 2：安裝完整 Router Runtime"), the status check and the Level 2 error table are removed. They are replaced by one section for users of a 0.4.x Level 2 runtime. It covers:
-    - its own `uninstall` command, run through `%LOCALAPPDATA%\JohnnyRouter\launcher\johnny-router.ps1`, or the `JOHNNY_ROOT` root when set;
-    - what that command removes and what it leaves;
-    - when the folder may be deleted by hand: when uninstall cannot run, for example after a failed install whose `install-journal.jsonl` blocks a reinstall.
-  - The Claude Code section installs from the development repository's `v0.5.0` tag. The command is `claude plugin marketplace add https://raw.githubusercontent.com/johnnyliu365-sys/Johnny_AI_Skill/v0.5.0/.claude-plugin/marketplace.json`, followed by the existing install, update and uninstall commands.
-  - A new Codex section gives these steps:
-    1. `codex --version`, with the note that the `plugin add` command is needed: `0.167.0-alpha.3.2` has it, while `0.130.0-alpha.5` lists only `plugin marketplace`.
-    2. `codex plugin marketplace add johnnyliu365-sys/Johnny_AI_Skill --ref v0.5.0`. Codex takes a GitHub source and a ref, not a raw `marketplace.json` URL.
-    3. `codex plugin add johnny-ai-skill@johnny-ai-skill --json`.
-    4. The version check: `codex plugin list --marketplace johnny-ai-skill --json`, where the entry `johnny-ai-skill@johnny-ai-skill` shows `version` `0.5.0`, `installed` true and `enabled` true. A new Codex session then loads it.
-    5. Removal: `codex plugin remove johnny-ai-skill@johnny-ai-skill --json`, and `codex plugin marketplace remove johnny-ai-skill --json`.
-- **SKILL.md:** the sentence on the kept launcher commands (`SKILL.md:112`, after "The honest statement is: …") is replaced by one sentence. It says that a 0.4.x Level 2 runtime is removed by its own `uninstall`, as the README describes. The no-runner statement before it stays.
-- **The publication commit:**
-  - The seat builds it locally with the committed generator: `python -m library.local_orchestration.plugin_publication --repo . --manifest .claude-plugin/plugin.json --marketplace .claude-plugin/marketplace.json --ref refs/heads/publication-0.5.0`.
-  - The generator repins `marketplace.json` to the new commit.
-  - The STATEMENT records the commit id, its tree id and the file count. The run is repeated once, and the second run must give the same commit id.
-  - The seat creates the local ref `refs/heads/publication-0.5.0` and pushes nothing.
-- **The package carries the new gates.** The seat checks the publication commit, not the development tree:
-  - it extracts the publication commit's tree into an empty directory;
-  - it runs the gate scripts from that directory: `dispatch_lint.py` with `--ticket` (R7) and R8, `evidence_gate.py` on a receipt with an `effort:` line, and `usage_report.py` with an expectation that names a model and an effort;
-  - the sha256 of every gate script in the package equals that of the same file on the development branch;
-  - both manifests in the package say `0.5.0`, and the package holds no `.codex-plugin` and no Level 2 file;
-  - the marketplace pin names this publication commit;
-  - the package's README holds the Codex section and no Level 2 install section.
+1. **The shipped manifests.**
+   - `.claude-plugin/plugin.json` gets:
+     - `name` is `software-factory`;
+     - `version` is `0.5.0`;
+     - `license` is `Apache-2.0`;
+     - `author.name` is `Johnny Liu`, with URL `https://github.com/johnnyliu365-sys`;
+     - `homepage` and `repository` are `https://github.com/johnnyliu365-sys/software-factory-plugin`;
+     - a description of the governed project workflow with its gate scripts and of reusable-module selection, naming neither router nor telemetry.
+   - `.claude-plugin/marketplace.json` gets:
+     - the marketplace `name` and the plugin entry `name` are both `software-factory`;
+     - `owner.name` is `Johnny Liu`;
+     - the plugin entry has `version` `0.5.0`, `license` `Apache-2.0` and the same author, homepage and repository;
+     - its `source` is `{"source": "url", "url": "https://github.com/johnnyliu365-sys/software-factory-plugin.git", "sha": <the publication commit>}`.
+   - No manifest holds an e-mail address.
+   - The `payload` declaration of `plugin.json` is unchanged.
+2. **`NOTICE`** names the product "Software Factory". Its repository line is the publication repository URL. Its other lines stay.
+3. **The README is rewritten in full.** The section headings, in this order, are listed below.
 
-  The STATEMENT records each result.
-- **The publication tests:** `_RELEASE_VERSION` is `0.5.0`. The four base failures pass on the host once the anchor ref exists locally. On CI they pass once the control plane has pushed the anchor ref, so until then they stay registered. Each changed constant is named in the STATEMENT.
-- **The changelog:** `doc/HARNESS-CHANGELOG.md` gains a 0.5.0 entry naming:
-  - the router library retirement (tickets 65, 66, 68), and the governance documents cleared of retired surfaces (ticket 67);
-  - the gate scripts as the default path;
-  - the `USAGE` cell (ticket 69), and the model and effort bound to each profile (ticket 76);
-  - the template follow-ups (ticket 70), and the repository's own ticket template with dispatch lint R7 (ticket 75);
-  - the wave-3 rule texts (ticket 74);
-  - the licence alignment.
+   (1) **Software Factory 是什麼、給誰用.** A governed control plane for building software with AI agents. Its target is teams and, from 1.0, enterprises.
 
-  The entry also has a section for outside readers, so that a user or a Codex host run does not follow a retired specification. It states:
-  - which surfaces were retired: the flow engine, the private router, the profile, router telemetry, and the cross-lifetime bridge (runner, wake, dispatch and review CLI families, live descriptor);
-  - that the seven router-era SPECs now live in `doc/archive/specs/2026/`, as `ARCH-SPEC-20261118-001` to `007`;
-  - that nine router-era ADRs are marked `SUPERSEDED` in place;
-  - which documents to read instead: `AGENTS.md`, `Workflow.md`, `CodeReview.md` and `modules/spec/workflow-governance.md`.
-- **After review approval and the owner's confirmation**, the control plane does the outward steps, which are not this seat's work:
-  1. push the publication commit to `Johnny_AI_Skill_publication` `main`, with tag `plugin-v0.5.0`;
-  2. push `refs/heads/publication-0.5.0` to the development repository, and tag `v0.5.0` on the development commit whose `marketplace.json` pins the publication commit, which is the tag the README's install commands name;
-  3. read both back;
-  4. remove the four rows from `ci/registered-failures.json` in an additive commit, once CI shows them passing.
+   (2) **它會做什麼、不會做什麼.** It carries the content of today's section "它會對你的 repository 做什麼、不做什麼", brought up to date.
+
+   (3) **安裝：Claude Code.** Exactly these three commands:
+
+   ```bash
+   claude plugin marketplace add https://raw.githubusercontent.com/johnnyliu365-sys/software-factory-plugin/marketplace/.claude-plugin/marketplace.json
+   claude plugin install software-factory@software-factory --scope user
+   claude plugin marketplace remove software-factory
+   ```
+
+   The third command removes the marketplace. The README also keeps the `update` and `uninstall` commands with the new id.
+
+   (4) **安裝：Codex.** The steps, in order:
+   1. Run `codex --version`. The `plugin add` command is needed: `0.167.0-alpha.3.2` has it, and `0.130.0-alpha.5` lists only `plugin marketplace`.
+   2. Run `codex plugin marketplace add johnnyliu365-sys/software-factory-plugin --ref marketplace`.
+   3. Run `codex plugin add software-factory@software-factory --json`.
+   4. Check the version with `codex plugin list --marketplace software-factory --json`: the entry `software-factory@software-factory` shows `version` `0.5.0`, `installed` true and `enabled` true.
+   5. To remove it, run `codex plugin remove software-factory@software-factory --json`, then `codex plugin marketplace remove software-factory --json`.
+
+   (5) **從舊版 `johnny-ai-skill` 換過來.** Remove the old plugin with each host's remove command for `johnny-ai-skill@johnny-ai-skill`, then install as above. A project's own copies of `AGENTS.md` and `Workflow.md`, copied from an earlier version, are replaced with the 0.5.0 copies.
+
+   (6) **舊版 Level 2 runtime 的移除.**
+   - The old runtime removes itself with its own `uninstall`. The command sits in a fenced block, as today.
+   - What `uninstall` removes and what it leaves (`johnny-router.ps1`, `live_uninstall_composition.py`).
+   - When the folder `%LOCALAPPDATA%\JohnnyRouter` may be deleted by hand: when `uninstall` cannot run, for example after a failed install whose `install-journal.jsonl` blocks a reinstall.
+
+   Paths appear in fenced blocks or as plain text, never as inline code.
+
+   (7) **第一次使用.** One project from requirement to acceptance, in plain steps.
+
+   (8) **它怎麼運作.** State lives in files: tickets, receipts, the integration queue. Gate scripts decide each step. Reviews are independent.
+
+   (9) **路線.** 0.5.0, then wave 4, then the beta (every 1.0 capability except deployment, run on the tester's own computer), then 1.0 for enterprises (self-hosted, Docker Compose), then a SaaS later.
+
+   (10) **作者與授權.**
+
+   The README names no Level 2 install step and no `johnny-install.cmd`.
+4. **`SKILL.md`.** The sentence that ticket 67 restored after "The honest statement is: …" begins "The kept launcher commands". It becomes one sentence: a 0.4.x Level 2 runtime is removed by its own `uninstall`, as the README describes. It holds no path token in backticks. The no-runner statement before it stays.
+5. **Tests.** Each change is named in the STATEMENT:
+   - `tests/test_plugin_publication.py`:
+     - `_RELEASE_VERSION` and the hard-coded `"0.4.14"` in `test_t6` become `0.5.0`;
+     - the exact route tuple of `_assert_exact_l3_marketplace_routes` becomes the one `claude plugin marketplace add` line above;
+     - the injection anchor of `test_l3_rejects…` becomes that line;
+     - the install, update, uninstall and remove assertions use `software-factory`.
+   - `tests/test_plugin_payload_boundary.py`:
+     - the closure dictionaries lose the `johnny-install.cmd` entry, whose only payload reference leaves the README;
+     - they gain no entry, because the new README adds no path-shaped inline token;
+     - a manifest test reads the new id, version, licence and author.
+   - `ci/registered-failures.json`: the eight rows of the four publication tests stay registered, on Linux and Windows, until the anchor is pushed. Their reason text names the new pin.
+6. **The publication commit.**
+   - The seat builds it locally with the committed generator: `python -m library.local_orchestration.plugin_publication --repo . --manifest .claude-plugin/plugin.json --marketplace .claude-plugin/marketplace.json --ref refs/heads/publication-0.5.0`.
+   - The generator repins the development `marketplace.json`. The package's own copy keeps the pin of forty zeros that the generator writes.
+   - The run is repeated, and the second run gives the same commit id.
+   - The seat creates the local ref `refs/heads/publication-0.5.0`. It pushes only its own development branch, to run CI; it pushes nothing else.
+7. **The package check.** The seat extracts the publication commit into an empty directory and checks there:
+   - it runs the gate scripts from that directory: `dispatch_lint.py` with `--ticket` (R7) and R8, `evidence_gate.py` on a receipt with an `effort:` line, and `usage_report.py` with an expectation that names a model and an effort;
+   - the sha256 of every gate script equals that on the development branch;
+   - `plugin.json` says `software-factory` and `0.5.0`;
+   - the package holds no `.codex-plugin`, and none of these Level 2 files:
+     - `install.ps1`, `johnny-install.cmd`, `johnny-router.ps1`, `requirements-runtime.lock`;
+     - anything under `library/local_orchestration/`;
+   - the package's README holds the Codex section and no Level 2 install section;
+   - the development `marketplace.json` pins this commit, while the package's copy holds forty zeros.
+8. **The local marketplace for testing**, built by the seat in `C:/Temp/claude/sf-050-local/` from the extracted package:
+   - the plugin tree goes in `plugins/software-factory/`;
+   - `.claude-plugin/marketplace.json` names `software-factory`, with source `./plugins/software-factory`;
+   - `.agents/plugins/marketplace.json` gives the same entry with source `{"source": "local", "path": "./plugins/software-factory"}`.
+
+   The STATEMENT lists the exact commands the owner runs to test it:
+   - Claude Code: `claude --plugin-dir C:/Temp/claude/sf-050-local/plugins/software-factory`.
+   - Codex: a fresh `CODEX_HOME`, then `codex plugin marketplace add C:/Temp/claude/sf-050-local`, then `codex plugin add software-factory@software-factory --json`.
+
+   The seat does not run Codex or Claude itself.
+9. **The changelog.** `doc/HARNESS-CHANGELOG.md` keeps its one-row-per-change table, with new rows, and adds a section `## 0.5.0`.
+   - The rows name:
+     - the router library retirement (tickets 65, 66, 68), and the documents cleared of retired surfaces (67);
+     - the gate scripts as the default path;
+     - the USAGE cell (69), and model and effort bound to each profile (76);
+     - the template follow-ups (70), and the repository's own template with dispatch lint R7 (75);
+     - the wave-3 rule texts (74);
+     - review rounds and rework causes (73);
+     - read-only lookups that go to the leaf (79);
+     - the licence;
+     - the rename to Software Factory.
+   - The section is for outside readers. It states:
+     - the retired surfaces: the flow engine, the private router, the profile, router telemetry, and the cross-lifetime bridge (the runner, wake, dispatch and review CLI families, and the live descriptor);
+     - that the seven router-era SPECs are in `doc/archive/specs/2026/` as `ARCH-SPEC-20261118-001` to `007`, and nine ADRs are `SUPERSEDED`;
+     - what to read instead: `AGENTS.md`, `Workflow.md`, `CodeReview.md` and `modules/spec/workflow-governance.md`;
+     - the move from `johnny-ai-skill` to `software-factory`.
+10. **Out of scope.** These keep the old name, with the reasons:
+    - the skill id `johnny-project-takeover`, which renaming would break in every project that names it;
+    - the activation markers `johnny-ai-skill:project-adoption` in `project_adoption_contracts.py`, which existing projects carry;
+    - `.agents/plugins/johnny-ai-skill/`, the Antigravity registration;
+    - everything Level 2, which ticket 78 retires.
+
+**The release, after review approval, ticket 77's acceptance and the owner's confirmation at each push.** This is control-plane work, not this seat's:
+
+1. Integrate this ticket into `cp/wave3`, and read CI back.
+2. The owner renames `Johnny_AI_Skill_publication` to `software-factory-plugin`.
+3. Push the publication commit to the publication repository with tag `plugin-v0.5.0`. The publication repository's `main` is the owner's to move, by force-with-lease from `0b3afd36`.
+4. Push a branch `marketplace` to the publication repository. It holds one commit containing the development `marketplace.json` at this ticket's integration, both as `.claude-plugin/marketplace.json` and as `.agents/plugins/marketplace.json`. Later releases add commits to it, so it never needs a force push.
+5. Push `refs/heads/publication-0.5.0` to the development repository.
+6. Fast-forward the development `main` to `cp/wave3`, and tag `v0.5.0` there.
+7. Read back from a fresh clone made with `--no-hardlinks`: check out `v0.5.0`, run `git branch publication-0.5.0 origin/publication-0.5.0`, then run `--verify-only --ref refs/heads/publication-0.5.0`.
+8. Run one smoke install through the public path of the README's sections (3) and (4).
+9. Remove the eight rows from `ci/registered-failures.json` in an additive commit. The CI run after the anchor push is expected to be red with `REGISTERED_NOW_PASSING` until that commit lands.
 
 ## 實作範圍、依賴與 ticket elements
 
@@ -164,6 +236,7 @@ After this ticket:
 - **反向突變證據**, each restored after it turns a named test red:
   - put `Proprietary` back in one manifest;
   - put a Level 2 install section back in the README;
+  - set the plugin `name` back to `johnny-ai-skill`;
   - drop `NOTICE` from the payload.
 - **CI evidence**: one run on a commit of this branch, with both jobs `success`. The four publication rows stay registered until the anchor ref is pushed.
 - **Receipt**: R4-7 cells, passing P9 and E1 (E1 runs last).
