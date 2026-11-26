@@ -8,23 +8,24 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision02 / receipt under `.worktrees/81-coexist-out/` / owner implementation seat / worktree `.worktrees/81-coexist` / branch `cp/wave3-81-coexist` / baseline the `cp/wave3` commit named in the dispatch, after ticket 80 is integrated |
+| Agent Context binding | ticket revision03 / receipt under `.worktrees/81-coexist-out/` / owner implementation seat / worktree `.worktrees/81-coexist` / branch `cp/wave3-81-coexist` / baseline the `cp/wave3` commit named in the dispatch, after ticket 80 is integrated |
 | 實作語言 | Markdown governance text and JSON; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `PLANNED`（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes (`doc/reviews/workflow-governance/81-old-and-new-do-not-fight-ticket-review.md`); after ticket 80） |
+| 狀態 | `PLANNED`（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes (`doc/reviews/workflow-governance/81-old-and-new-do-not-fight-ticket-review.md`); revision03 adds item 7 (owner decision 2026-11-26 "併進票 81 修", from S80-01 and S80-02), with a rule-only review of that item; after ticket 80） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/81-coexist` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/81-coexist-review` |
-| 責任邊界 | one new start step in `SKILL.md`, two paragraphs in README section 5, a release runbook, the tests that pin them, and the marketplace pin, the registered-failure reasons and the changelog for the rebuilt publication commit |
-| 禁止修改 | `AGENTS.md`, `Workflow.md`, `CodeReview.md`, `library/`, `commands/`, `template/`, `.claude-plugin/plugin.json`, `ci/acceptance/`, `.github/` |
+| 責任邊界 | the first 流程索引 row in `AGENTS.md`, one new start step in `SKILL.md`, two paragraphs in README section 5, a release runbook, the tests that pin them, and the marketplace pin, the registered-failure reasons and the changelog for the rebuilt publication commit |
+| 禁止修改 | every other line of `AGENTS.md`; `Workflow.md`, `CodeReview.md`, `library/`, `commands/`, `template/`, `.claude-plugin/plugin.json`, `ci/acceptance/`, `.github/` |
 | 環境 | `LOCAL` and GitHub Actions on the development repository; nothing is pushed to the publication repository |
 
 ## 邊界宣告（機器可讀，整合前由閘門讀取）
 
 ```johnny-boundary
+modify = AGENTS.md
 modify = skills/johnny-project-takeover/SKILL.md
 modify = README.md
 modify = tests/test_entry_read_only_lookup.py
@@ -33,7 +34,6 @@ modify = .claude-plugin/marketplace.json
 modify = ci/registered-failures.json
 modify = doc/HARNESS-CHANGELOG.md
 create = doc/runbooks/release.md
-forbid = AGENTS.md
 forbid = Workflow.md
 forbid = CodeReview.md
 forbid = library/
@@ -87,6 +87,15 @@ After this ticket:
 6. **`doc/HARNESS-CHANGELOG.md`.**
    - Directly below the ticket 80 row: `| 2026-11-26 | The skill stops when the old plugin johnny-ai-skill is still installed; the README explains the host's decline record; a version is never published twice (ticket 81) | `REQ-20261103-043`, owner decisions 2026-11-26 | `modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md` |`.
    - In the `## 0.5.0` section, as the last bullet of the part about moving from `johnny-ai-skill`: `- With both plugins installed, the new skill stops at its first step and asks the user to remove the old one and open a new session.`
+7. **`AGENTS.md`, the first 流程索引 row** (owner decision 2026-11-26 "併進票 81 修", quoted in `REQ-20261103-043`; ticket 80 review S80-01 and S80-02).
+   - The row `| 唯讀查詢（文件內容、票的狀態、規則寫法） | [唯讀查詢](#read-only-lookup) | 不適用：只讀索引指到的那一節 |` becomes exactly `| 唯讀查詢本身的規則（怎麼查、查不到時怎麼回答） | [唯讀查詢](#read-only-lookup) | 不適用：規則即本檔該節 |`.
+   - No other line of `AGENTS.md` changes.
+   - `tests/test_entry_read_only_lookup.py`:
+     - the expected first row takes the new text;
+     - a new check requires each `#anchor` link of the 流程索引 to appear in exactly one row, so a duplicate row that points to an anchor another row already names is red;
+     - the docstring says how many files `copy_texts` copies.
+   - TDD 2 gains three cases: the old first row put back; a duplicate P0 row appended to the table; the first row's 情境 widened back with 「規則寫法」.
+   - The extracted package's `AGENTS.md` holds the new first row (item 5's package check).
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
 1. Ticket 77 goes to revision04 with the relaxed rules of the 2026-11-26 decision:
