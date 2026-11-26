@@ -16,7 +16,7 @@ One row per change that altered what the plugin does. Working history lives in G
 | 2026-11-26 | A read-only lookup goes to the leaf document and does not load the workflow (ticket 79) | `REQ-20261103-043` | `modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md` |
 | 2026-11-26 | A read-only lookup goes through the 流程索引, and the index gains rows for the two P0 sections, the start order and the target project's sources (ticket 80) | `REQ-20261103-043`, owner decision 2026-11-26 "A" | `modules/tickets/workflow-governance/80-lookup-through-the-index.md` |
 | 2026-11-26 | The skill stops when the old plugin johnny-ai-skill is still installed; the README explains the host's decline record; a version is never published twice; the first 流程索引 row is narrowed to the lookup's own rules, with a table-order tie-break (ticket 81) | `REQ-20261103-043`, owner decisions 2026-11-26 | `modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md` |
-| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file and sends a read-only lookup to the 流程索引 first (ticket 82) | `REQ-20261103-043`, owner decision 2026-11-26 "A" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |
+| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill (ticket 82) | `REQ-20261103-043`, owner decisions 2026-11-26 "A" and "放進 hook" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |
 | 2026-11-26 | The licence is Apache License 2.0, and the author is Johnny Liu | owner decision 2026-11-18 "2A" | `LICENSE`, `NOTICE` |
 | 2026-11-26 | The plugin is renamed from `johnny-ai-skill` to `software-factory` (Software Factory), version 0.5.0; the marketplace moves into the public publication repository; the README is rewritten | owner decision 2026-11-20 | `modules/tickets/workflow-governance/71-publication-0-5.md` |
 
@@ -37,7 +37,7 @@ Version 0.5.0 is the first release as Software Factory. This section is for read
 - The seven router-era SPECs are in `doc/archive/specs/2026/` as `ARCH-SPEC-20261118-001` to `007`, and nine ADRs are `SUPERSEDED`.
 - To learn how the workflow runs now, read `AGENTS.md`, `Workflow.md`, `CodeReview.md` and `modules/spec/workflow-governance.md`.
 - A question about a rule is answered through the 流程索引 of `AGENTS.md`: its row links the one section to read, and a keyword search is not a way to find a rule.
-- Each session receives, from the plugin's SessionStart hook, the path of its rules file and the instruction to start a lookup at the 流程索引.
+- Each session receives, from the plugin's SessionStart hook, the path of its rules file, the instruction to start a lookup at the 流程索引, and the instruction to stop when the old plugin johnny-ai-skill is also listed.
 
 ### The move from `johnny-ai-skill` to `software-factory`
 

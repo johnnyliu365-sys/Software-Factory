@@ -162,7 +162,7 @@ uninstall 移除什麼、留下什麼：
 
 規則的來源是 AGENTS.md、Workflow.md、CodeReview.md 與 modules/spec/workflow-governance.md。
 
-每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡，以及查本插件規則的唯讀查詢要先查流程索引；在 Claude Code 裡輸入 /hooks 可以看到它。
+每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡、查本插件規則的唯讀查詢要先查流程索引，以及舊版 johnny-ai-skill 還裝著時要先停下來；在 Claude Code 終端機裡輸入 /hooks 可以看到它。
 
 ## 9. 路線
 

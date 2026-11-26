@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. To answer a read-only question about one of those rules, read that file: its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index gives the one row and the one section to read. Do not locate a rule with grep, a full-text search or by browsing files.\""
+            "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. To answer a read-only question about one of those rules, read that file: its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index gives the one row and the one section to read. Do not locate a rule with grep, a full-text search or by browsing files. If this session also lists a skill whose name begins with johnny-ai-skill: or whose file lies in a folder named johnny-ai-skill, then before anything else tell the user that the old 0.4.x plugin is still installed and conflicts with this version, give the removal commands in section 5 of ${CLAUDE_PLUGIN_ROOT}/README.md, ask the user to open a new session after removing it, and do nothing else in this session.\""
           }
         ]
       }

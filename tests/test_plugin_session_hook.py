@@ -9,11 +9,13 @@ The hook is one file, `hooks/hooks.json`, whose command only prints text. This m
 - the payload declaration, which lists `hooks/hooks.json` and carries no `hooks` tree, and the publication tree
   step, which writes the same bytes;
 - the README sentence, the last paragraph of section `## 8. 它怎麼運作`;
+- the old-plugin guard of the command: its two match conditions stand once in the command and once in the line
+  of `SKILL.md` that begins `1. Before anything else`;
 - the command itself, run in each shell it must work in, with `${CLAUDE_PLUGIN_ROOT}` replaced by a temporary
   directory.
 
 The file checks are one function over a root directory (`hook_defects`), so each injection case below runs it on a
-temporary copy of the four files with one text damaged and must go red; the unmodified copy must stay green. A
+temporary copy of the five files with one text damaged and must go red; the unmodified copy must stay green. A
 missing or unparsable file is a named defect and never a traceback. The pinned commit is not checked here: K1 does it.
 
 Shells: on Windows the bash case runs the file named by `CLAUDE_CODE_GIT_BASH_PATH`, or
@@ -43,6 +45,7 @@ HOOKS = "hooks/hooks.json"
 AGENTS = "AGENTS.md"
 README = "README.md"
 MANIFEST = ".claude-plugin/plugin.json"
+SKILL = "skills/johnny-project-takeover/SKILL.md"
 
 PLACEHOLDER = "${CLAUDE_PLUGIN_ROOT}"
 COMMAND = (
@@ -50,7 +53,13 @@ COMMAND = (
     "To answer a read-only question about one of those rules, read that file: "
     "its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index "
     "gives the one row and the one section to read. "
-    'Do not locate a rule with grep, a full-text search or by browsing files."'
+    "Do not locate a rule with grep, a full-text search or by browsing files. "
+    "If this session also lists a skill whose name begins with johnny-ai-skill: "
+    "or whose file lies in a folder named johnny-ai-skill, "
+    "then before anything else tell the user that the old 0.4.x plugin is still installed "
+    "and conflicts with this version, give the removal commands in section 5 of "
+    '${CLAUDE_PLUGIN_ROOT}/README.md, ask the user to open a new session after removing it, '
+    'and do nothing else in this session."'
 )
 EXPECTED_HOOKS: dict[str, object] = {
     "hooks": {
@@ -71,7 +80,13 @@ EXPECTED_TEXT = (
     "To answer a read-only question about one of those rules, read that file: "
     "its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index "
     "gives the one row and the one section to read. "
-    "Do not locate a rule with grep, a full-text search or by browsing files."
+    "Do not locate a rule with grep, a full-text search or by browsing files. "
+    "If this session also lists a skill whose name begins with johnny-ai-skill: "
+    "or whose file lies in a folder named johnny-ai-skill, "
+    "then before anything else tell the user that the old 0.4.x plugin is still installed "
+    "and conflicts with this version, give the removal commands in section 5 of "
+    "{root}/README.md, ask the user to open a new session after removing it, "
+    "and do nothing else in this session."
 )
 
 LOOKUP_ANCHOR_NAME = "read-only-lookup"
@@ -80,11 +95,19 @@ INDEX_HEADING = "## 流程索引"
 
 README_HEADING = "## 8. 它怎麼運作"
 README_SENTENCE = (
-    "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡，"
-    "以及查本插件規則的唯讀查詢要先查流程索引；在 Claude Code 裡輸入 /hooks 可以看到它。"
+    "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡、"
+    "查本插件規則的唯讀查詢要先查流程索引，以及舊版 johnny-ai-skill 還裝著時要先停下來；"
+    "在 Claude Code 終端機裡輸入 /hooks 可以看到它。"
 )
 
-FILES = (HOOKS, AGENTS, README, MANIFEST)
+# The two match conditions of the old-plugin guard: the command and `SKILL.md` step 1 carry them word for word.
+GUARD_CONDITIONS = (
+    "name begins with johnny-ai-skill:",
+    "file lies in a folder named johnny-ai-skill",
+)
+SKILL_STEP_START = "1. Before anything else"
+
+FILES = (HOOKS, AGENTS, README, MANIFEST, SKILL)
 
 
 def expected_file_text() -> str:
@@ -140,6 +163,32 @@ def _first_command(parsed: object) -> str | None:
         return None
     command = inner[0].get("command")
     return command if isinstance(command, str) else None
+
+
+def check_guard(root: Path, defects: list[str]) -> None:
+    """Each match condition of the old-plugin guard stands exactly once in the command and exactly once in the
+    line of `SKILL.md` that begins `1. Before anything else`."""
+    hook_text = read_text(root, HOOKS, [])
+    command: str | None = None
+    if hook_text is not None:
+        try:
+            command = _first_command(json.loads(hook_text))
+        except ValueError:
+            command = None
+    if command is None:
+        defects.append(f"{HOOKS}: holds no command to compare with the guard of {SKILL}")
+    skill_text = read_text(root, SKILL, defects)
+    if skill_text is None:
+        return
+    steps = [line for line in skill_text.split("\n") if line.startswith(SKILL_STEP_START)]
+    if len(steps) != 1:
+        defects.append(f"{SKILL}: exactly one line must begin {SKILL_STEP_START!r}")
+        return
+    for condition in GUARD_CONDITIONS:
+        if steps[0].count(condition) != 1:
+            defects.append(f"{SKILL}: step 1 must hold {condition!r} exactly once")
+        if command is not None and command.count(condition) != 1:
+            defects.append(f"{HOOKS}: the command must hold {condition!r} exactly once")
 
 
 def check_anchors(root: Path, defects: list[str]) -> None:
@@ -205,6 +254,7 @@ def hook_defects(root: Path) -> list[str]:
     """Every defect of the hook, its two anchors, the payload declaration and the README sentence under `root`."""
     defects: list[str] = []
     check_hook_file(root, defects)
+    check_guard(root, defects)
     check_anchors(root, defects)
     check_payload(root, defects)
     check_readme(root, defects)
@@ -251,6 +301,23 @@ class RepositoryHookTests(unittest.TestCase):
         self.assertIsNotNone(command)
         assert command is not None
         self.assertTrue(command.isascii())
+
+    def test_the_guard_conditions_match_the_skill_step_word_for_word(self) -> None:
+        defects: list[str] = []
+        check_guard(REPO, defects)
+        self.assertEqual(defects, [])
+        step = [
+            line
+            for line in (REPO / SKILL).read_text(encoding="utf-8").splitlines()
+            if line.startswith(SKILL_STEP_START)
+        ]
+        self.assertEqual(len(step), 1)
+        command = _first_command(json.loads((REPO / HOOKS).read_text(encoding="utf-8")))
+        assert command is not None
+        for condition in GUARD_CONDITIONS:
+            with self.subTest(condition=condition):
+                self.assertEqual(command.count(condition), 1)
+                self.assertEqual(step[0].count(condition), 1)
 
     def test_each_anchor_it_names_stands_once_in_the_rules_file(self) -> None:
         defects: list[str] = []
@@ -359,6 +426,43 @@ class InjectionTests(unittest.TestCase):
 
     def test_a_matcher_added_is_red(self) -> None:
         self.assert_red(HOOKS, lambda t: t.replace('      {\n        "hooks"', '      {\n        "matcher": "startup",\n        "hooks"'), "does not equal the hook")
+
+    def test_the_old_plugin_sentence_removed_from_the_command_is_red(self) -> None:
+        sentence = (
+            " If this session also lists a skill whose name begins with johnny-ai-skill: or whose file lies in a "
+            "folder named johnny-ai-skill, then before anything else tell the user that the old 0.4.x plugin is "
+            "still installed and conflicts with this version, give the removal commands in section 5 of "
+            "${CLAUDE_PLUGIN_ROOT}/README.md, ask the user to open a new session after removing it, and do "
+            "nothing else in this session."
+        )
+        defects = self.damaged(HOOKS, lambda t: t.replace(sentence, ""))
+        self.assertTrue(any("does not equal the hook" in d for d in defects), defects)
+        self.assertTrue(any("must hold 'name begins with johnny-ai-skill:' exactly once" in d for d in defects), defects)
+
+    def test_a_guard_condition_changed_in_the_command_is_red(self) -> None:
+        self.assert_red(
+            HOOKS,
+            lambda t: t.replace("name begins with johnny-ai-skill:", "name begins with johnny-ai-skill-"),
+            "the command must hold 'name begins with johnny-ai-skill:' exactly once",
+        )
+
+    def test_the_second_guard_condition_changed_in_the_command_is_red(self) -> None:
+        self.assert_red(
+            HOOKS,
+            lambda t: t.replace("file lies in a folder named johnny-ai-skill", "file lies in a folder named johnny-ai"),
+            "the command must hold 'file lies in a folder named johnny-ai-skill' exactly once",
+        )
+
+    def test_a_guard_condition_changed_in_the_skill_step_is_red(self) -> None:
+        self.assert_red(
+            SKILL,
+            lambda t: t.replace("its name begins with johnny-ai-skill:", "its name starts with johnny-ai-skill:"),
+            "step 1 must hold 'name begins with johnny-ai-skill:' exactly once",
+        )
+
+    def test_a_missing_skill_file_is_a_named_defect(self) -> None:
+        (self.root / SKILL).unlink()
+        self.assertTrue(any(SKILL in d and "cannot be read" in d for d in hook_defects(self.root)))
 
     def test_the_command_text_changed_by_one_word_is_red(self) -> None:
         self.assert_red(HOOKS, lambda t: t.replace("Do not locate", "Do not find"), "does not equal the hook")
