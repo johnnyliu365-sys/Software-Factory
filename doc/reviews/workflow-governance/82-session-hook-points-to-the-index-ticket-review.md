@@ -65,6 +65,25 @@ The seat confirmed that both insertion points are exact and unique, and that eve
 | S82R-24 | minor | The owner-test bullet still treated Codex hook support as open | Reworded on the recorded evidence |
 | S82R-25 | low | The changelog citation was incomplete, and the "gains" wording could duplicate the row | Cites "併進票 82"; "not added again" |
 
+## Revision07 delta (commit `e6a9eda9`), same seat, resumed
+
+**verdict: CHANGES_REQUESTED**
+
+Revision07 rewrites item 4b after the owner found that the Codex desktop app does not ask to trust a changed hook (owner decision "A"). The seat confirmed:
+- the state row keeps the JAS-82-3 digest until the new dispatch, as revisions 03 to 06 did;
+- the new paragraph holds no forbidden character;
+- the new cache prefix tells the build apart from `3ab86d43`, and is unique in the README;
+- the only pins of the revision05 text are in `tests/test_plugin_session_hook.py`, and the changelog row and TDD 2 list stay true.
+
+Admitting the change as revision07 of ticket 82 is acceptable once the owner override is recorded; a new ticket is not needed.
+
+| id | severity | finding | revision08 |
+| --- | --- | --- | --- |
+| S82R-26 | major | Reopening after `INTEGRATED` is not a listed transition, and the owner override was not recorded | The Owner override record names the rules and the owner's choice "開票 82 第 7 版"; revision07 is a new closure revision |
+| S82R-27 | major | The rollback line still restored `6d04fa6d` | The rollback restores `3ab86d43` |
+| S82R-28 | minor | "Added exactly" against a branch that already holds the paragraph; the changed files were not named | The Revision07 paragraph names the in-place replacements, the repins and what does not change |
+| S82R-29 | minor | "任一專案資料夾", "不會執行" and "不會詢問" claimed more than the evidence; no instruction to leave | The reviewer's wording |
+
 ## Seat token use
 
 | seat | model | effort | input | cache write | cache read | output |
