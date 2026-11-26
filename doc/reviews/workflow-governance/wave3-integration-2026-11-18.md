@@ -216,3 +216,20 @@ The integration clone `C:/Temp/claude/jas-integ-71` was made from `4ddea536`.
 | Local test marketplace | `C:/Temp/claude/sf-050-local/`, its plugin tree equal to the extracted publication commit |
 | USAGE | `.worktrees/71-publication-out/RETURN.md` (sha256 `2c7f81fbba33346a606a8dd8442d76829aa0531c4bdbe21d4636acdca8a5a5c7`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=11 defects=0`); `usage_report.py` with the repository's expectation gives both seats `WITHIN`, exit 0 |
 | Rework report over the wave-3 code-review records | `TOTAL tickets=13 rounds=25 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=3 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=9`, exit 0 |
+
+## Ticket 80 (2026-11-26)
+
+| Ticket | Approved candidate | Approval | Integration commit |
+| --- | --- | --- | --- |
+| 80 a read-only lookup goes through the 流程索引 | `7ec1f539` | revision02 initial review `APPROVED` (S80-01 and S80-02 moved into ticket 81 by owner decision; S80-03 and S80-04 handled) | `72d035b6`, merged forward at `31f15b7c` |
+
+The integration clone `C:/Temp/claude/jas-integ-80` was made from `4fe5a8ef`.
+
+| Check | Result |
+| --- | --- |
+| Full suite under the host lock | 5 failed, 3442 passed, 22 skipped. Every failure is a base name, so zero new red |
+| Merged forward | Three record-only commits (`12dc603c`, `57cd380d`, `cf504055`: ticket 81 text and its review record, REQ-043 and the ticket index) landed on `cp/wave3` during the run. They were merged into the integration as `31f15b7c`; CI covers that merge |
+| CI readback | run 45753850263 on `31f15b7c`: `test (linux)` and `test (windows)` both `success` |
+| Publication commit | `193777a7a8503d869c521425befc0d41ab323c28`, named by the local ref `refs/heads/publication-0.5.0` since 2026-11-26T02:42:39Z; not pushed |
+| USAGE | `.worktrees/80-index-out/RETURN.md` (sha256 `bea46f0d25a437070c7884d3ea53f7822b2d662dfd21a068d03b6ff28fcc693b`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=10 defects=0`); `usage_report.py` gives both seats `WITHIN` |
+| Rework report over the wave-3 code-review records | `TOTAL tickets=14 rounds=26 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=3 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=9`, exit 0 |
