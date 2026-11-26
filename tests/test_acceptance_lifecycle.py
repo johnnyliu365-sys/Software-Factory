@@ -184,7 +184,11 @@ if args[0:2] == ["plugin", "list"]:
     rows = state["installed"]
     on = mode != "disabled"
     if host == "claude":
-        print(json.dumps([{"id": key, "version": value["version"], "scope": "user", "enabled": on} for key, value in rows.items()]))
+        listed = [{"id": key, "version": value["version"], "scope": "user", "enabled": on} for key, value in rows.items()]
+        if mode == "flagless":
+            for row in listed:
+                del row["enabled"]
+        print(json.dumps(listed))
     else:
         market = args[args.index("--marketplace") + 1]
         listed = [
@@ -192,6 +196,9 @@ if args[0:2] == ["plugin", "list"]:
              "version": value["version"], "installed": True, "enabled": on}
             for key, value in rows.items() if key.endswith("@" + market)
         ]
+        if mode == "flagless":
+            for row in listed:
+                del row["enabled"]
         print(json.dumps({"installed": listed, "available": []}))
     sys.exit(0)
 if args[0:2] == ["plugin", "update"]:
@@ -637,6 +644,13 @@ class NormalBehaviourTests(LifecycleCase):
         self.assertEqual(code, 1)
         self.assertEqual(report[-1]["verdict"], "FAIL")
         self.assertIn("refused", json.dumps(report[-1]["evidence"]))
+
+    def test_an_entry_that_does_not_say_it_is_enabled_is_not_enabled(self) -> None:
+        code, report, _ = self.run_script("build,fresh", mode="flagless")
+        self.assertEqual(code, 1)
+        self.assertEqual(self.verdicts(report)["fresh/claude"], "FAIL")
+        self.assertEqual(self.verdicts(report)["fresh/codex"], "FAIL")
+        self.assertIn("enabled=None", json.dumps(report[-1]["evidence"]))
 
     def test_a_disabled_entry_is_not_installed_and_enabled(self) -> None:
         code, report, _ = self.run_script("build,fresh", mode="disabled")
