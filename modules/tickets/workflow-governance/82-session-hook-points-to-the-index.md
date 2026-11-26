@@ -8,13 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision06 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
+| Agent Context binding | ticket revision07 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
 | 實作語言 | JSON and Markdown; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `INTEGRATED`; dispatch=sha256:d0eea2ecafbc56ff696cdbf5f1dc8787ade9bf2705022c7be704fafd44507d70 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-3.yaml`)（candidate `4be37a7a`; initial review of closure revision06 `APPROVED`） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:d0eea2ecafbc56ff696cdbf5f1dc8787ade9bf2705022c7be704fafd44507d70 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-3.yaml`)（revision07; strict tier; revisions 02 to 06 as the revision paragraphs and the review records say; revision06 APPROVED `4be37a7a` and integrated at `f0ba4995`; revision07 rewrites item 4b by owner decision 2026-11-26 "A" (REQ-043 row "Owner finding and decision 2026-11-26 (the Codex desktop app does not ask to trust a changed hook, "A")")） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
@@ -52,6 +52,8 @@ Process tier: strict.
 **The problem.** The decision is quoted in `REQ-20261103-043`, row "Owner finding and decision 2026-11-26 (the written lookup rule is not followed; the plugin ships a hook, "A")". In the owner's retest of the final candidate (`6d04fa6d`), a read-only lookup still located the rule by keyword search. The agent does not know where the installed plugin's `AGENTS.md` is, so it searches for the rule that forbids searching. Only a mechanism fixes that: the host must put the location and the first step in front of every session.
 
 **Revision03.** The owner retested `838bb354`. The hook ran, and both lookups went through the 流程索引 with no search. With `johnny-ai-skill` also installed, a plain question did not trigger ticket 81's guard, which sits in `SKILL.md`, and the owner said "舊版裝了／他沒有叫我刪". The owner decided "放進 hook" (REQ-043 row "Owner finding and decision 2026-11-26 (the old-plugin guard also goes into the hook, "放進 hook")"). The hook text gains the guard sentence, and the `SKILL.md` guard stays as a second line. Because `/hooks` does not exist in the desktop app, the README sentence names the terminal. Revision03 is carried by additive commits on the same branch; OLD for its rebuild is `838bb3540960f1cbb3a086c411136766235277d5`, the id revision02 recorded in G1. On the branch, revision03 replaces in place the revision02 command in `hooks/hooks.json` and in the tests, the README section 8 sentence, the changelog row of item 7 and its `What to read instead` bullet; none of them is added a second time. The seat reads this revision from the `cp/wave3` commit named in the correction dispatch (`git show <commit>:modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md`); the copy in its worktree stays at revision02 and is not edited.
+
+**Revision07.** Revision06 was integrated at `f0ba4995` with the publication commit `3ab86d43`. In the owner's retest, a Codex desktop session ran no hook and located the rule by search. With Codex 0.166.0 and 0.172.0, `codex exec` printed `hook: SessionStart Failed` while the trust record still named the earlier hook; the hook command itself exits 0 under cmd and Windows PowerShell. The owner then ran the terminal `codex` once in a project folder, was asked to trust the changed hook and trusted it; afterwards `codex exec` printed `hook: SessionStart Completed`, and the session named the rules file and the no-search instruction without running anything. The desktop app had not asked. The owner decided "A" (REQ-043 row "Owner finding and decision 2026-11-26 (the Codex desktop app does not ask to trust a changed hook, "A")"): README section 4's trust paragraph (item 4b) is rewritten to send the user to the terminal once after each install or update. Nothing else in the payload changes. OLD for the rebuild is `3ab86d439f236880db92648ab28724a626dc360b`, the id revision06 recorded in G1.
 
 **Scope against the decision.** Option A said each session receives the 流程索引, the read-only-lookup paragraph and the installed plugin path (about 2 to 3 KB). This ticket injects only the path and the first step (about 0.4 KB; with the old-plugin sentence of revision03, 777 printed characters), in ASCII. When Git Bash is missing, the command runs in Windows PowerShell 5.1, which does not print UTF-8 text reliably, and a second copy of the index would drift from `AGENTS.md`. The session reads the paragraph and the index from the file. Codex is tested in the owner-assisted test, not before this ticket. The owner accepted this ("接受", row "Owner decision 2026-11-26 (ticket 82 scope, "接受")" of `REQ-20261103-043`).
 
@@ -92,9 +94,9 @@ After this ticket:
    "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡、查本插件規則的唯讀查詢要先查流程索引，以及舊版 johnny-ai-skill 還裝著時要先停下來；在 Claude Code 終端機裡輸入 /hooks 可以看到它。"
 
    It holds no inline code, no path and no link.
-4b. **README section 4 (安裝：Codex), revision05.** Directly after the fenced block `codex plugin list --marketplace software-factory --json` and before the line that begins `5. 要移除時`, with one blank line on each side, this paragraph is added exactly:
+4b. **README section 4 (安裝：Codex), revision05, rewritten in revision07.** Directly after the fenced block `codex plugin list --marketplace software-factory --json` and before the line that begins `5. 要移除時`, with one blank line on each side, this paragraph is added exactly:
 
-   "安裝或更新 Software Factory 之後開 Codex 時，如果它詢問是否信任 Software Factory 的 hook，請選信任。沒有信任的話，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。"
+   "安裝或更新 Software Factory 之後，請先在終端機裡進到任一專案資料夾執行一次 codex；它詢問是否信任 Software Factory 的 hook 時請選信任，之後就可以照常使用 Codex 桌面 app。桌面 app 不會詢問：hook 有變動而還沒在終端機裡重新信任時，Codex 不會執行這個 hook，開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。"
 
    It holds no inline code, no path and no link, and the numbered steps do not change. The new test file checks that section 4 holds it exactly once at that place, and TDD 2 gains the case "the Codex trust paragraph removed". Item 7's row already holds "; README section 4 tells a Codex user to trust the hook"; it is not added again.
 
@@ -126,7 +128,7 @@ After this ticket:
    - `--verify-only` is run;
    - the extracted package holds `hooks/hooks.json` and the anchor;
    - the local marketplace's plugin tree is rebuilt;
-   - the STATEMENT gives the owner's refresh commands. The cache check looks, in each host's `0.5.0` cache folder, for `README.md` holding a line that begins `上面的 uninstall 指令針對裝在 user 範圍的舊版`. A cache without that line holds an earlier build (`9cda3f9e` already ships the hook with the old-plugin sentence), so that host was not refreshed; the owner removes that host's `0.5.0` cache folder and installs again.
+   - the STATEMENT gives the owner's refresh commands. The cache check looks, in each host's `0.5.0` cache folder, for `README.md` holding a line that begins `安裝或更新 Software Factory 之後，請先在終端機裡`. A cache without that line holds an earlier build (`3ab86d43` already ships the scope paragraph and the revision05 trust paragraph), so that host was not refreshed; the owner removes that host's `0.5.0` cache folder and installs again.
    - If this ticket is closed without integration, the control plane runs `git update-ref refs/heads/publication-0.5.0 6d04fa6d0cf0c1e7134a312894adc219f44bf4a9 <the id on the ref>`.
 7. **`doc/HARNESS-CHANGELOG.md`.**
    - Directly below the ticket 81 row, replacing the revision02 row of ticket 82: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill; README section 4 tells a Codex user to trust the hook; README section 5 names the other install scopes (ticket 82) | `REQ-20261103-043`, owner decisions 2026-11-26 "A", "放進 hook" and "併進票 82" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
@@ -137,7 +139,7 @@ After this ticket:
 2. **The owner-assisted test** records:
    - whether the hook's text reaches a desktop session, and whether `/hooks` in the Claude Code terminal lists the hook;
    - the same P0 and PRD questions, with the files the session read. The expected route is the 流程索引, then the one linked section, with no search;
-   - whether Codex, once the hook is trusted as README section 4 says, prints the hook text with its installed plugin directory as the path (REQ-043 row "Owner finding 2026-11-26 (Codex asks to trust the plugin hook)" records that it ran on `838bb354`), and whether the two-versions case stops in Codex too;
+   - whether Codex, once the hook is trusted from the terminal as README section 4 says, prints the hook text with its installed plugin directory as the path (REQ-043 row "Owner finding 2026-11-26 (Codex asks to trust the plugin hook)" records that it ran on `838bb354`), whether a later session in the Codex desktop app then receives it, and whether the two-versions case stops in Codex too;
    - the two-versions case of ticket 81, asked as a plain question without invoking the skill: the expected answer is the stop, the removal commands from README section 5, and nothing else.
 3. Ticket 77's cloud trigger passes `expected_publication` equal to this ticket's publication commit.
 4. Repin the `agents` row of `doc/handoffs/2026/workflow-governance/control-plane-worklog.md` and run `index_pins.py --check`.
