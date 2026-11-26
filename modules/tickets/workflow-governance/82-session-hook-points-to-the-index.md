@@ -14,7 +14,7 @@
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:669a489d88e262c6ea1d0615943d18789335d2f5a4152fbed65f686a38aa935f (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-1.yaml`)（revision04; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks; revision04 applies the exact fixes of the revision03 delta review (S82R-12 to S82R-18)） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:5c60d9a305ab3f107cee8abd93e15e33ed93a9cf9c608c8d8cb118abbd5b3208 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-2.yaml`)（revision04; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks; revision04 applies the exact fixes of the revision03 delta review (S82R-12 to S82R-18)） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
