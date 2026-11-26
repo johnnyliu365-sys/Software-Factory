@@ -76,6 +76,8 @@ codex plugin add software-factory@software-factory --json
 codex plugin list --marketplace software-factory --json
 ```
 
+安裝或更新 Software Factory 之後開 Codex 時，如果它詢問是否信任 Software Factory 的 hook，請選信任。沒有信任的話，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。
+
 5. 要移除時，先移除 plugin，再移除 marketplace：
 
 ```bash
@@ -101,6 +103,8 @@ claude plugin uninstall johnny-ai-skill@johnny-ai-skill --scope user
 ```bash
 claude plugin marketplace remove johnny-ai-skill
 ```
+
+上面的 uninstall 指令針對裝在 user 範圍的舊版（0.4.x 的 README 就是這樣教的）。如果當初裝在 project 或 local 範圍，請到那個專案的資料夾裡執行上面兩個指令，並把 uninstall 的 --scope user 換成 --scope project 或 --scope local。
 
 Codex：
 

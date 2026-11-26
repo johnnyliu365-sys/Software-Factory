@@ -107,6 +107,21 @@ GUARD_CONDITIONS = (
 )
 SKILL_STEP_START = "1. Before anything else"
 
+# Revision05 and revision06, items 4b and 4c: one paragraph in README section 4 and one in section 5, each at a
+# fixed place (the three lines before it and the two lines after it are pinned), without code, path or link.
+README_SECTION_4 = "## 4. 安裝：Codex"
+README_SECTION_5 = "## 5. 從舊版 johnny-ai-skill 換過來"
+CODEX_TRUST_PARAGRAPH = (
+    "安裝或更新 Software Factory 之後開 Codex 時，如果它詢問是否信任 Software Factory 的 hook，請選信任。"
+    "沒有信任的話，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。"
+)
+SCOPE_PARAGRAPH = (
+    "上面的 uninstall 指令針對裝在 user 範圍的舊版（0.4.x 的 README 就是這樣教的）。"
+    "如果當初裝在 project 或 local 範圍，請到那個專案的資料夾裡執行上面兩個指令，"
+    "並把 uninstall 的 --scope user 換成 --scope project 或 --scope local。"
+)
+FORBIDDEN_IN_PARAGRAPH = ("`", "](", "/", "\\")
+
 FILES = (HOOKS, AGENTS, README, MANIFEST, SKILL)
 
 
@@ -250,14 +265,75 @@ def check_readme(root: Path, defects: list[str]) -> None:
         defects.append(f"{README}: the sentence must be its own paragraph and the last one of {README_HEADING!r}")
 
 
+def _section(lines: list[str], heading: str) -> tuple[int, int] | None:
+    """The line range (start, end) of the section under `heading`, up to the next `## ` heading."""
+    if lines.count(heading) != 1:
+        return None
+    start = lines.index(heading) + 1
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("## ")), len(lines))
+    return start, end
+
+
+def _check_placed_paragraph(
+    lines: list[str],
+    heading: str,
+    paragraph: str,
+    before: tuple[str, str, str],
+    after_start: str,
+    defects: list[str],
+) -> None:
+    """The paragraph stands exactly once in the section, directly after `before` (a command line, a closing fence
+    and a blank line) and directly before a blank line and a line that begins `after_start`."""
+    found = _section(lines, heading)
+    if found is None:
+        defects.append(f"{README}: the heading {heading!r} must appear exactly once")
+        return
+    start, end = found
+    if any(ch in paragraph for ch in FORBIDDEN_IN_PARAGRAPH):
+        defects.append(f"{README}: the paragraph of {heading!r} must hold no code, path or link character")
+    at = [i for i in range(start, end) if lines[i] == paragraph]
+    if len(at) != 1 or lines.count(paragraph) != 1:
+        defects.append(f"{README}: section {heading!r} must hold its paragraph exactly once")
+        return
+    i = at[0]
+    if tuple(lines[i - 3 : i]) != before:
+        defects.append(f"{README}: the three lines before the paragraph of {heading!r} are not {before!r}")
+    if len(lines) < i + 3 or lines[i + 1] != "" or not lines[i + 2].startswith(after_start):
+        defects.append(f"{README}: the paragraph of {heading!r} must be followed by a blank line and {after_start!r}")
+
+
+def check_readme_paragraphs(root: Path, defects: list[str]) -> None:
+    text = read_text(root, README, defects)
+    if text is None:
+        return
+    lines = text.split("\n")
+    _check_placed_paragraph(
+        lines,
+        README_SECTION_4,
+        CODEX_TRUST_PARAGRAPH,
+        ("codex plugin list --marketplace software-factory --json", "```", ""),
+        "5. 要移除時",
+        defects,
+    )
+    _check_placed_paragraph(
+        lines,
+        README_SECTION_5,
+        SCOPE_PARAGRAPH,
+        ("claude plugin marketplace remove johnny-ai-skill", "```", ""),
+        "Codex：",
+        defects,
+    )
+
+
 def hook_defects(root: Path) -> list[str]:
-    """Every defect of the hook, its two anchors, the payload declaration and the README sentence under `root`."""
+    """Every defect of the hook, its two anchors, the payload declaration and the README texts under `root`."""
     defects: list[str] = []
     check_hook_file(root, defects)
     check_guard(root, defects)
     check_anchors(root, defects)
     check_payload(root, defects)
     check_readme(root, defects)
+    check_readme_paragraphs(root, defects)
     return defects
 
 
@@ -338,6 +414,17 @@ class RepositoryHookTests(unittest.TestCase):
             written = destination / HOOKS
             self.assertTrue(written.is_file(), f"{HOOKS} is not in the publication tree")
             self.assertEqual(written.read_bytes(), (REPO / HOOKS).read_bytes())
+
+    def test_the_codex_trust_and_scope_paragraphs_stand_at_their_places(self) -> None:
+        defects: list[str] = []
+        check_readme_paragraphs(REPO, defects)
+        self.assertEqual(defects, [])
+
+    def test_neither_new_paragraph_holds_code_a_path_or_a_link(self) -> None:
+        for paragraph in (CODEX_TRUST_PARAGRAPH, SCOPE_PARAGRAPH):
+            for character in FORBIDDEN_IN_PARAGRAPH:
+                with self.subTest(paragraph=paragraph[:12], character=character):
+                    self.assertNotIn(character, paragraph)
 
     def test_the_readme_sentence_is_the_last_paragraph_of_section_8(self) -> None:
         defects: list[str] = []
@@ -492,6 +579,28 @@ class InjectionTests(unittest.TestCase):
     def test_the_lookup_anchor_removed_is_red(self) -> None:
         anchor = f'<a id="{LOOKUP_ANCHOR_NAME}"></a>'
         self.assert_red(AGENTS, lambda t: t.replace(anchor + "\n\n", ""), f"the anchor {anchor}")
+
+    def test_the_codex_trust_paragraph_removed_is_red(self) -> None:
+        self.assert_red(README, lambda t: t.replace(CODEX_TRUST_PARAGRAPH + "\n\n", ""), "must hold its paragraph exactly once")
+
+    def test_the_scope_paragraph_removed_is_red(self) -> None:
+        self.assert_red(README, lambda t: t.replace(SCOPE_PARAGRAPH + "\n\n", ""), "must hold its paragraph exactly once")
+
+    def test_the_codex_trust_paragraph_moved_is_red(self) -> None:
+        self.assert_red(
+            README,
+            lambda t: t.replace(CODEX_TRUST_PARAGRAPH + "\n\n5. 要移除時", "5. 要移除時").replace(
+                "\n\n## 5. 從舊版", "\n\n" + CODEX_TRUST_PARAGRAPH + "\n\n## 5. 從舊版"
+            ),
+            "the three lines before the paragraph",
+        )
+
+    def test_the_scope_paragraph_with_a_path_character_is_red(self) -> None:
+        self.assert_red(
+            README,
+            lambda t: t.replace("project 或 local 範圍", "project/local 範圍"),
+            "must hold its paragraph exactly once",
+        )
 
     def test_the_readme_sentence_removed_is_red(self) -> None:
         self.assert_red(README, lambda t: t.replace(README_SENTENCE + "\n\n", ""), "must appear exactly once")
