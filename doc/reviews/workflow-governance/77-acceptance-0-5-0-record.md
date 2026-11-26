@@ -37,7 +37,7 @@ The run exits 0 with every verdict `PASS`:
 | recover | codex | PASS |
 | level2 | none | PASS |
 
-The lines come from a run at commit `85e0e4ea`. The candidate of the receipt has the same `lifecycle.py` and adds this record. The receipt's cells L1 and L2 are the same two runs repeated at the candidate.
+The lines come from a run at commit `85e0e4ea`. The candidate of the receipt has the same `lifecycle.py`; it differs by this record and by test changes only. The receipt's cells L1 and L2 are the same two runs repeated at the candidate, with the same verdicts.
 
 The Codex half of `upgrade` (owner decision of 2026-11-26, "A"): Codex honours the forty-zero `sha` of the public 0.4.14 marketplace and refuses it (`git checkout 0000…0000 failed`, found by revision02's run). The step now writes `<step>/marketplace-0414/.claude-plugin/marketplace.json` byte for byte from `git show 01b810f096b1201005d26922e2c8a474bdd5a0a0:.claude-plugin/marketplace.json`, adds that directory with `codex plugin marketplace add`, installs `johnny-ai-skill@johnny-ai-skill`, and reads `git rev-parse HEAD` in the installed directory: `0b3afd3645946f97662c336f0e6ac0dcae502e69`. The list shows `0.4.14` installed and enabled. After the removal and the local install, the list shows only `software-factory` `0.5.0` and the marketplace list has no `johnny-ai-skill`. For Claude Code the step reads the public marketplace at `01b810f0` and finds the same commit in `installed_plugins.json`.
 
