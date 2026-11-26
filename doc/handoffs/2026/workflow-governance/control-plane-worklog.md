@@ -30,6 +30,10 @@ Run it from the repository root.
 | t77record | record | open | git:4b6c187f4147e6130cb8eea182a9d8a829ce5b19 | sha256:bccb55324ef85e5877ed4ecd9d75feaf36d7cb619d950fa071894135b9c9f6df | doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md |
 | t80 | ticket | open | git:2a34bce4d267c8655f23e440f0486297ffbb1beb | sha256:fa2668353870a941eb69862250a5acdbaf934a4a2c945510d9fa8dbbc1c86e3b | modules/tickets/workflow-governance/80-lookup-through-the-index.md |
 | t81 | ticket | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:a372e81107b6e95cca035c50cb0861d3f835652ae1b4aa925dc60bd620d2f01a | modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md |
+| t82 | ticket | open | git:0000000000000000000000000000000000000000 | sha256:0000000000000000000000000000000000000000000000000000000000000000 | modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md |
+| t82ticketreview | review | open | git:0000000000000000000000000000000000000000 | sha256:0000000000000000000000000000000000000000000000000000000000000000 | doc/reviews/workflow-governance/82-session-hook-points-to-the-index-ticket-review.md |
+| t82review | review | open | git:0000000000000000000000000000000000000000 | sha256:0000000000000000000000000000000000000000000000000000000000000000 | doc/reviews/workflow-governance/82-session-hook-points-to-the-index-code-review.md |
+| integration3 | record | open | git:0000000000000000000000000000000000000000 | sha256:0000000000000000000000000000000000000000000000000000000000000000 | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
 | release | runbook | open | git:d7623817149f5625b5998d5f3df00a1fc20f5b2e | sha256:fa666771742b6c84c3c7ca63013f190971d4a128b52a04451ec7e8041f163a6f | doc/runbooks/release.md |
 
 ## Gate script pins
@@ -78,6 +82,40 @@ Run it from the repository root.
 - Quote owner decisions verbatim, with the question.
 
 The scratchpad tools are listed in `control-plane-resume-2026-11-20.md`, in the shared side-session notes folder outside the repository.
+
+## 2026-11-26 stage summary, end of day (pointers only)
+
+This section replaces the earlier 2026-11-26 summary below, which is kept for history. Every decision is quoted verbatim in REQ-043 (rows dated 2026-11-26), REQ-044 (Owner decisions, T8 to T17) and REQ-045 (owner decision 2026-11-26). Read them, not this summary.
+
+**Done today:**
+- Tickets 79, 71, 80, 81 and 77 were integrated, each with CI green on both jobs (row `integration3`).
+- The final local lifecycle passed all ten verdicts at `e87bc5cb` with `6d04fa6d` (row `t77record`).
+- The owner's local tests are in row `t77record`. The written read-only rule was not followed in use. With ticket 82's SessionStart hook, both lookups went through the 流程索引 with no search. The hook runs in the Claude desktop app and in Codex; Codex asks to trust it. The old-plugin guard fires from the hook on a plain question.
+- REQ-044 grew from T1–T7 to T1–T17. The order is A (T13–T15) first, then B and C (T12, T16), then the rest. The non-engineer themes are due by 1.0. Generic lessons are in its carried list.
+- Issues #3, #16 and #17 were rewritten or updated.
+
+**In flight at this summary:**
+- Ticket 82 revision06 correction. Its seat runs dispatch `JAS-82-3` (sha256 `d0eea2ec…`) on `cp/wave3-82-hook`, from `b629db41`. It adds README section 4's trust paragraph and section 5's scope paragraph, rebuilds the publication commit from OLD `9cda3f9e`, and rebuilds the local marketplace. Revision04 was APPROVED at `b629db41` (row `t82review`).
+- The shared local ref `refs/heads/publication-0.5.0` names the newest rebuild. Check it with `git rev-parse`.
+
+**Resume order** (every push waits for the owner's confirmation):
+1. When the 82 seat returns:
+   - append USAGE and rerun E1;
+   - send the correction review of revision06 to the same reviewer (it reviewed revision02 and revision04);
+   - record the review, integrate with `integ_one.sh`, read CI back, and write the integration record.
+2. Rerun ticket 77's lifecycle at the integration commit, with the new publication id, and record it.
+3. The owner refreshes both hosts. The cache check is the README line `上面的 uninstall 指令針對裝在 user 範圍的舊版`. The owner retests once: the P0 lookup, the PRD lookup and the two-versions plain question.
+4. Repin the `agents` row and run `index_pins --check`.
+5. Fast-forward the development `main` (decision "B"). Trigger the one cloud run: `gh workflow run acceptance.yml --ref main -f candidate=<main> -f expected_publication=<newest id>`.
+6. The owner renames the publication repository to `software-factory-plugin`. A reviewer reported "Repository not found" for the old name, so check its current name first.
+7. Release per `doc/runbooks/release.md`. Show each push command with `--dry-run` before running it.
+8. Smoke install from the public path, then remove the eight registered rows.
+9. Ticket 78, then wave 4 in REQ-044's order.
+
+**Practice kept today:**
+- Every ticket gets a rule-only review before dispatch, and a delta review for each new revision.
+- Correction dispatches tell the seat to copy the previous receipt first (S82-01).
+- Each report states what runs, how long it usually takes, and whether the owner must act.
 
 ## 2026-11-26 stage summary (pointers only)
 
