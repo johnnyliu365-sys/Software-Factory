@@ -3,7 +3,8 @@ change takes the start order.
 
 Ticket 80 adds to `AGENTS.md` three anchors (`startup-order`, `p0-permissions`, `target-sources`), five rows at the
 top of the 流程索引 table (directly below its separator line, above the row that begins "| 任一事件") and the two
-sentences of the lookup paragraph that say how a rule is located. Every link in the five rows must resolve: a `#name`
+sentences of the lookup paragraph that say how a rule is located; ticket 82 adds `process-index` above
+`## 流程索引`. Every link in the five rows must resolve: a `#name`
 to exactly one line `<a id="name"></a>` of `AGENTS.md`, a path to a file under the root. A missing `AGENTS.md`, or a
 table without its separator line, is a named defect and never a traceback.
 
@@ -55,6 +56,7 @@ STATE_PARAGRAPH_START = "狀態只保存"
 ANCHORED_HEADINGS: tuple[tuple[str, str], ...] = (
     ("startup-order", "## 啟動順序"),
     ("p0-permissions", "## P0：權限與所有權"),
+    ("process-index", "## 流程索引"),
     ("target-sources", "## Target project 正式來源"),
 )
 

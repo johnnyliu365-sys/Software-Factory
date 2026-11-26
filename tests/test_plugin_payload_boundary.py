@@ -228,6 +228,10 @@ class PayloadDeclarationTests(unittest.TestCase):
             with self.subTest(tree=required):
                 self.assertIn(required, trees)
 
+    def test_the_session_hook_is_carried(self) -> None:
+        self.assertIn("hooks/hooks.json", _payload_entries(self.payload, "files"))
+        self.assertNotIn("hooks", _payload_entries(self.payload, "trees"))
+
     def test_the_declared_payload_is_a_list_not_a_remainder(self) -> None:
         """Every repository top-level entry is either enumerated or not shipped."""
 

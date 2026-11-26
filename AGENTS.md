@@ -65,6 +65,8 @@ checker；ticket schema、preflight 與 TDD 由 Router 指向：
 - 未核准、未提交、聊天宣稱、截圖或其他 worktree 的檔案不能作為 implementation
   authority、review evidence 或 merge source。
 
+<a id="process-index"></a>
+
 ## 流程索引
 
 | 情境 | Workflow 入口 | Router 指向的詳細 reference |
