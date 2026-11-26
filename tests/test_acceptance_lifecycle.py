@@ -188,6 +188,11 @@ if args[0:2] == ["plugin", "list"]:
         if mode == "flagless":
             for row in listed:
                 del row["enabled"]
+        if mode == "builtin":
+            listed += [{"id": "cc-plugin-" + word + "@builtin", "version": "1.0.0", "scope": "user", "enabled": True}
+                       for word in ("agents-md", "privacy")]
+        if mode == "extra":
+            listed.append({"id": "other@elsewhere", "version": "1.0.0", "scope": "user", "enabled": True})
         print(json.dumps(listed))
     else:
         market = args[args.index("--marketplace") + 1]
@@ -210,6 +215,11 @@ if args[0:2] in (["plugin", "uninstall"], ["plugin", "remove"]):
         fail("Error: not found in installed plugins")
     del state["installed"][identity]
     save()
+    if host == "claude" and mode in ("declined", "declined_other_key"):
+        record = {"firstStartVersion": "9.9.9", "declinedPlugins": [identity]}
+        if mode == "declined_other_key":
+            record["projects"] = {"p": {"note": "software-factory"}}
+        (home / ".claude.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
     if host == "codex":
         name, market = identity.split("@")
         shutil.rmtree(home / "plugins" / "cache" / market / name, ignore_errors=True)
@@ -663,6 +673,32 @@ class NormalBehaviourTests(LifecycleCase):
         code, report, _ = self.run_script("build,uninstall")
         self.assertEqual(code, 0, report)
 
+    def test_recover_counts_the_entries_outside_the_hosts_builtin_plugins(self) -> None:
+        code, report, _ = self.run_script("build,recover", host="claude", mode="builtin")
+        self.assertEqual(code, 0, report)
+        self.assertEqual(report[-1]["verdict"], "PASS")
+
+    def test_a_second_entry_that_is_not_builtin_fails_recover(self) -> None:
+        code, report, _ = self.run_script("build,recover", host="claude", mode="extra")
+        self.assertEqual(code, 1)
+        self.assertIn("not exactly one", json.dumps(evidence_of(report[-1])))
+
+    def test_uninstall_admits_the_hosts_decline_record_by_key_and_then_reinstalls(self) -> None:
+        code, report, run_root = self.run_script("build,uninstall", host="claude", mode="declined")
+        self.assertEqual(code, 0, report)
+        self.assertTrue((run_root / "uninstall-claude" / ".claude.json").is_file())
+        installs = [arguments_of(call) for call in self.calls() if arguments_of(call)[:2] == ["plugin", "install"]]
+        self.assertEqual(len(installs), 2)
+        evidence = evidence_of(report[-1])
+        self.assertTrue(any(item.startswith("after the reinstall:") for item in evidence), evidence)
+
+    def test_the_decline_record_does_not_hide_another_key_that_names_the_plugin(self) -> None:
+        code, report, _ = self.run_script("build,uninstall", host="claude", mode="declined_other_key")
+        self.assertEqual(code, 1)
+        self.assertEqual(report[-1]["verdict"], "FAIL")
+        self.assertIn("residue: line .claude.json:", json.dumps(evidence_of(report[-1])))
+        self.assertEqual(len([call for call in self.calls() if arguments_of(call)[:2] == ["plugin", "install"]]), 1)
+
     def test_recover_ends_with_exactly_one_listed_entry(self) -> None:
         code, report, _ = self.run_script("build,recover")
         self.assertEqual(code, 0, report)
@@ -855,6 +891,23 @@ class ResidueTests(LifecycleCase):
         write_text(step / "plugins" / "cache" / "software-factory.old" / "a.json", '{"n": "software-factory"}\n')
         self.assertIn("path plugins/cache/software-factory.old", lifecycle.scan_residue(step, "claude", entries))
 
+    def test_a_key_entry_admits_one_top_level_value_and_is_not_a_line_rule(self) -> None:
+        step = self.tmp / "keyscan"
+        record: dict[str, object] = {"declinedPlugins": ["software-factory@software-factory"], "firstStartVersion": "1"}
+        write_text(step / ".claude.json", json.dumps(record, indent=2) + "\n")
+        entry = lifecycle.AllowEntry("key", "claude", ".claude.json#declinedPlugins", "r")
+        self.assertEqual(lifecycle.scan_residue(step, "claude", [entry]), [])
+        self.assertNotEqual(lifecycle.scan_residue(step, "claude", []), [])
+        self.assertNotEqual(lifecycle.scan_residue(step, "codex", [entry]), [])
+        record["projects"] = {"p": "software-factory"}
+        write_text(step / ".claude.json", json.dumps(record, indent=2) + "\n")
+        self.assertNotEqual(lifecycle.scan_residue(step, "claude", [entry]), [])
+        # a key of another name is not admitted, and a nested key of the same name is not the top-level one
+        other = lifecycle.AllowEntry("key", "claude", ".claude.json#elsewhere", "r")
+        self.assertNotEqual(lifecycle.scan_residue(step, "claude", [other]), [])
+        write_text(step / ".claude.json", json.dumps({"x": {"declinedPlugins": ["software-factory"]}}, indent=2) + "\n")
+        self.assertNotEqual(lifecycle.scan_residue(step, "claude", [entry]), [])
+
     def test_a_malformed_allow_list_entry_is_a_fail_closed_error(self) -> None:
         with self.assertRaises(lifecycle.StepFail):
             lifecycle.parse_allowlist("```lifecycle-allowlist\npath | claude | only three fields\n```\n")
@@ -968,6 +1021,35 @@ class Level2Tests(LifecycleCase):
         )
         self.assertEqual(record.exit_code, 0, record)
         self.assertIn("answer=INSTALL", record.stdout)
+
+
+class TicketLiteralTests(unittest.TestCase):
+    """The fixed values of the ticket, compared with `lifecycle.py` unpatched (S77-12)."""
+
+    def test_the_old_install_commits_and_url_are_the_tickets(self) -> None:
+        self.assertEqual(lifecycle.OLD_PINNED_COMMIT, "0b3afd3645946f97662c336f0e6ac0dcae502e69")
+        self.assertEqual(lifecycle.OLD_MARKETPLACE_COMMIT, "01b810f096b1201005d26922e2c8a474bdd5a0a0")
+        self.assertEqual(
+            lifecycle.CLAUDE_OLD_MARKETPLACE_URL,
+            "https://raw.githubusercontent.com/johnnyliu365-sys/Software-Factory/"
+            "01b810f096b1201005d26922e2c8a474bdd5a0a0/.claude-plugin/marketplace.json",
+        )
+        self.assertEqual(lifecycle.OLD_VERSION, "0.4.14")
+        self.assertEqual(lifecycle.EXPECTED_VERSION, "0.5.0")
+
+    def test_the_level2_assets_and_their_digests_are_the_tickets(self) -> None:
+        self.assertEqual(
+            lifecycle.LEVEL2_RELEASE_URL,
+            "https://github.com/johnnyliu365-sys/Software-Factory/releases/download/v0.4.9/",
+        )
+        self.assertEqual(
+            dict(lifecycle.LEVEL2_ASSETS),
+            {
+                "johnny-ai-skill-0.4.9.zip": "2365b6f70a06f00ae0aed008371f7cc0b5afd0cb148a77e7476416bf25854aef",
+                "johnny-install.cmd": "906b067238f05841ba87b5c59d88d0a8a5499821d8ebc660df9cee17296f532b",
+            },
+        )
+        self.assertEqual(lifecycle.LEVEL2_CONFIRMATION, "INSTALL\n")
 
 
 class RedactionTests(unittest.TestCase):

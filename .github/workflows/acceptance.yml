@@ -39,7 +39,7 @@ jobs:
           python-version: "3.11"
       - name: Install the host CLIs at the versions of ci/acceptance/README.md
         run: |
-          npm install --global @anthropic-ai/claude-code@2.1.316 @openai/codex@0.166.0
+          npm install --global @anthropic-ai/claude-code@2.1.332 @openai/codex@0.166.0
       - name: Run the lifecycle
         env:
           CANDIDATE: ${{ inputs.candidate }}

@@ -174,6 +174,7 @@ CLAUDE_OLD_MARKETPLACE_URL = (
 )
 OLD_MARKETPLACE_COMMIT = "01b810f096b1201005d26922e2c8a474bdd5a0a0"
 PUBLICATION_REF = "refs/heads/publication-0.5.0"
+BUILTIN_SUFFIX = "@builtin"
 LEVEL2_RELEASE_URL = "https://github.com/johnnyliu365-sys/Software-Factory/releases/download/v0.4.9/"
 LEVEL2_ASSETS: Mapping[str, str] = {
     "johnny-ai-skill-0.4.9.zip": "2365b6f70a06f00ae0aed008371f7cc0b5afd0cb148a77e7476416bf25854aef",
@@ -894,6 +895,9 @@ def step_uninstall(ctx: Context) -> None:
             ctx.log.note(f"residue: {finding}")
         raise StepFail(f"{len(findings)} residue finding(s) outside the allow-list")
     ctx.log.note(f"no residue naming {MARKETPLACE_NAME} outside the {len(allowed)} allow-listed entries")
+    # with the host's own record still present, a reinstall must succeed
+    install_from_local(ctx, session)
+    require_listed(read_entries(session), PLUGIN_ID, EXPECTED_VERSION, "after the reinstall", ctx.log)
 
 
 def write_broken_marketplace(root: Path) -> None:
@@ -921,9 +925,9 @@ def step_recover(ctx: Context) -> None:
     second_out = session.run(*marketplace_remove_args(session.host, MARKETPLACE_NAME))
     ctx.log.note(f"cleanup exits, not judged: uninstall {first_out.exit_code}, marketplace remove {second_out.exit_code}")
     install_from_local(ctx, session)
-    entries = read_entries(session)
+    entries = [item for item in read_entries(session) if not item.plugin_id.endswith(BUILTIN_SUFFIX)]
     if len(entries) != 1:
-        raise StepFail(f"the list shows {len(entries)} entries, not exactly one: {[e.plugin_id for e in entries]}")
+        raise StepFail(f"the list shows {len(entries)} entries outside the host's builtin plugins, not exactly one: {[e.plugin_id for e in entries]}")
     require_listed(entries, PLUGIN_ID, EXPECTED_VERSION, "after recovery", ctx.log)
 
 
@@ -933,7 +937,7 @@ def step_recover(ctx: Context) -> None:
 
 _WHOLE_NAME = re.compile(r"(?<![A-Za-z0-9_-])software-factory(?![A-Za-z0-9_-])")
 RESIDUE_SUFFIXES = (".json", ".toml")
-ALLOW_KINDS = ("path", "line", "emptydir")
+ALLOW_KINDS = ("path", "line", "emptydir", "key")
 
 
 @dataclass(frozen=True)
@@ -1021,6 +1025,35 @@ def _line_allowed(relative: str, host: str, allowed: Sequence[AllowEntry]) -> bo
     return any(item.kind == "line" and item.host == host and item.target == relative for item in allowed)
 
 
+def _admitted_keys(relative: str, host: str, allowed: Sequence[AllowEntry]) -> set[str]:
+    """The top-level keys of one JSON file whose values an allow-list entry of kind `key` admits.
+
+    A `key` entry names its target as `<file>#<top-level key>`. It admits that key's value and nothing else
+    of the file, so it is a key rule, not a line rule."""
+
+    keys: set[str] = set()
+    for item in allowed:
+        if item.kind == "key" and item.host == host and "#" in item.target:
+            file_part, key = item.target.split("#", 1)
+            if file_part == relative and key != "":
+                keys.add(key)
+    return keys
+
+
+def _lines_outside_keys(path: Path, keys: set[str]) -> list[str] | None:
+    """The lines of the file's JSON text once the admitted top-level keys are removed, or None when the file is
+    not a JSON object (the caller then judges every raw line)."""
+
+    try:
+        data: object = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    rest = {str(key): value for key, value in data.items() if str(key) not in keys}
+    return json.dumps(rest, indent=2, ensure_ascii=False).splitlines()
+
+
 def scan_residue(step_dir: Path, host: str, allowed: Sequence[AllowEntry]) -> list[str]:
     """Paths and `.json`/`.toml` lines under the step directory that name software-factory as a whole name."""
 
@@ -1036,11 +1069,16 @@ def scan_residue(step_dir: Path, host: str, allowed: Sequence[AllowEntry]) -> li
         if path.is_file() and not path.is_symlink() and path.suffix.lower() in RESIDUE_SUFFIXES:
             if _path_allowed(relative, host, allowed) or _line_allowed(relative, host, allowed):
                 continue
-            try:
-                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-            except OSError as error:
-                findings.append(f"unreadable {relative}: {error}")
-                continue
+            admitted = _admitted_keys(relative, host, allowed)
+            narrowed = _lines_outside_keys(path, admitted) if admitted else None
+            if narrowed is not None:
+                lines = narrowed
+            else:
+                try:
+                    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+                except OSError as error:
+                    findings.append(f"unreadable {relative}: {error}")
+                    continue
             for number, line in enumerate(lines, start=1):
                 if names_whole(line):
                     findings.append(f"line {relative}:{number}")

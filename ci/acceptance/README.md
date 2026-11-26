@@ -8,12 +8,17 @@ either host: the only host commands are `--version`, `plugin` and `plugin market
 
 ## Host CLI versions
 
-The local run and the workflow use these exact versions. A run on another version is recorded with both
-versions (the acceptance record, and the receipt's STATEMENT).
+The workflow installs these exact versions. They are the versions that `--version` printed on this host at the
+local run: the local run uses the `claude` and `codex` that come first on `PATH`, with no copied binary, and
+the versions pinned here are the ones it printed. A run on another version is recorded with both versions (the
+acceptance record, and the receipt's STATEMENT). Claude Code 2.1.332 differs from 2.1.316 in two ways that the
+rules accept (owner decision of 2026-11-26): an uninstall leaves the host's own decline record, the key
+`declinedPlugins` of `.claude.json`, and `plugin list --json` shows the host's `@builtin` plugins, which the
+exactly-one-entry rule of `recover` does not count.
 
 | Host | Version | npm package |
 | --- | --- | --- |
-| claude | 2.1.316 | `@anthropic-ai/claude-code@2.1.316` |
+| claude | 2.1.332 | `@anthropic-ai/claude-code@2.1.332` |
 | codex | 0.166.0 | `@openai/codex@0.166.0` |
 
 The 0.5.0 README says Codex needs the `plugin add` command, which `0.167.0-alpha.3.2` has and
@@ -94,10 +99,15 @@ the name `software-factory` as a whole name: a match is not preceded or followed
 `-`, so `software-factory-plugin` and `my-software-factory` do not match, and `software-factory.json` does.
 Entry fields are `kind | host | path relative to the step directory | reason`. A `path` entry admits the path
 and everything below it, an `emptydir` entry admits a directory that holds no file at any depth, and a `line`
-entry admits the lines of one file.
+entry admits the lines of one file. A `key` entry names `<file>#<top-level key>` and admits that key's value
+and nothing else of the file: any other key or line of the file that names `software-factory` is `FAIL`. The
+one `key` entry is the value of `declinedPlugins` in `.claude.json`, which Claude Code 2.1.332 writes on
+uninstall. The `uninstall` step then adds the good marketplace and installs again with the record present; it
+must exit 0 and the list must show 0.5.0, installed and enabled.
 
 ```lifecycle-allowlist
 path | claude | plugins/cache/software-factory | Claude Code keeps the uninstalled plugin's cache and marks the version directory with an .orphaned_at file, to remove it after a delay; it is the plugin's own copy, not a registration
+key | claude | .claude.json#declinedPlugins | the host's own decline record (owner decision 2026-11-26, 放寬)
 emptydir | codex | plugins/cache/software-factory | Codex removes the plugin's files and leaves the empty marketplace directory of its cache
 ```
 
