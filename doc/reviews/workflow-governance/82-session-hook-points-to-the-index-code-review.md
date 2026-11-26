@@ -168,3 +168,92 @@ causes:
 ## Control-plane note on S82-01 (2026-11-26)
 
 The seat removed the revision02 receipt with the control plane's appended USAGE section in it. The revision02 round's seat use, as the reviewer recovered it, was claude-sonnet-5-5, effort high: input 152, cache write 190183, cache read 9934582, output 50727. From the next correction on, the dispatch names where the previous round's receipt goes before the seat starts.
+
+# Revision06 initial review
+
+- **Ticket.** Revision06, read with `git show 44018a0b:modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md`. Its state row at `5769c0d8` carries the dispatch digest `d0eea2ec…507d70`, and `JAS-82-3.yaml` from `5769c0d8` hashes to that value. The boundary block is unchanged since revision02.
+  - Wording sources: S82R-19 to S82R-25 of the ticket-review record, and the REQ-043 rows for items 4b ("Codex asks to trust the plugin hook") and 4c ("併進票 82").
+- **Candidate.** `4be37a7aa52ea77bd12ff4dbecac1d0296eab88e`. It is two additive commits on `b629db41`:
+  - `6c4cb7e1` holds the two README paragraphs, the tests and the changelog row;
+  - `4be37a7a` holds the repin.
+  - Both are authored `Johnny Liu <johnny.liu365@gmail.com>`, with a `Co-Authored-By: Claude Sonnet 5.5` trailer that matches the dispatch model and USAGE (`seat:implementation-standard/JAS82R3`).
+- **Label.** Initial review of closure revision06. It is a new closure revision, so the §5 count restarts. Process tier: strict.
+- **Reviewer.** Independent `ticket-review` seat, run id `R82-3`. The worktree `.worktrees/82-hook-review` was detached from `b629db41` to the candidate, with porcelain empty before and after.
+- **Publication commit.** `3ab86d439f236880db92648ab28724a626dc360b`.
+- **Captures.** Every capture is in `r06/` beside this file, with the scripts that produced it: `exact_texts_r06.py`, `counter_mutations_r06.py` and `boundary_r06.py`.
+
+## Findings (revision06)
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| — | — | — | — | No finding. Every item, every TDD 2 case, the rebuild and the receipt hold under independent rerun. | The per-check table below | — |
+
+Notes. None of these is a finding.
+
+- **N7. S82-01 is closed in practice.** The seat copied the whole revision04 out directory to `.worktrees/82-hook-out-rev04` before it changed anything. That copy holds `RETURN.md` with its USAGE section and every revision04 capture. Its `RETURN.as-returned.md` is byte-identical to `82-hook-out/RETURN.as-returned.rev04.md`. The revision04 section of this record should be read against `82-hook-out-rev04/`.
+- **N8. The seat's bare `bash -c` slip does not touch any evidence.**
+  - A Python `subprocess` call of a bare `bash` on Windows resolves through the CreateProcess search order to `C:\Windows\System32\bash.exe`, the WSL launcher, before `PATH`. On this host the only WSL distribution is `docker-desktop`. The WSL VM has been running since 2026-11-19, so the slip did not start it.
+  - There is no non-Git `bash.exe` process and no `r82c` process now.
+  - The helper ran one read-only `grep` under scratch, and its output was discarded.
+  - The K1 capture is valid UTF-8 with no CR. Its `grep -n -o` line gives README lines 79 and 107, which I confirmed on the candidate.
+  - Every K1 fact is reproduced by my own K1, run in Git Bash (R4c).
+  - The S82R-03 rule governs the test's bash case. That case is unchanged and still selects the Git Bash file.
+- **N9. The test's character check reads the constants.** `test_neither_new_paragraph_holds_code_a_path_or_a_link` and the check in `_check_placed_paragraph` test the constants, not the README text. This is equivalent, because the README line must equal the constant exactly. Accordingly, the injection "path character" case goes red as "not found", not on the character rule.
+
+## Per-check table (revision06)
+
+| # | Check | Result | Evidence and notes |
+| --- | --- | --- | --- |
+| R1a | `git diff b629db41 4be37a7a`: what changes | PASS | Changed: `README.md`, `tests/test_plugin_session_hook.py`, `doc/HARNESS-CHANGELOG.md`, `.claude-plugin/marketplace.json` and `ci/registered-failures.json`. Byte-identical to `b629db41`: `hooks/hooks.json`, `skills/johnny-project-takeover/SKILL.md`, `AGENTS.md`, `plugin.json` and both other test files. The README delta is exactly the two paragraphs, each with one blank line. README equals `b629db41` with those two insertions. Section 8 is identical. Section 4's numbered steps 1 to 5 are unchanged. Ticket 81's two section 5 paragraphs (`新舊兩版同時裝著時…` and `在 Claude Code 2.1.332 上…`) are unchanged and each appears once. `r06/exact-texts.txt` (`exact_texts_r06.py`) |
+| R1b | The changelog row | PASS | The row is byte-exact to revision06 item 7, directly below the ticket 81 row. The file has exactly one ticket 82 row, and exactly one line differs from `b629db41` (replaced in place, S82R-25). The bullet is unchanged and still last. |
+| R2 | Items 4b and 4c byte-exact and placed | PASS | Both paragraphs, taken from the ticket, appear exactly once in the README. 4b sits in `## 4. 安裝：Codex`. The three lines before it are `codex plugin list --marketplace software-factory --json`, ```` ``` ```` and a blank line. The two lines after it are a blank line and `5. 要移除時，先移除 plugin，再移除 marketplace：`. 4c sits in `## 5.`. The three lines before it are `claude plugin marketplace remove johnny-ai-skill`, ```` ``` ```` and a blank line. The two lines after it are a blank line and exactly `Codex：`. Neither paragraph holds `` ` ``, `](`, `/` or `\`. The tests' `CODEX_TRUST_PARAGRAPH` and `SCOPE_PARAGRAPH` equal 4b and 4c. The README has no CR. |
+| R3a | The seat's two new M1 mutations | PASS | `M1.txt` has 11 blocks, and each is `exit=1`. Mutation 10 removes the trust paragraph: 5 failed, including `test_the_codex_trust_and_scope_paragraphs_stand_at_their_places` and `test_the_codex_trust_paragraph_removed_is_red`. Mutation 11 removes the scope paragraph: 6 failed, including the same placement test and `test_the_scope_paragraph_removed_is_red`. The other failure in each block is the registered l5 test in the clone. |
+| R3b | My counter-mutations | PASS | Run in a disposable `--no-hardlinks` clone at `4be37a7a` (a CRLF checkout; line ends kept), with the three hook, payload and lookup test files in full. CM11 adds one character to 4b (`請選信任` to `請選擇信任`): red, 4 failed. CM12 moves 4c below the Codex removal block of section 5: red, 6 failed, including ticket 81's three section 5 tests in `test_plugin_payload_boundary.py`. CM13 removes the blank line after 4b: red, 5 failed. CM14 adds a second copy of 4c at the end of section 6: red, 3 failed. Porcelain was empty after each restore. `r06/M1-review.txt` (`counter_mutations_r06.py`) |
+| R4a | Rebuild in a disposable clone, `--ref refs/heads/publication-0.5.0-r82c` | PASS | Two runs at `4be37a7a` each print `publication commit 3ab86d439f236880db92648ab28724a626dc360b`, exit 0, and leave porcelain empty. A third run at `6c4cb7e1` prints the same id and repins `9cda3f9e → 3ab86d43`, which is exactly `4be37a7a`'s marketplace line. The clone's ref names a parentless commit with tree `9277f3e8…`. The clone and its ref were removed. `r06/G1-review.txt` |
+| R4b | `--verify-only` on the shared ref | PASS | `verified 3ab86d439f236880db92648ab28724a626dc360b`, exit 0. The reflog shows `9cda3f9e` at 16:10:16+08:00, then `3ab86d43` at 17:10:07+08:00 (09:10:07Z), as the STATEMENT says. No `-t82` or `-r82*` ref is left in the shared repository. I did not move the ref. `r06/V1-review.txt` |
+| R4c | The package, the rows and the local marketplace | PASS | `git archive 3ab86d43` gives a package that holds both paragraphs once each (lines 79 and 107). Its README equals the candidate's byte for byte. Its `hooks/hooks.json` is `cmp`-equal to `9cda3f9e`'s and to the candidate's. `git diff 9cda3f9e 3ab86d43` is README only, with +4 lines. The package also has the anchor once, `plugin.json` line 43, `software-factory` and `0.5.0`, and forty zeros in its marketplace. It holds no `.codex-plugin`, no Level 2 files and nothing under `local_orchestration`. `ci/registered-failures.json` equals `b629db41`'s with the 8 occurrences of `9cda3f9e` changed to `3ab86d43` and nothing else; the marketplace likewise differs only in the pin. `diff -r` of the package against `C:/Temp/claude/sf-050-local/plugins/software-factory` prints nothing, and both local marketplace files keep their sha256 values. A1 is byte-identical to the receipt's. `r06/K1-review.txt`, `r06/rows-review.txt`, `r06/A1-review.txt` |
+| R5 | The STATEMENT's cache check (S82R-19) | PASS | It tells the owner to look, in each host's `0.5.0` cache folder, in `README.md` for a line that begins `上面的 uninstall 指令針對裝在 user 範圍的舊版`, and it gives both cache paths. A cache without that line holds an earlier build, since `9cda3f9e` already ships the hook with the old-plugin sentence. The owner then removes that host's `0.5.0` folder and installs again. That is item 6's revision06 wording. |
+| R6 | The boundary (`document_mutation_gate`) | PASS | `read_boundary` of the ticket at `5769c0d8` gives `DECLARED`. The merge-base range (`94acca3a..4be37a7a`, with `cp/wave3` at `d83a2c17`) gives 2 `CREATE` and 8 `MODIFY`, `(None, None)`. `4be37a7a` alone also gives `(None, None)`. As in N5, the correction delta by itself is refused, here on `tests/test_plugin_session_hook.py`, but the gate does not judge that range. The `Workflow.md` and `SKILL.md` controls give `PATH_FORBIDDEN`. `r06/boundary-review.txt` |
+| R7a | P1 and T1 rerun, under the host lock | PASS | I held the host lock `C:/Temp/claude/jas-fullsuite.lock` as `R82-3`: acquired by `mkdir` at 09:56:57Z, released by rename and remove after `owner.txt` was checked. P1 (five files, `-rfEs`): 298 passed, 914 subtests passed, exit 0, no skip. T1: mypy `--strict` on three files reports "no issues", exit 0. The hook test file alone has 40 passed and 0 skipped. All match the receipt. My counter-mutation runs also ran under the lock. `r06/P1-review.txt`, `r06/T1-review.txt`, `r06/hook-tests-verbose.txt` |
+| R7b | CI read back | PASS | Run 45789512934: `headSha` `4be37a7a…`, branch `cp/wave3-82-hook`, completed `success`, with `test (linux)` and `test (windows)` both `success`. The 14,989-line log has 0 `UNREGISTERED_FAILURE` or `REGISTERED_NOT_FAILING` lines and no `FAILED` line naming `test_plugin_session_hook`. Against run 45780938741 (`b629db41`), both jobs have +6 passed with unchanged skips (Windows 18, Linux 80). `r06/C1-review.txt`, `r06/ci-counts.txt` |
+| R7c | E1 and F1 | PASS / READ | E1 on the receipt with USAGE, `--candidate 4be37a7a`: `cells=11 defects=0`, exit 0 (`r06/E1-review.txt`). F1 was read, not rerun: 1 failed (`test_acr2_linux…`, registered), 3578 passed and 13 skipped. |
+| R7d | The rest of the receipt | PASS | The STATEMENT's ids, the move time, the eight rows, V1, K1, L1 and A1 match my reruns. Its residue item names the preserved `82-hook-out-rev04` (N7) and reports the slip truthfully (N8). |
+
+```review-verdict
+candidate: 4be37a7aa52ea77bd12ff4dbecac1d0296eab88e
+verdict: APPROVED
+round: initial
+closure_revision: revision06
+reviewer: ticket-review seat R82-3 (claude-opus-5-5)
+reviewed_at: 2026-11-26
+```
+
+```rework-record
+candidate: 4be37a7aa52ea77bd12ff4dbecac1d0296eab88e
+round: 3
+kind: INITIAL
+verdict: APPROVED
+causes:
+```
+
+## Not done here, and why (revision06)
+
+- **The full suite was not rerun.** It was not asked for. F1 was read.
+- **The control-plane list after integration is unchanged and not done here.** It covers ticket 77's rerun with `3ab86d43`, the owner-assisted test (Codex with the hook trusted, and the two-versions case in both hosts), ticket 77's cloud trigger, and the `agents` repin with `index_pins.py --check`.
+- **Until this ticket integrates,** the publication tests on this host fail in any checkout that pins an earlier id.
+- **Residue.**
+  - My scratch `.worktrees/82-hook-review-scratch/` was removed, including the clone `clone-R82-3` with its `-r82c` ref, the package `pkg-R82-3`, the CI log and the `_R82-3` scripts.
+  - The host lock I took was released; it is absent now.
+  - I did not touch `refs/heads/publication-0.5.0`, the candidate, the receipt, `82-hook-out-rev04` or the local marketplace.
+  - PROCESSES_LEFT=0.
+
+## Seat token use (readiness criterion 5)
+
+Host-reported usage per seat, summed per unique message id, against the expectation the owner confirmed on 2026-11-18 ("1A"); appended to the receipt as `USAGE` cells at integration.
+
+| Seat | Model | input | cache write | cache read | output | processed | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `seat:implementation-standard/JAS82R3` | claude-sonnet-5-5 | 346 | 736328 | 33201482 | 117648 | 33938156 | OVER_PROCESSED |
+| `seat:ticket-review/R82` | claude-opus-5-5 | 240 | 797057 | 23523699 | 118491 | 24320996 | OVER_OUTPUT,OVER_PROCESSED |
+
+**Control-plane note on the usage verdicts (2026-11-26).** Each of the two seats ran three rounds of this ticket by resumption: the implementation seat for revisions 02, 04 and 06, and the review seat for the initial reviews of revisions 02, 04 and 06. The host transcript sums all three, so each row is a three-round total against a one-round expectation. The implementation seat's revision04 receipt recorded 20,274,328 cache-read tokens at its return, so revision06 alone added about 12.9 million processed tokens, within one round's expectation. Every round was a new closure revision after an owner decision ("放進 hook", "併進票 82") or a delta review, not rework of a refused candidate. The rework report shows this as three rounds with empty causes. REQ-044 T13 to T15 aim at this cost.
