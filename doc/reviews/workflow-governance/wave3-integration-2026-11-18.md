@@ -233,3 +233,20 @@ The integration clone `C:/Temp/claude/jas-integ-80` was made from `4fe5a8ef`.
 | Publication commit | `193777a7a8503d869c521425befc0d41ab323c28`, named by the local ref `refs/heads/publication-0.5.0` since 2026-11-26T02:42:39Z; not pushed |
 | USAGE | `.worktrees/80-index-out/RETURN.md` (sha256 `bea46f0d25a437070c7884d3ea53f7822b2d662dfd21a068d03b6ff28fcc693b`) with both seats' cells and `effort:` lines; E1 gives exit 0 (`cells=10 defects=0`); `usage_report.py` gives both seats `WITHIN` |
 | Rework report over the wave-3 code-review records | `TOTAL tickets=14 rounds=26 CONTROL_PLANE_RULE=5 RETURN_UNTRUE=3 DESIGN_UNFORESEEN=2 IMPLEMENTATION_DETAIL=9`, exit 0 |
+
+## Tickets 81 and 77 (2026-11-26)
+
+| Ticket | Approved candidate | Approval | Integration commit |
+| --- | --- | --- | --- |
+| 81 old and new do not fight; the first 流程索引 row narrowed with a tie-break | `d07bf53b` | revision04 initial review `APPROVED` (S81-01 carried to wave 4) | `c6ae03e9`, merged forward at `02e1691f` |
+| 77 acceptance of 0.5.0 | `8cf1e387` | revision04 correction review `APPROVED` (S77-11, S77-16 and S77-17 carried to wave 4) | `e87bc5cb` |
+
+| Check | Result |
+| --- | --- |
+| Full suite under the host lock | 81: 5 failed, 3459 passed. 77: 5 failed, 3524 passed. Every failure is a base name, so zero new red |
+| Merged forward | One record commit (`f6decb64`, ticket 77's approval record) landed during the 81 run. It was merged into the integration as `02e1691f`; CI covers it |
+| CI readback | run 45761709630 on `02e1691f` and run 45763761666 on `e87bc5cb`: `test (linux)` and `test (windows)` both `success` |
+| Publication commit | `6d04fa6d0cf0c1e7134a312894adc219f44bf4a9`, named by the local ref `refs/heads/publication-0.5.0`; not pushed |
+| Final local lifecycle | at `e87bc5cb` with `--expected-publication 6d04fa6d…`: exit 0, every verdict `PASS` (`77-acceptance-0-5-0-record.md`) |
+| USAGE | 81: `.worktrees/81-coexist-out/RETURN.md` (sha256 `4e5976fa4032340abe6cfc82eea66786632fb95f1510ef5a2f71e66109de366c`), E1 `cells=11 defects=0`, both seats `WITHIN`. 77: `.worktrees/77-acceptance-out/RETURN.md` (sha256 `a47378c6e859f66a2371b52928a57ce25f94353a9c2458ab58890aa49b5ce18e`), E1 `cells=9 defects=0`, both seats `OVER_OUTPUT,OVER_PROCESSED`, explained in the 77 review record |
+| Rework report over the wave-3 code-review records | `TOTAL tickets=16 rounds=32 CONTROL_PLANE_RULE=6 RETURN_UNTRUE=4 DESIGN_UNFORESEEN=4 IMPLEMENTATION_DETAIL=12`, exit 0 |
