@@ -126,3 +126,22 @@ Ticket 82 rebuilt the publication commit, so the lifecycle was run again at the 
 | Command | `python ci/acceptance/lifecycle.py --candidate f0ba4995… --expected-publication 3ab86d43… --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root C:/Temp/claude/cp77-r82-L1`, run in the fresh integration clone |
 | Host CLIs | the host's own `claude` and `codex`, as pinned in `ci/acceptance/README.md` |
 | Result | exit 0. Every verdict is `PASS`: build; fresh, upgrade, uninstall and recover on both hosts; level2 |
+
+## Control-plane rerun with ticket 82 revision08's publication commit (2026-11-26)
+
+Ticket 82 revision08 rebuilt the publication commit again, so the lifecycle was run again at the `cp/wave3` commit that holds it.
+
+| Field | Value |
+| --- | --- |
+| Commit | `3e54da2cf7d057ba8b7501a203646ff7526dad55` (ticket 82 revision08 integrated and merged forward) |
+| Expected publication | `e08e82d3373547a5448040638fb22b1810dc9cf3` (ticket 82 revision08) |
+| Command | `python ci/acceptance/lifecycle.py --candidate 3e54da2c… --expected-publication e08e82d3… --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root C:/Temp/claude/cp77-r82b-L1`, run in the fresh integration clone |
+| Host CLIs | `claude` 2.1.332 and `codex` 0.172.0. Codex updated itself from 0.166.0 on 2026-11-26, so it differs from the version pinned in `ci/acceptance/README.md`; the owner's decision "放寬" on host CLI drift (REQ-043, 2026-11-26) covers it |
+| Result | exit 0. Every verdict is `PASS`: build; fresh, upgrade, uninstall and recover on both hosts; level2 |
+
+## Owner-assisted tests of 2026-11-26 on `3ab86d43` (ticket 82 revision06)
+
+- **Two versions, Claude desktop app.** With `johnny-ai-skill` 0.4.14 installed at local scope, a plain question was stopped by the hook's guard. The answer gave README section 5's removal commands and the paragraph on project and local scope, and asked for a new session. After the owner removed the old plugin, a plain question was answered normally.
+- **Codex desktop app, hook not trusted again.** The P0 and PRD questions were answered by searching the project with `rg`; no hook text had reached the session. `codex exec` in the test project printed `hook: SessionStart Failed` on Codex 0.166.0 and on 0.172.0, while the hook command exits 0 under cmd and Windows PowerShell.
+- **Codex after trusting from the terminal.** The owner ran the terminal `codex` once and was asked to trust the changed hook ("有問要不要信任 然後quit"). Afterwards `codex exec` printed `hook: SessionStart Completed`, and a Codex desktop session answered the P0 and PRD questions from the plugin's `AGENTS.md` alone. Observation, not a violation: Codex searched its own memory file first, which is host behaviour.
+- **Result.** Ticket 82 revision07 and revision08 rewrite README section 4 (owner decision "A"). The owner's retest of `e08e82d3` follows below when it is done.
