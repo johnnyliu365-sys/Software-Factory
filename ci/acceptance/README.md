@@ -55,9 +55,17 @@ For Claude Code that directory is `CLAUDE_CONFIG_DIR`, for Codex it is `CODEX_HO
 else is inherited.
 
 The `level2` step runs the 0.4.9 installer, which is not a host CLI. Its downloads go to `<step>/download`,
-and `JOHNNY_ROOT` is `<step>/root`, a new empty directory. The `py` launcher that the installer calls exits
-109 under any `USERPROFILE` other than the real one, and the step must not expose the real profile, so this
-step leaves `USERPROFILE` out of the environment and keeps `HOME` as the step's own.
+and `JOHNNY_ROOT` is `<step>/root`, a new empty directory. Its environment is the allow-list, `HOME` set to
+`<step>/home`, `JOHNNY_ROOT`, and no `USERPROFILE`: the `py` launcher that the installer calls exits 109 under
+any `USERPROFILE` other than the real one, and the step must not expose the real profile. The install runs
+with the step directory as its working directory, and the wrapper is passed by absolute path.
+
+The Codex half of `upgrade` installs 0.4.14 from a local marketplace, `<step>/marketplace-0414/`, whose only
+file is `.claude-plugin/marketplace.json`, written byte for byte from
+`git show 01b810f096b1201005d26922e2c8a474bdd5a0a0:.claude-plugin/marketplace.json` in the build clone. The public
+publication marketplace pins forty zeros and Codex honours that `sha`, so it cannot be used (owner decision of
+2026-11-26, "A"). The step passes only when `git rev-parse HEAD` in the installed directory is
+`0b3afd3645946f97662c336f0e6ac0dcae502e69`. Claude Code reads the public 0.4.14 marketplace at that commit.
 
 The host state that a step may still write outside its step directory:
 

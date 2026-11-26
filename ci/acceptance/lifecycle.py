@@ -172,7 +172,7 @@ CLAUDE_OLD_MARKETPLACE_URL = (
     "https://raw.githubusercontent.com/johnnyliu365-sys/Software-Factory/"
     "01b810f096b1201005d26922e2c8a474bdd5a0a0/.claude-plugin/marketplace.json"
 )
-CODEX_OLD_MARKETPLACE_SOURCE = "johnnyliu365-sys/Johnny_AI_Skill_publication"
+OLD_MARKETPLACE_COMMIT = "01b810f096b1201005d26922e2c8a474bdd5a0a0"
 PUBLICATION_REF = "refs/heads/publication-0.5.0"
 LEVEL2_RELEASE_URL = "https://github.com/johnnyliu365-sys/Software-Factory/releases/download/v0.4.9/"
 LEVEL2_ASSETS: Mapping[str, str] = {
@@ -804,23 +804,53 @@ def installed_commit(session: HostSession, plugin_id: str, install_json: str) ->
     return found if head.ok and _FULL_SHA.fullmatch(found) is not None else None
 
 
-def old_install(ctx: Context, session: HostSession) -> None:
-    """Install johnny-ai-skill 0.4.14 from the public marketplace and say which commit it came from."""
+def old_marketplace_blob(ctx: Context) -> bytes:
+    """The development repository's marketplace file at the 0.4.14 commit, exactly as git stores it."""
+
+    repo = ctx.shared.repo
+    if repo is None:
+        raise StepFail("no build repository: build did not pass in this run")
+    executable = resolve_executable("git", ctx.environment())
+    if executable is None:
+        raise StepFail("git is not on PATH")
+    spec = f"{OLD_MARKETPLACE_COMMIT}:.claude-plugin/marketplace.json"
+    argv = (executable, "-C", str(repo), "cat-file", "blob", spec)
+    try:
+        done = subprocess.run(
+            list(argv), cwd=str(ctx.step_dir), env=ctx.environment(), capture_output=True, timeout=120, check=False
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise StepFail(f"git cat-file cannot run: {type(error).__name__}: {error}") from error
+    ctx.log.commands.append(
+        CommandRecord(argv, done.returncode, f"{len(done.stdout)} bytes", done.stderr.decode("utf-8", "replace"))
+    )
+    if done.returncode != 0:
+        raise StepFail(f"git cat-file blob {spec} failed: {excerpt(done.stderr.decode('utf-8', 'replace'))}")
+    return done.stdout
+
+
+def old_marketplace_source(ctx: Context, session: HostSession) -> str:
+    """Claude Code reads the public 0.4.14 marketplace. Codex honours the zero pin of the public one, so it
+    reads a local marketplace whose only file is the development repository's marketplace of that time."""
 
     if session.host == "claude":
-        source = CLAUDE_OLD_MARKETPLACE_URL
-    else:
-        source = CODEX_OLD_MARKETPLACE_SOURCE
+        return CLAUDE_OLD_MARKETPLACE_URL
+    root = ctx.step_dir / "marketplace-0414"
+    target = root / ".claude-plugin" / "marketplace.json"
+    target.parent.mkdir(parents=True)
+    with open(target, "wb") as handle:
+        handle.write(old_marketplace_blob(ctx))
+    ctx.log.note(f"wrote marketplace-0414/.claude-plugin/marketplace.json from {OLD_MARKETPLACE_COMMIT}")
+    return str(root)
+
+
+def old_install(ctx: Context, session: HostSession) -> None:
+    """Install johnny-ai-skill 0.4.14 and say which commit it came from."""
+
+    source = old_marketplace_source(ctx, session)
     must_succeed(session.run(*marketplace_add_args(session.host, source)), "marketplace add of the 0.4.14 marketplace")
     installed = session.run(*install_args(session.host, OLD_PLUGIN_ID))
     if not installed.ok:
-        if session.host == "codex":
-            honoured = "0" * 40 in installed.output
-            ctx.log.note(
-                "Codex "
-                + ("honoured `sha`: it tried to check out the pinned forty zeros" if honoured else "refused the install")
-                + " (CHANGE_DETECTED: the 0.4.14 Codex install path does not work as the ticket assumes)"
-            )
         raise StepFail(f"the 0.4.14 install was refused: {describe(installed)}")
     require_listed(read_entries(session, marketplace=OLD_MARKETPLACE_NAME), OLD_PLUGIN_ID, OLD_VERSION, "0.4.14", ctx.log)
     commit = installed_commit(session, OLD_PLUGIN_ID, installed.stdout)
@@ -1050,8 +1080,8 @@ def step_level2(ctx: Context) -> None:
     # Owner decision of 2026-11-26 (S77R-01): this script answers the 0.4.9 installer's INSTALL prompt on
     # standard input, only for an install into the empty JOHNNY_ROOT made for this acceptance.
     installed = run_command(
-        ctx.services.level2_install(downloads / LEVEL2_WRAPPER),
-        cwd=downloads,
+        ctx.services.level2_install((downloads / LEVEL2_WRAPPER).resolve()),
+        cwd=ctx.step_dir,
         env=ctx.environment(extra, omitted),
         stdin=LEVEL2_CONFIRMATION,
         timeout=1800,

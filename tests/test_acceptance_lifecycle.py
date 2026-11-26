@@ -31,13 +31,25 @@ WORKFLOW = ROOT / ".github" / "workflows" / "acceptance.yml"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 REPOSITORY_README = ROOT / "README.md"
 ZEROS = "0" * 40
+TICKET_ENV_ALLOW_LIST = (
+    "PATH",
+    "SYSTEMROOT",
+    "WINDIR",
+    "COMSPEC",
+    "PATHEXT",
+    "TEMP",
+    "TMP",
+    "LOCALAPPDATA",
+    "APPDATA",
+    "PROGRAMDATA",
+)
 
 FAKE_CLI = r'''
 import json, os, shutil, subprocess, sys
 from pathlib import Path
 
-host, log_path, mode = sys.argv[1], sys.argv[2], sys.argv[3]
-args = sys.argv[4:]
+host, log_path, mode, pinned = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+args = sys.argv[5:]
 home = Path(os.environ["CLAUDE_CONFIG_DIR" if host == "claude" else "CODEX_HOME"])
 with open(log_path, "a", encoding="utf-8") as handle:
     handle.write(json.dumps({"host": host, "args": args, "cwd": os.getcwd(), "env": dict(os.environ)}) + "\n")
@@ -121,13 +133,11 @@ if args[0:2] in (["plugin", "install"], ["plugin", "add"]):
         fail("Error: marketplace not found")
     installed_path = home / "plugins" / "cache" / market / name
     if known["kind"] == "old":
-        if host == "codex" and mode != "old_ok":
-            fail("Error: git checkout " + "0" * 40 + " failed with status exit code: 128", 1)
         state["installed"][identity] = {"version": "0.4.14"}
         if host == "claude":
             plugins = home / "plugins"
             plugins.mkdir(parents=True, exist_ok=True)
-            commit = "0b3afd3645946f97662c336f0e6ac0dcae502e69" if mode != "wrong_commit" else "1" * 40
+            commit = pinned if mode != "wrong_commit" else "1" * 40
             (plugins / "installed_plugins.json").write_text(
                 json.dumps({"version": 2, "plugins": {identity: [{"gitCommitSha": commit}]}}), encoding="utf-8"
             )
@@ -142,6 +152,17 @@ if args[0:2] in (["plugin", "install"], ["plugin", "add"]):
     else:
         _, entry = entry_of(Path(known["file"]))
         source = entry["source"]
+        if isinstance(source, dict) and "sha" in source:
+            if mode == "old_refused":
+                fail("Error: git checkout " + source["sha"] + " failed with status exit code: 128")
+            installed_path = installed_path / entry["version"]
+            git("clone", "-q", source["url"], str(installed_path))
+            git("-C", str(installed_path), "checkout", "-q", source["sha"])
+            state["installed"][identity] = {"version": entry["version"]}
+            save()
+            print(json.dumps({"pluginId": identity, "name": name, "marketplaceName": market,
+                              "version": entry["version"], "installedPath": str(installed_path)}))
+            sys.exit(0)
         relative = source if isinstance(source, str) else source["path"]
         target = Path(known["root"]) / relative
         if not target.is_dir() and mode != "lenient":
@@ -161,13 +182,14 @@ if args[0:2] == ["plugin", "list"]:
     if mode == "no_list_json":
         fail("error: unknown option '--json'")
     rows = state["installed"]
+    on = mode != "disabled"
     if host == "claude":
-        print(json.dumps([{"id": key, "version": value["version"], "scope": "user", "enabled": True} for key, value in rows.items()]))
+        print(json.dumps([{"id": key, "version": value["version"], "scope": "user", "enabled": on} for key, value in rows.items()]))
     else:
         market = args[args.index("--marketplace") + 1]
         listed = [
             {"pluginId": key, "name": key.split("@")[0], "marketplaceName": key.split("@")[1],
-             "version": value["version"], "installed": True, "enabled": True}
+             "version": value["version"], "installed": True, "enabled": on}
             for key, value in rows.items() if key.endswith("@" + market)
         ]
         print(json.dumps({"installed": listed, "available": []}))
@@ -199,7 +221,9 @@ if action == "install":
     answer = sys.stdin.read()
     with open(log_path, "a", encoding="utf-8") as handle:
         handle.write(json.dumps({"answer": answer, "root_entries": sorted(item.name for item in root.iterdir()),
-                                 "has_userprofile": "USERPROFILE" in os.environ}) + "\n")
+                                 "has_userprofile": "USERPROFILE" in os.environ, "cwd": os.getcwd(),
+                                 "wrapper": sys.argv[4], "home": os.environ.get("HOME"),
+                                 "env_names": sorted(name.upper() for name in os.environ)}) + "\n")
     if answer != "INSTALL\n":
         sys.exit(2)
     (root / "launcher").mkdir()
@@ -311,6 +335,30 @@ class Fixture:
         run_git(self.repo, "add", "-A")
         run_git(self.repo, "commit", "-q", "-m", "fixture")
         self.candidate = run_git(self.repo, "rev-parse", "HEAD")
+        # the 0.4.14 marketplace of this fixture: a commit off the candidate, on a side branch, that names the
+        # candidate's own commit as its plugin source
+        run_git(self.repo, "checkout", "-q", "-b", "old")
+        write_text(
+            self.repo / ".claude-plugin" / "marketplace.json",
+            json.dumps(
+                {
+                    "name": "johnny-ai-skill",
+                    "owner": {"name": "Fixture"},
+                    "plugins": [
+                        {
+                            "name": "johnny-ai-skill",
+                            "version": "0.4.14",
+                            "source": {"source": "url", "url": str(self.repo), "sha": self.candidate},
+                        }
+                    ],
+                },
+                indent=2,
+            )
+            + "\n",
+        )
+        run_git(self.repo, "commit", "-q", "-am", "the 0.4.14 marketplace")
+        self.old_commit = run_git(self.repo, "rev-parse", "HEAD")
+        run_git(self.repo, "checkout", "-q", "main")
         generated = base / "generated"
         run_git(base, "clone", "-q", "--no-hardlinks", str(self.repo), str(generated))
         completed = subprocess.run(
@@ -380,7 +428,8 @@ class LifecycleCase(unittest.TestCase):
 
     def launchers(self, mode: str = "ok") -> dict[str, list[str]]:
         return {
-            host: [sys.executable, str(self.cli), host, str(self.log), mode] for host in ("claude", "codex")
+            host: [sys.executable, str(self.cli), host, str(self.log), mode, fixture().candidate]
+            for host in ("claude", "codex")
         }
 
     def services(
@@ -393,7 +442,7 @@ class LifecycleCase(unittest.TestCase):
             source_repo=fixture().repo,
             environ=environ,
             downloader=self.download,
-            level2_install=lambda wrapper: [sys.executable, str(level2), "install", str(level2_log), level2_mode],
+            level2_install=lambda wrapper: [sys.executable, str(level2), "install", str(level2_log), level2_mode, str(wrapper)],
             level2_uninstall=lambda root: [sys.executable, str(level2), "uninstall", str(level2_log), level2_mode],
         )
 
@@ -414,7 +463,9 @@ class LifecycleCase(unittest.TestCase):
         run_root = self.tmp / f"run{self.runs}"
         chosen = services or self.services(mode, level2_mode)
         digests = {name: sha256_hex(b"fake " + name.encode("ascii")) for name in lifecycle.LEVEL2_ASSETS}
-        with mock.patch.object(lifecycle, "LEVEL2_ASSETS", digests):
+        with mock.patch.object(lifecycle, "LEVEL2_ASSETS", digests), mock.patch.object(
+            lifecycle, "OLD_MARKETPLACE_COMMIT", fixture().old_commit
+        ), mock.patch.object(lifecycle, "OLD_PINNED_COMMIT", fixture().candidate):
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 code = lifecycle.main(
                     [
@@ -502,11 +553,20 @@ class NormalBehaviourTests(LifecycleCase):
                 self.assertEqual(Path(str(call["cwd"])).resolve(), step.resolve())
 
     def test_no_variable_outside_the_allow_list_reaches_a_host_cli(self) -> None:
-        environ = {**os.environ, "ACCEPTANCE_SENTINEL": "leak", "CODEX_HOME": "/the/users/own", "GITHUB_TOKEN": "x"}
+        environ = {
+            **os.environ,
+            "ACCEPTANCE_SENTINEL": "leak",
+            "CODEX_HOME": "/the/users/own",
+            "GITHUB_TOKEN": "x",
+            "ANTHROPIC_API_KEY": "leak",
+            "OPENAI_API_KEY": "leak",
+        }
         services = self.services(environ=environ)
         code, report, _ = self.run_script("build,fresh", services=services)
         self.assertEqual(code, 0, report)
-        allowed = set(lifecycle.ENV_ALLOW_LIST) | {
+        # pinned against the ticket's ten names, not against the constant the script itself reads
+        self.assertEqual(lifecycle.ENV_ALLOW_LIST, TICKET_ENV_ALLOW_LIST)
+        allowed = set(TICKET_ENV_ALLOW_LIST) | {
             "CLAUDE_CONFIG_DIR",
             "CODEX_HOME",
             "HOME",
@@ -519,6 +579,8 @@ class NormalBehaviourTests(LifecycleCase):
             names = {name.upper() for name in environment_of(call)}
             self.assertNotIn("ACCEPTANCE_SENTINEL", names)
             self.assertNotIn("GITHUB_TOKEN", names)
+            self.assertNotIn("ANTHROPIC_API_KEY", names)
+            self.assertNotIn("OPENAI_API_KEY", names)
             self.assertEqual(names - allowed - {"LC_CTYPE", "__PYVENV_LAUNCHER__"}, set(), call["args"])
             self.assertNotEqual(environment_of(call).get("CODEX_HOME"), "/the/users/own")
 
@@ -552,12 +614,36 @@ class NormalBehaviourTests(LifecycleCase):
         self.assertEqual(code, 1)
         self.assertEqual(self.verdicts(report)["upgrade/claude"], "FAIL")
 
-    def test_codex_refusing_the_zero_pin_is_a_fail_that_says_sha_is_honoured(self) -> None:
-        code, report, _ = self.run_script("build,upgrade", host="codex")
+    def test_codex_installs_0414_from_a_local_marketplace_written_byte_for_byte(self) -> None:
+        code, report, run_root = self.run_script("build,upgrade", host="codex")
+        self.assertEqual(code, 0, report)
+        step = run_root / "upgrade-codex"
+        local = step / "marketplace-0414"
+        files = sorted(item.relative_to(local).as_posix() for item in local.rglob("*") if item.is_file())
+        self.assertEqual(files, [".claude-plugin/marketplace.json"])
+        stored = subprocess.run(
+            ["git", "-C", str(fixture().repo), "cat-file", "blob", f"{fixture().old_commit}:.claude-plugin/marketplace.json"],
+            capture_output=True,
+            check=True,
+            env=git_env(),
+        ).stdout
+        self.assertEqual((local / ".claude-plugin" / "marketplace.json").read_bytes(), stored)
+        added = [arguments_of(call) for call in self.calls() if arguments_of(call)[:3] == ["plugin", "marketplace", "add"]]
+        self.assertEqual(added[0], ["plugin", "marketplace", "add", str(local)])
+        self.assertIn("installed from " + fixture().candidate, json.dumps(report[-1]["evidence"]))
+
+    def test_codex_refusing_the_0414_install_is_a_fail(self) -> None:
+        code, report, _ = self.run_script("build,upgrade", host="codex", mode="old_refused")
         self.assertEqual(code, 1)
-        row = report[-1]
-        self.assertEqual(row["verdict"], "FAIL")
-        self.assertIn("honoured `sha`", json.dumps(row["evidence"]))
+        self.assertEqual(report[-1]["verdict"], "FAIL")
+        self.assertIn("refused", json.dumps(report[-1]["evidence"]))
+
+    def test_a_disabled_entry_is_not_installed_and_enabled(self) -> None:
+        code, report, _ = self.run_script("build,fresh", mode="disabled")
+        self.assertEqual(code, 1)
+        self.assertEqual(self.verdicts(report)["fresh/claude"], "FAIL")
+        self.assertEqual(self.verdicts(report)["fresh/codex"], "FAIL")
+        self.assertIn("enabled=False", json.dumps(report[-1]["evidence"]))
 
     def test_uninstall_leaves_only_the_allow_listed_cache(self) -> None:
         code, report, _ = self.run_script("build,uninstall")
@@ -751,6 +837,9 @@ class ResidueTests(LifecycleCase):
         self.assertEqual(len(lifecycle.scan_residue(step, "codex", entries)), 5)
         write_text(step / "empty" / "software-factory" / "file.txt", "x")
         self.assertIn("path empty/software-factory", lifecycle.scan_residue(step, "claude", entries))
+        # an allow-listed path is a whole path component: a sibling that only starts like it is residue
+        write_text(step / "plugins" / "cache" / "software-factory.old" / "a.json", '{"n": "software-factory"}\n')
+        self.assertIn("path plugins/cache/software-factory.old", lifecycle.scan_residue(step, "claude", entries))
 
     def test_a_malformed_allow_list_entry_is_a_fail_closed_error(self) -> None:
         with self.assertRaises(lifecycle.StepFail):
@@ -812,7 +901,18 @@ class Level2Tests(LifecycleCase):
         code, report, run_root = self.run_script("build,level2")
         self.assertEqual(code, 0, report)
         answers = [json.loads(line) for line in self.level2_log.read_text(encoding="utf-8").splitlines()]
-        self.assertEqual(answers, [{"answer": "INSTALL\n", "root_entries": [], "has_userprofile": False}])
+        self.assertEqual(len(answers), 1)
+        entry = answers[0]
+        step = run_root / "level2"
+        self.assertEqual(entry["answer"], "INSTALL\n")
+        self.assertEqual(entry["root_entries"], [])
+        self.assertFalse(entry["has_userprofile"])
+        self.assertEqual(Path(entry["cwd"]).resolve(), step.resolve())
+        self.assertEqual(Path(entry["wrapper"]), step / "download" / lifecycle.LEVEL2_WRAPPER)
+        self.assertTrue(Path(entry["wrapper"]).is_absolute())
+        self.assertEqual(Path(entry["home"]), step / "home")
+        allowed = set(TICKET_ENV_ALLOW_LIST) | {"HOME", "GIT_CONFIG_GLOBAL", "GIT_TERMINAL_PROMPT", "DISABLE_AUTOUPDATER", "JOHNNY_ROOT"}
+        self.assertEqual(set(entry["env_names"]) - allowed - {"LC_CTYPE", "__PYVENV_LAUNCHER__"}, set())
         self.assertTrue((run_root / "level2" / "download" / lifecycle.LEVEL2_BUNDLE).is_file())
         self.assertFalse((run_root / "level2" / "root").exists())
 
