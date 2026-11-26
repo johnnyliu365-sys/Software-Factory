@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. To answer a read-only question about one of those rules, read that file: its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index gives the one row and the one section to read. Do not locate a rule with grep, a full-text search or by browsing files.\""
+          }
+        ]
+      }
+    ]
+  }
+}

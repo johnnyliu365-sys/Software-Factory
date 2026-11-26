@@ -162,6 +162,8 @@ uninstall 移除什麼、留下什麼：
 
 規則的來源是 AGENTS.md、Workflow.md、CodeReview.md 與 modules/spec/workflow-governance.md。
 
+每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡，以及查本插件規則的唯讀查詢要先查流程索引；在 Claude Code 裡輸入 /hooks 可以看到它。
+
 ## 9. 路線
 
 0.5.0（這一版），然後是 wave 4，然後是 beta（除了部署以外的每一項 1.0 能力，跑在測試者自己的電腦上），然後是給企業的 1.0（自行架設，用 Docker Compose），之後再做 SaaS。
