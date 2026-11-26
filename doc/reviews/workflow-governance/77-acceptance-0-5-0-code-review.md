@@ -172,3 +172,153 @@ causes: IMPLEMENTATION_DETAIL
 ### Residue (R77-2)
 
 Removed: `C:/Temp/claude/R77-2-fresh`, `C:/Temp/claude/R77-2-mypycache`, and every `R77-2-*` entry in `.worktrees/77-acceptance-review-scratch` (the clone `R77-2-m`, the driver and boundary scripts, and the captures, which were copied here first as `M-reviewer-rev03.txt` and `V2-reviewer-rev03.txt`). `PROCESSES_LEFT=0`.
+
+## Revision04 initial review
+
+- Ticket: revision04, read at `origin/cp/wave3`. The ticket's last change is commit `2d6b25aa`.
+- Dispatch: `JAS-77-3.yaml`. Its sha256 is `2d5bb809…eddec` (recomputed), the same digest as the state row.
+- Owner decision: the REQ-043 row "Owner decisions 2026-11-26 (host CLI drift: relax; old and new must not fight, "A")".
+- Candidate: `2290bf4fac5d688cd21b31d9d84869708d34784a`, two additive commits on `9d4ccf63`: `8bb57b56` (the fix) and `2290bf4f` (the record only).
+  - Both are authored `Johnny Liu <johnny.liu365@gmail.com>`, with the trailer `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+  - The candidate equals `origin/cp/wave3-77-acceptance`.
+- Label: the initial review of closure revision04 (CodeReview §5).
+- Reviewer: `ticket-review` seat, run id `R77-3` (claude-opus-5-5).
+
+### Closure of the revision03 findings (diff `9d4ccf63..2290bf4f`)
+
+| id | status | evidence |
+| --- | --- | --- |
+| S77-12 | Closed | `TicketLiteralTests` compares the unpatched constants with the ticket's literals: `OLD_PINNED_COMMIT`, `OLD_MARKETPLACE_COMMIT`, `CLAUDE_OLD_MARKETPLACE_URL`, `LEVEL2_RELEASE_URL`, both `LEVEL2_ASSETS` digests, the versions and `LEVEL2_CONFIRMATION`. Reviewer RM8 now fails `test_the_old_install_commits_and_url_are_the_tickets`. Reviewer RM9 now fails `test_the_level2_assets_and_their_digests_are_the_tickets`. |
+| S77-13 | Closed, now in scope under the owner's relax decision | **Pins:** the README and the workflow say `claude` 2.1.332 and `codex` 0.166.0. In L1, every `--version` printed `2.1.332 (Claude Code)` from `~/.local/bin/claude.EXE` and `codex-cli 0.166.0` (four times each), with no copied binary. `npm view` confirms both versions exist. **Residue:** a `key` entry `key \| claude \| .claude.json#declinedPlugins \| the host's own decline record (owner decision 2026-11-26, 放寬)`. This is the reason text revision04 item 2 words. **Reinstall:** after the scan, `install_from_local` and `require_listed(… "after the reinstall" …)`. **recover:** the count excludes ids that end in `@builtin`. My V3 run (`--host claude --steps build,fresh,uninstall`, host `claude` 2.1.332, run root `C:/Temp/claude/R77-3-V3`) gives all three `PASS`, with evidence "no residue … outside the 3 allow-listed entries" and "after the reinstall: … 0.5.0 … enabled=True". Afterwards the step's `.claude.json` has the top-level key `declinedPlugins`, which the reinstall had emptied to `[]`. I did not see the record's value at scan time; that it held the plugin id is the seat's evidence. |
+| S77-11 | Carried | Hardening: the residue match is case-sensitive. It is not part of this correction. |
+
+### Findings of this round
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| S77-14 | `EVIDENCE_DEFECT` | Low | `tests/test_acceptance_lifecycle.py` `test_a_key_entry_admits_one_top_level_value_and_is_not_a_line_rule`; `lifecycle._admitted_keys` | Revision04 item 2 limits the `key` entry to `.claude.json` **under the step's `CLAUDE_CONFIG_DIR`**. The code is correct: it compares the target with the path relative to the step directory (`file_part == relative`). But no test puts a second `.claude.json` deeper in the tree, so matching by file name alone would pass. A regression would then admit the `declinedPlugins` value of any nested `.claude.json`, for example one in a cache or project directory. | Reviewer **KR1**: `file_part == relative` → `file_part == relative.rsplit("/", 1)[-1]` gives **65 passed, exit 0** (zero red). The output was unfiltered (`M-reviewer-rev04.txt`). | In that test, write `sub/.claude.json` holding `{"declinedPlugins": ["software-factory@software-factory"]}` and assert `line sub/.claude.json:…` is a finding. |
+| S77-15 | `EVIDENCE_DEFECT` | Low | `tests/test_acceptance_lifecycle.py` fake mode `extra`; `step_recover` filter | The `@builtin` filter is correct: `endswith("@builtin")`. My probe confirms that `builtin-tool@elsewhere` and `a@builtins` are kept and only `x@builtin` is dropped. But the "second entry fails" test uses `other@elsewhere`, which contains no `builtin`, so matching by substring would pass. A regression would hide a non-builtin plugin whose name contains `builtin`. This answers the coordinator's question: as committed, no such plugin is hidden; the property is just not pinned. Note: an entry from a marketplace literally named `builtin` is dropped by design. That matches the ticket's wording "the host's `@builtin` plugins", and the isolated step adds no such marketplace. | Reviewer **BR1**: `not item.plugin_id.endswith(BUILTIN_SUFFIX)` → `"builtin" not in item.plugin_id` gives **65 passed, exit 0** (zero red). | Rename the `extra` fake entry to `builtin-helper@elsewhere`, or add a second extra entry with that name. The existing assertion that `recover` fails then pins it. |
+| S77-16 | `OUT_OF_SCOPE_HARDENING` | Low | `lifecycle._lines_outside_keys` | Once a `key` entry applies, the file is judged through `json.loads` and then re-serialized. Python keeps the last value of a duplicated key, so `{"declinedPlugins": […], "x": "software-factory", "x": "ok"}` gives no finding. Without the entry, the raw line is a finding. Hosts write `.claude.json` through a serializer, so this does not violate the current closure. | Reviewer probe: `scan_residue` with the entry → `[]`; without the entry → `['line .claude.json:1']`. | Follow-up hardening: `json.loads(…, object_pairs_hook=…)` that raises on a duplicate key, so `_lines_outside_keys` returns `None` and the raw lines are judged. |
+
+### Checks
+
+| # | Check | Result | Evidence |
+| --- | --- | --- | --- |
+| 1 | `key` kind against revision04 item 2 | PASS in code; S77-14 test gap | The target is `.claude.json#declinedPlugins`, host `claude`, and the path is relative to the step directory (= `CLAUDE_CONFIG_DIR`). Only the top-level key is removed: the nested same-name key is still judged (reviewer KR2 red). Other keys and lines are judged (reviewer KR3 red). A file that is not a JSON object falls back to raw lines, which fails closed. A `key` target without `#` admits nothing. |
+| 2 | Reinstall with the record present, and the `@builtin` filter | PASS; S77-15 test gap | Reviewer RI1 (reinstall dropped) is red. BR2 (filter to `@software-factory` only) is red. BR1 is zero red (S77-15). |
+| 3 | Pins and workflow | PASS | The pins equal the printed versions, and a test compares README and workflow. The workflow diff since `504e5177` is that single `npm install` line. The trigger is still `workflow_dispatch` only, with `permissions: contents: read`, the same three SHA-pinned actions, `fetch-depth: 0`, `persist-credentials: false`, and no secret or token name. |
+| 4 | Earlier mutations | PASS | RM1, RM2, RM4, RM8 and RM9 each turn one test red (baseline 65 passed). Each mutation ran on the full file, in a disposable `--no-hardlinks` clone, with porcelain 0 after each. |
+| 5 | Boundary | PASS | `read_boundary(revision04)` → `DECLARED`. The diff `f53ecc6a..2290bf4f` is five `CREATE 100644` changes, each admitted, and `evaluate_changes` gives `(None, None)`. |
+| 6 | Local run (L1, L2) and record | PASS | L1 exits 0 with ten `PASS` verdicts, using the host's own CLIs. L2: build `PASS`, codex-ref `NOT_SUPPORTED`, codex-files `PASS`. The record carries both versions and says the candidate differs from `8bb57b56` only by the record, which is true (`git diff --stat`). |
+| 7 | Receipt truth | PASS | P1 rerun: 176 passed, 392 subtests, the same as the receipt. T1 rerun: `Success: no issues found in 2 source files`. M1: the seat's thirteen mutations are each red. C1: run 45746324457 has headSha `2290bf4f`, conclusion success, both jobs success. E1 rerun with `--candidate 2290bf4f`: `cells=9 defects=0`, exit 0. `RETURN.md` differs from `RETURN.as-returned.md` only by USAGE. The foreign pytests at F1 are named in the STATEMENT, as the F1 assert requires, and F1 shows only the registered failure. `items: 13` matches the 13 items. There is no `jas77-r3*` residue under `C:/Temp/claude`. |
+| 8 | P0 types | PASS | `mypy --strict` is clean. There is no `Any` and no `type: ignore`. |
+| 9 | Full suite | Not rerun | I took no host lock and did not touch the `integ-80` lock. The seat's F1 and both CI jobs cover the suite. |
+
+Host commands: only through `lifecycle.py` (V3), so only `--version`, `plugin` and `plugin marketplace`. No prompt, session or login ran, and the user's configuration was not touched.
+
+### Verdict
+
+`CHANGES_REQUESTED`. S77-12 and S77-13 are closed, and the candidate's behaviour matches revision04 item 2 word for word. Two properties that revision04 states are not pinned by a test, and each of my counter-mutations on them left all 65 tests passing:
+- S77-14: the `key` entry applies only to `.claude.json` at the step root;
+- S77-15: the `@builtin` filter matches the suffix, not a substring.
+
+Each needs a one-line test change, added as an additive commit on the same branch. S77-11 and S77-16 are hardening and do not block.
+
+```review-verdict
+candidate: 2290bf4fac5d688cd21b31d9d84869708d34784a
+verdict: CHANGES_REQUESTED
+round: initial
+closure_revision: revision04
+reviewer: ticket-review seat R77-3 (claude-opus-5-5)
+reviewed_at: 2026-11-26
+```
+
+```rework-record
+candidate: 2290bf4fac5d688cd21b31d9d84869708d34784a
+round: 4
+kind: INITIAL
+verdict: CHANGES_REQUESTED
+causes: IMPLEMENTATION_DETAIL
+```
+
+### Residue (R77-3)
+
+Removed: `C:/Temp/claude/R77-3-V3`, `C:/Temp/claude/R77-3-mypycache`, and every `R77-3-*` entry in `.worktrees/77-acceptance-review-scratch` (the clone `R77-3-m`, the driver, boundary and probe files, and the captures, which were copied here first as `M-reviewer-rev04.txt` and `V3-reviewer-rev04.txt`). `PROCESSES_LEFT=0`.
+
+## Revision04 correction review
+
+- Candidate: `8cf1e387d38ad7a346582586f17e3f27034bb402`, one additive commit on `2290bf4f`.
+  - It is authored `Johnny Liu <johnny.liu365@gmail.com>`, with the trailer `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+  - It equals `origin/cp/wave3-77-acceptance`.
+- Label: the correction review of closure revision04. CodeReview §5 rule B applies.
+- Reviewer: `ticket-review` seat, run id `R77-4` (claude-opus-5-5).
+
+### Closure of the revision04 initial-review findings
+
+| id | status | evidence |
+| --- | --- | --- |
+| S77-14 | Closed | The key-scan test writes `.claude.json` at the step root and `sub/.claude.json`, each with `declinedPlugins` naming the plugin. It asserts there are findings and that every one is `line sub/.claude.json:…`, so the file at the root is admitted and the nested one is not. I reran KR1 (any file of that base name): `1 failed, 64 passed`. The failure is in `test_a_key_entry_admits_one_top_level_value_and_is_not_a_line_rule`, with `AssertionError: [] is not true`, which is the intended reason. |
+| S77-15 | Closed | The fake `extra` entry is now `builtin-helper@elsewhere`. I reran BR1 (`"builtin" not in id`): `1 failed, 64 passed`. The failure is in `test_a_second_entry_that_is_not_builtin_fails_recover`, with `AssertionError: 0 != 1`, because `recover` passed with the extra entry hidden. That is the intended reason. Baseline: 65 passed. Output unfiltered, in `M-reviewer-rev04-correction.txt`. |
+| S77-11, S77-16 | Carried | Hardening, not touched by this correction. Neither blocks. |
+
+### Findings of this round
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| S77-17 | `OUT_OF_SCOPE_HARDENING` | Low | `doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md` line 40 | The record says the receipt's candidate "differs by this record only" from `8bb57b56`. Since `8cf1e387`, the candidate also differs by one test commit. The substantive claims are still true: `lifecycle.py` is unchanged since `8bb57b56` (`git diff 2290bf4f 8cf1e387` touches only `tests/test_acceptance_lifecycle.py`), and L1 and L2 were repeated at the candidate with the same verdicts. Closure item 6 (the record starts with the local run) is not violated. | `git diff --stat 2290bf4f 8cf1e387`: one file, the test, 6 insertions and 1 deletion. | When the control plane next edits the record (the cloud-run section), say "it differs by this record and by test changes". |
+
+### Checks
+
+| # | Check | Result | Evidence |
+| --- | --- | --- | --- |
+| 1 | Diff scope | PASS | `git diff 2290bf4f 8cf1e387` touches only `tests/test_acceptance_lifecycle.py`. It changes two test data lines and adds one assertion block. There is no production or record change. No new defect is in the diff. |
+| 2 | P1, T1 | PASS | P1 rerun: 176 passed, 392 subtests, the same as the receipt. T1 rerun: `Success: no issues found in 2 source files`. |
+| 3 | CI | PASS | Run 45752942946 has headSha `8cf1e387`, conclusion success, and both jobs success. Its log has no `UNREGISTERED_FAILURE`, `REGISTERED_NOT_FAILING` or `REGISTERED_NOW_PASSING`. |
+| 4 | Receipt and STATEMENT | PASS | E1 rerun with `--candidate 8cf1e387`: `cells=9 defects=0`, exit 0. `RETURN.md` differs from `RETURN.as-returned.md` only by USAGE. L1 at `C:\Temp\claude\jas77-r4-L1` has ten `PASS` verdicts and exit 0. In L1, `--version` printed `2.1.332 (Claude Code)` and `codex-cli 0.166.0` four times each, from the host's own `~/.local/bin/claude.EXE`. M1 shows the baseline (65 passed) and 15 mutations, each red, with the exit list `0,1×15`. The STATEMENT describes the host lock truly: the seat waited for another seat's `r81a` lock and named the foreign pytest 51444. There is no `jas77-r4*` residue, and the seat's scratch is empty. `items: 13` matches the 13 items. |
+
+I took no host lock and did not touch the `integ-81` lock. Host commands: none (no `lifecycle.py` run was needed for a test-only diff).
+
+### Verdict
+
+`APPROVED`. S77-14 and S77-15 are closed, and the reruns of KR1 and BR1 now fail their tests for the intended reasons. The diff is limited to the test file. P1, T1, CI and E1 hold. The remaining items S77-11, S77-16 and S77-17 are hardening and do not block. Under the review label rule this is the one correction review of revision04.
+
+```review-verdict
+candidate: 8cf1e387d38ad7a346582586f17e3f27034bb402
+verdict: APPROVED
+round: correction
+closure_revision: revision04
+reviewer: ticket-review seat R77-4 (claude-opus-5-5)
+reviewed_at: 2026-11-26
+```
+
+```rework-record
+candidate: 8cf1e387d38ad7a346582586f17e3f27034bb402
+round: 5
+kind: CORRECTION
+verdict: APPROVED
+causes:
+```
+
+### Residue (R77-4)
+
+Removed: `C:/Temp/claude/R77-4-mypycache`, and every `R77-4-*` entry in `.worktrees/77-acceptance-review-scratch` (the clone `R77-4-m`, the driver, and the capture, which was copied here first as `M-reviewer-rev04-correction.txt`). `PROCESSES_LEFT=0`.
+
+## Seat token use (readiness criterion 5)
+
+Host-reported usage per seat, summed per unique message id, against the expectation the owner confirmed on 2026-11-18 ("1A"); appended to the receipt as `USAGE` cells at integration.
+
+| Seat | Model | input | cache write | cache read | output | processed | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `seat:implementation-standard/JAS77R1` | claude-sonnet-5-5 | 564 | 1872598 | 98640156 | 312093 | 100513318 | OVER_OUTPUT,OVER_PROCESSED |
+| `seat:ticket-review/R77` | claude-opus-5-5 | 234 | 1731437 | 28150212 | 115196 | 29881883 | OVER_OUTPUT,OVER_PROCESSED |
+
+## Seat use against the expectation (control plane, 2026-11-26)
+
+Both seats are over the repository's expectation: implementation `OVER_OUTPUT,OVER_PROCESSED` (output 312093, processed 100513318), review `OVER_OUTPUT,OVER_PROCESSED` (output 115196, processed 29881883). The cause is the ticket's shape, not drift. Ticket 77 ran four closure revisions (revision01 to revision04) in one seat each, because two owner decisions came out of its own evidence:
+- the Codex 0.4.14 zeros pin (CHANGE_DETECTED);
+- the host CLI moving to 2.1.332.
+
+Each revision reran the full local lifecycle on both hosts, plus a full suite. Wave 4's T13 (the full suite where it pays) and T15 (a rule-only review before every dispatch) address the cost. The carried items are:
+- S77-11: case-insensitive residue match;
+- S77-16: refusing duplicate JSON keys;
+- S77-17: the record's "differs by this record only" wording.

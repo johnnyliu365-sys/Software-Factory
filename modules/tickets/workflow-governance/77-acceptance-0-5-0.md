@@ -14,7 +14,7 @@
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:2d5bb809e9c9f2db6a95a0330bd3d39aa40a3740c619a595b190435e32aeddec (`doc/handoffs/2026/workflow-governance/dispatch/JAS-77-3.yaml`)（revision03; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner decision of 2026-11-26 on S77R-01; the seat's CHANGE_DETECTED on revision02 and its initial review (S77-01 to S77-11) give revision03, with the owner decision of 2026-11-26 "A" on the Codex upgrade; the initial review of revision03 (S77-12, S77-13) and the owner decisions of 2026-11-26 on host CLI drift ("放寬") and on old and new versions ("A") give revision04） |
+| 狀態 | `REVIEW_APPROVED`; dispatch=sha256:2d5bb809e9c9f2db6a95a0330bd3d39aa40a3740c619a595b190435e32aeddec (`doc/handoffs/2026/workflow-governance/dispatch/JAS-77-3.yaml`)（candidate `8cf1e387`; correction review `APPROVED`） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/77-acceptance` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/77-acceptance-review` |
