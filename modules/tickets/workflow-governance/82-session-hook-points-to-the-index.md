@@ -8,13 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision02 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
+| Agent Context binding | ticket revision03 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
 | 實作語言 | JSON and Markdown; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:669a489d88e262c6ea1d0615943d18789335d2f5a4152fbed65f686a38aa935f (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-1.yaml`)（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02)） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:669a489d88e262c6ea1d0615943d18789335d2f5a4152fbed65f686a38aa935f (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-1.yaml`)（revision03; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
@@ -51,6 +51,8 @@ Process tier: strict.
 
 **The problem.** The decision is quoted in `REQ-20261103-043`, row "Owner finding and decision 2026-11-26 (the written lookup rule is not followed; the plugin ships a hook, "A")". In the owner's retest of the final candidate (`6d04fa6d`), a read-only lookup still located the rule by keyword search. The agent does not know where the installed plugin's `AGENTS.md` is, so it searches for the rule that forbids searching. Only a mechanism fixes that: the host must put the location and the first step in front of every session.
 
+**Revision03.** The owner retested `838bb354`. The hook ran, and both lookups went through the 流程索引 with no search. With `johnny-ai-skill` also installed, a plain question did not trigger ticket 81's guard, which sits in `SKILL.md`, and the owner said "舊版裝了／他沒有叫我刪". The owner decided "放進 hook" (REQ-043 row "Owner finding and decision 2026-11-26 (the old-plugin guard also goes into the hook, "放進 hook")"). The hook text gains the guard sentence, and the `SKILL.md` guard stays as a second line. Because `/hooks` does not exist in the desktop app, the README sentence names the terminal. Revision03 is carried by additive commits on the same branch; OLD for its rebuild is `838bb3540960f1cbb3a086c411136766235277d5`, the id revision02 recorded in G1.
+
 **Scope against the decision.** Option A said each session receives the 流程索引, the read-only-lookup paragraph and the installed plugin path (about 2 to 3 KB). This ticket injects only the path and the first step (about 0.4 KB), in ASCII. When Git Bash is missing, the command runs in Windows PowerShell 5.1, which does not print UTF-8 text reliably, and a second copy of the index would drift from `AGENTS.md`. The session reads the paragraph and the index from the file. Codex is tested in the owner-assisted test, not before this ticket. The owner accepted this ("接受", row "Owner decision 2026-11-26 (ticket 82 scope, "接受")" of `REQ-20261103-043`).
 
 **Facts this ticket relies on.** These are from the Claude Code plugin documentation (`code.claude.com/docs/en/plugins/components.md`, `manifest-reference.md`, `hooks.md`):
@@ -72,7 +74,7 @@ After this ticket:
            "hooks": [
              {
                "type": "command",
-               "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. To answer a read-only question about one of those rules, read that file: its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index gives the one row and the one section to read. Do not locate a rule with grep, a full-text search or by browsing files.\""
+               "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. To answer a read-only question about one of those rules, read that file: its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index gives the one row and the one section to read. Do not locate a rule with grep, a full-text search or by browsing files. If this session also lists a skill whose name begins with johnny-ai-skill: or whose file lies in a folder named johnny-ai-skill, then before anything else tell the user that the old 0.4.x plugin is still installed and conflicts with this version, give the removal commands in section 5 of ${CLAUDE_PLUGIN_ROOT}/README.md, ask the user to open a new session after removing it, and do nothing else in this session.\""
              }
            ]
          }
@@ -87,7 +89,7 @@ After this ticket:
 3. **`AGENTS.md`.** The anchor `<a id="process-index"></a>` goes directly above `## 流程索引`. It stands on its own line, with a blank line before it and after it, as `p0-source-type` does. No other line changes.
 4. **README section 8 (它怎麼運作).** This sentence is added at the end of the section, exactly, as its own paragraph:
 
-   "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡，以及查本插件規則的唯讀查詢要先查流程索引；在 Claude Code 裡輸入 /hooks 可以看到它。"
+   "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡、查本插件規則的唯讀查詢要先查流程索引，以及舊版 johnny-ai-skill 還裝著時要先停下來；在 Claude Code 終端機裡輸入 /hooks 可以看到它。"
 
    It holds no inline code, no path and no link.
 5. **Tests.**
@@ -111,8 +113,8 @@ After this ticket:
    - the STATEMENT gives the owner's refresh commands. The cache check looks for `hooks/hooks.json` in each host's `0.5.0` cache folder.
    - If this ticket is closed without integration, the control plane runs `git update-ref refs/heads/publication-0.5.0 6d04fa6d0cf0c1e7134a312894adc219f44bf4a9 <the id on the ref>`.
 7. **`doc/HARNESS-CHANGELOG.md`.**
-   - Directly below the ticket 81 row: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file and sends a read-only lookup to the 流程索引 first (ticket 82) | `REQ-20261103-043`, owner decision 2026-11-26 "A" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
-   - In `## 0.5.0`, as the last bullet of `### What to read instead`: `- Each session receives, from the plugin's SessionStart hook, the path of its rules file and the instruction to start a lookup at the 流程索引.`
+   - Directly below the ticket 81 row: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill (ticket 82) | `REQ-20261103-043`, owner decision 2026-11-26 "A" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
+   - In `## 0.5.0`, as the last bullet of `### What to read instead`: `- Each session receives, from the plugin's SessionStart hook, the path of its rules file, the instruction to start a lookup at the 流程索引, and the instruction to stop when the old plugin johnny-ai-skill is also listed.`
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
 1. Rerun ticket 77's local lifecycle at the integration commit with `--expected-publication` set to this ticket's commit, and add it to ticket 77's record.
@@ -152,7 +154,8 @@ After this ticket:
    - a matcher added;
    - the anchor `process-index` removed or moved below `## 流程索引`;
    - the command text changed by one word;
-   - the README sentence removed.
+   - the README sentence removed;
+   - the old-plugin sentence removed from the command.
 3. 外部失敗／fail-closed：a missing or unparsable `hooks/hooks.json` is a named defect, not a traceback.
 4. 回歸保護：every check of tickets 79, 80 and 81 still passes; `--verify-only` passes with the new pin.
 
