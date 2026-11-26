@@ -8,13 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision01 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
+| Agent Context binding | ticket revision02 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
 | 實作語言 | JSON and Markdown; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `PLANNED`（revision01; strict tier; rule-only review before dispatch） |
+| 狀態 | `PLANNED`（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02)） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
@@ -51,9 +51,11 @@ Process tier: strict.
 
 **The problem.** The decision is quoted in `REQ-20261103-043`, row "Owner finding and decision 2026-11-26 (the written lookup rule is not followed; the plugin ships a hook, "A")". In the owner's retest of the final candidate (`6d04fa6d`), a read-only lookup still located the rule by keyword search. The agent does not know where the installed plugin's `AGENTS.md` is, so it searches for the rule that forbids searching. Only a mechanism fixes that: the host must put the location and the first step in front of every session.
 
+**Scope against the decision.** Option A said each session receives the 流程索引, the read-only-lookup paragraph and the installed plugin path (about 2 to 3 KB). This ticket injects only the path and the first step (about 0.4 KB), in ASCII. When Git Bash is missing, the command runs in Windows PowerShell 5.1, which does not print UTF-8 text reliably, and a second copy of the index would drift from `AGENTS.md`. The session reads the paragraph and the index from the file. Codex is tested in the owner-assisted test, not before this ticket. The owner accepted this ("接受", row "Owner decision 2026-11-26 (ticket 82 scope, "接受")" of `REQ-20261103-043`).
+
 **Facts this ticket relies on.** These are from the Claude Code plugin documentation (`code.claude.com/docs/en/plugins/components.md`, `manifest-reference.md`, `hooks.md`):
 - A plugin's hooks live in `hooks/hooks.json` at the plugin root, under a top-level `"hooks"` key.
-- `${CLAUDE_PLUGIN_ROOT}` is substituted in the command with the installed plugin directory, using forward slashes in shell form.
+- `${CLAUDE_PLUGIN_ROOT}` is substituted anywhere in the command with the installed plugin directory: with forward slashes when Git Bash runs it, with native backslashes when PowerShell runs it.
 - A SessionStart hook's plain stdout, with exit 0, becomes context the model sees, capped at 10,000 characters.
 - With no matcher, the hook fires on `startup`, `resume`, `clear`, `compact` and `fork`.
 - On Windows a command runs in Git Bash, or in PowerShell when Git Bash is missing.
@@ -70,7 +72,7 @@ After this ticket:
            "hooks": [
              {
                "type": "command",
-               "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. For a read-only question (the content of a document, the state of a ticket, the wording of a rule), open that file at the anchor process-index, take the one row that fits the question, and read only the section that row links. Do not locate a rule with grep, a full-text search or by browsing files.\""
+               "command": "echo \"Software Factory plugin: its rules are in ${CLAUDE_PLUGIN_ROOT}/AGENTS.md. To answer a read-only question about one of those rules, read that file: its paragraph at the anchor read-only-lookup says how, and its table at the anchor process-index gives the one row and the one section to read. Do not locate a rule with grep, a full-text search or by browsing files.\""
              }
            ]
          }
@@ -79,27 +81,28 @@ After this ticket:
    }
    ```
 
-   - **The command is ASCII only.** It works the same in Git Bash and in PowerShell: `echo` is a command in both, and the path is substituted before the shell runs.
+   - **The command is ASCII only.** It works the same in Git Bash and in PowerShell: `echo` is a command in both, the path is substituted before the shell runs, and the text is inside one pair of double quotes in both shells.
    - **No matcher,** so the hook also fires after `resume`, `clear` and `compact`.
-2. **`.claude-plugin/plugin.json`.** The `payload` declaration gains `hooks/hooks.json`, in the form its other entries use. No other field changes.
+2. **`.claude-plugin/plugin.json`.** The `payload.files` list gains the line `      "hooks/hooks.json",` directly after the line `      "Workflow.md",`. `payload.trees` does not change, so no other file under `hooks/` ships. No other line changes.
 3. **`AGENTS.md`.** The anchor `<a id="process-index"></a>` goes directly above `## 流程索引`. It stands on its own line, with a blank line before it and after it, as `p0-source-type` does. No other line changes.
 4. **README section 8 (它怎麼運作).** This sentence is added at the end of the section, exactly, as its own paragraph:
 
-   "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡，以及唯讀查詢要先查流程索引；在 Claude Code 裡輸入 /hooks 可以看到它。"
+   "每次開新的 session，插件會用一個 SessionStart hook 告訴 agent 規則檔在哪裡，以及查本插件規則的唯讀查詢要先查流程索引；在 Claude Code 裡輸入 /hooks 可以看到它。"
 
    It holds no inline code, no path and no link.
 5. **Tests.**
    - **New `tests/test_plugin_session_hook.py`:**
      - `hooks/hooks.json` parses and equals item 1;
      - its command holds only ASCII;
-     - the anchor it names (`process-index`) stands exactly once in `AGENTS.md`, directly above `## 流程索引`;
-     - the payload declaration lists `hooks/hooks.json`, and the extracted publication tree holds it;
-     - with `${CLAUDE_PLUGIN_ROOT}` replaced by a temporary directory, the command run through `bash -c` prints exactly the expected text with that path, and exits 0. On Windows the test also runs it through `powershell -NoProfile -Command` and expects the same text. A case that needs a shell the runner lacks is skipped, and the skip names the shell.
-   - `tests/test_entry_read_only_lookup.py`: the anchor checks include `process-index`.
-   - `tests/test_plugin_payload_boundary.py`: the expected payload takes `hooks/hooks.json`.
+     - each anchor it names stands exactly once in `AGENTS.md`: `read-only-lookup`, and `process-index` directly above `## 流程索引`;
+     - the payload declaration lists `hooks/hooks.json`, and `materialise_publication_tree(<repository root>, <payload>, <temporary directory>)` writes `hooks/hooks.json` with the same bytes as the repository's file (the pinned commit is checked by K1, not by this test);
+     - README section `## 8. 它怎麼運作` holds the sentence of item 4 exactly once, as its own paragraph and as the section's last paragraph;
+     - with `${CLAUDE_PLUGIN_ROOT}` replaced by a temporary directory (forward slashes for bash, native separators for PowerShell), the command is run and must exit 0, write nothing to stderr, and print the expected text with that path followed by one line feed, after its stdout is decoded as UTF-8 and each CRLF is replaced by LF. The bash case runs `shutil.which("bash")` on Linux. On Windows it runs the file named by `CLAUDE_CODE_GIT_BASH_PATH` when that variable is set, otherwise `C:\Program Files\Git\bin\bash.exe`, and never a bare `bash`. It is skipped with the reason `Git Bash not found` when that file does not exist. On Windows only, the PowerShell case runs `[shutil.which("powershell"), "-NoProfile", "-NonInteractive", "-Command", command]`, and is skipped with the reason `Windows PowerShell not found` when `shutil.which("powershell")` is None.
+   - `tests/test_entry_read_only_lookup.py`: `ANCHORED_HEADINGS` gains `("process-index", "## 流程索引")` between the `p0-permissions` and `target-sources` entries, and the module docstring's "three anchors" sentence gains "; ticket 82 adds `process-index` above `## 流程索引`".
+   - `tests/test_plugin_payload_boundary.py`: `PayloadDeclarationTests` gains `def test_the_session_hook_is_carried(self) -> None:`, asserting `"hooks/hooks.json"` is in `_payload_entries(self.payload, "files")` and `"hooks"` is not in `_payload_entries(self.payload, "trees")`.
 6. **The rebuilt publication commit.** It is rebuilt exactly as ticket 80 item 5 says:
    - with the temporary ref `refs/heads/publication-0.5.0-t82`;
-   - OLD is `6d04fa6d0cf0c1e7134a312894adc219f44bf4a9`; `git rev-parse refs/heads/publication-0.5.0` must print OLD, otherwise HALT;
+   - OLD is `6d04fa6d0cf0c1e7134a312894adc219f44bf4a9` in the first round; in a correction round it is the id the previous round of this ticket recorded in G1; `git rev-parse refs/heads/publication-0.5.0` must print OLD, otherwise HALT;
    - `update-ref` with OLD, then the temporary ref is deleted;
    - each of the eight occurrences of OLD in `ci/registered-failures.json` becomes the new id;
    - `--verify-only` is run;
@@ -116,9 +119,10 @@ After this ticket:
 2. **The owner-assisted test** records:
    - whether a desktop session in the test project shows the hook (in `/hooks`) and its text;
    - the same P0 and PRD questions, with the files the session read. The expected route is the 流程索引, then the one linked section, with no search;
-   - whether Codex runs the plugin's hook. Codex 0.166.0 has hooks that need persisted trust. If it does not run it, README section 4 gains a sentence in a later ticket, and wave 4 T3 takes the Codex path;
+   - whether Codex runs the plugin's hook, and if it does, the exact text it prints (the path must be the installed plugin directory). Codex 0.166.0 has hooks that need persisted trust. If Codex does not run it, or prints a wrong path, the release waits for a ticket that adds a sentence to README section 4 and rebuilds the publication commit, unless the owner decides to release with that sentence missing;
    - the two-versions case of ticket 81.
 3. Ticket 77's cloud trigger passes `expected_publication` equal to this ticket's publication commit.
+4. Repin the `agents` row of `doc/handoffs/2026/workflow-governance/control-plane-worklog.md` and run `index_pins.py --check`.
 
 ## 實作範圍、依賴與 ticket elements
 
