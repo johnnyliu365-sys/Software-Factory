@@ -15,6 +15,7 @@ One row per change that altered what the plugin does. Working history lives in G
 | 2026-11-26 | Review rounds and the cause of each rework are recorded (ticket 73) | `REQ-20261103-043` | `modules/tickets/workflow-governance/73-review-rounds-and-rework-cause.md` |
 | 2026-11-26 | A read-only lookup goes to the leaf document and does not load the workflow (ticket 79) | `REQ-20261103-043` | `modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md` |
 | 2026-11-26 | A read-only lookup goes through the 流程索引, and the index gains rows for the two P0 sections, the start order and the target project's sources (ticket 80) | `REQ-20261103-043`, owner decision 2026-11-26 "A" | `modules/tickets/workflow-governance/80-lookup-through-the-index.md` |
+| 2026-11-26 | The skill stops when the old plugin johnny-ai-skill is still installed; the README explains the host's decline record; a version is never published twice; the first 流程索引 row is narrowed to the lookup's own rules, with a table-order tie-break (ticket 81) | `REQ-20261103-043`, owner decisions 2026-11-26 | `modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md` |
 | 2026-11-26 | The licence is Apache License 2.0, and the author is Johnny Liu | owner decision 2026-11-18 "2A" | `LICENSE`, `NOTICE` |
 | 2026-11-26 | The plugin is renamed from `johnny-ai-skill` to `software-factory` (Software Factory), version 0.5.0; the marketplace moves into the public publication repository; the README is rewritten | owner decision 2026-11-20 | `modules/tickets/workflow-governance/71-publication-0-5.md` |
 
@@ -43,6 +44,7 @@ Version 0.5.0 is the first release as Software Factory. This section is for read
 - Codex installs through `codex plugin marketplace add` and `codex plugin add`.
 - The licence is Apache License 2.0, and the author is Johnny Liu.
 - The skill id `johnny-project-takeover` keeps its name, because renaming it would break every project that names it.
+- With both plugins installed, the new skill stops at its first step and asks the user to remove the old one and open a new session.
 
 ## Checklist items carried from revision 135
 

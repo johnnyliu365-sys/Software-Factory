@@ -14,11 +14,16 @@ Four texts carry the rule, and this test pins each one exactly:
   between step 5 of the start order and the paragraph that begins "狀態只保存";
 - `skills/johnny-project-takeover/SKILL.md`, the frontmatter `description`, which must also be a valid YAML
   plain scalar (a colon and space inside it makes the skill fail to register);
-- `skills/johnny-project-takeover/SKILL.md`, section `## Start`: the new first step, then the four original
-  steps renumbered 2 to 5, in order.
+- `skills/johnny-project-takeover/SKILL.md`, section `## Start`: the guard step, then the read-only step, then
+  the four original steps renumbered 3 to 6, in order.
+
+Ticket 81 changes the first 流程索引 row and the tie-break clause of the lookup paragraph, and adds the guard
+step. The 流程索引 table is also pinned whole (`INDEX_TABLE`), and each link to an anchor of `AGENTS.md` itself
+must appear in exactly one row.
 
 The check is a function over a root directory (`find_defects`), so each injection case below runs it on a
-temporary copy of the two files with one text damaged, and must go red; the unmodified copy must stay green.
+temporary copy of the files with one text damaged, and must go red; the unmodified copy must stay green.
+`copy_texts` copies six files: `AGENTS.md`, `SKILL.md` and the four references the rows name.
 A named file that is missing or not UTF-8 is a defect that names the file.
 
 The frontmatter is parsed by `parse_frontmatter`, a small strict reader of the one shape the skill file uses
@@ -59,7 +64,7 @@ INDEX_HEADER = "| 情境 | Workflow 入口 | Router 指向的詳細 reference |"
 INDEX_SEPARATOR = "| --- | --- | --- |"
 ROW_AFTER_THE_FIVE_START = "| 任一事件"
 INDEX_ROWS: tuple[str, ...] = (
-    "| 唯讀查詢（文件內容、票的狀態、規則寫法） | [唯讀查詢](#read-only-lookup) | 不適用：只讀索引指到的那一節 |",
+    "| 唯讀查詢本身的規則（怎麼查、查不到時怎麼回答） | [唯讀查詢](#read-only-lookup) | 不適用：規則即本檔該節 |",
     "| P0 原始碼型別（強型別、外部輸入、strict checker） | [P0：原始碼型別](#p0-source-type) | "
     "[specification-ticketing](skills/johnny-project-takeover/references/specification-ticketing.md) + "
     "[implementation-tdd](skills/johnny-project-takeover/references/implementation-tdd.md) |",
@@ -69,6 +74,49 @@ INDEX_ROWS: tuple[str, ...] = (
     "| 啟動順序（動手前的讀取順序） | [啟動順序](#startup-order) | 不適用：規則即本檔該節 |",
     "| target project 正式來源的標準位置 | [Target project 正式來源](#target-sources) | 不適用：規則即本檔該節 |",
 )
+INDEX_BASE_ROWS: tuple[str, ...] = (
+    "| 任一事件、完成、等待或 HALT | [Router](Workflow.md#workflow-router) | "
+    "[router-control](skills/johnny-project-takeover/references/router-control.md) |",
+    "| POC/MVP/COMMERCIAL、模型或 lane 數量、staging | [Profile](Workflow.md#workflow-router) | "
+    "[delivery-profile](skills/johnny-project-takeover/references/delivery-profile.md) |",
+    "| 架構 owner、supervisor、implementer 休眠／喚醒 | [Model lifecycle](Workflow.md#workflow-router) | "
+    "[model-role-routing](skills/johnny-project-takeover/references/model-role-routing.md) |",
+    "| 最小 Context、旁路引用、能力選擇 | [Router Context](Workflow.md#workflow-router) | "
+    "[context-routing](skills/johnny-project-takeover/references/context-routing.md) |",
+    "| artifact tree、Agent Context 建立／換票／關閉 | [Router Context](Workflow.md#workflow-router) | "
+    "[artifact-tree-routing](skills/johnny-project-takeover/references/artifact-tree-routing.md) + "
+    "[agent-context-lifecycle](skills/johnny-project-takeover/references/agent-context-lifecycle.md) |",
+    "| PRD／CHG 建立、取代、封存 | [Change control](Workflow.md#change-control) | "
+    "[requirement-lineage](skills/johnny-project-takeover/references/requirement-lineage.md) |",
+    "| reusable module catalog 查找／分區 | [Router Context](Workflow.md#workflow-router) | "
+    "[module-catalog-routing](skills/johnny-project-takeover/references/module-catalog-routing.md) |",
+    "| 外部能力(map／craft／reduction)admission、tier／target 適配 | "
+    "[Router Context](Workflow.md#workflow-router) | "
+    "[capability-admission](skills/johnny-project-takeover/references/capability-admission.md) |",
+    "| 新專案、需求、Bug、架構或變更 | [Discovery](Workflow.md#discovery) | "
+    "[discovery-change](skills/johnny-project-takeover/references/discovery-change.md) |",
+    "| Browser/WebView/DOM/JavaScript 不可信資料 | [XSS gate](Workflow.md#xss-review) | "
+    "[xss-review](skills/johnny-project-takeover/references/xss-review.md) |",
+    "| Secret、正式 Log、Provider、Webhook、外部 effect | [Security](Workflow.md#security) | "
+    "[security-boundary](skills/johnny-project-takeover/references/security-boundary.md) |",
+    "| SPEC、ticket、DI、type preflight、dispatch | [Tickets](Workflow.md#tickets) | "
+    "[specification-ticketing](skills/johnny-project-takeover/references/specification-ticketing.md) |",
+    "| 低階模型 ticket 拆分或 admission | [Tickets](Workflow.md#tickets) | "
+    "[ticket-decomposition](skills/johnny-project-takeover/references/ticket-decomposition.md) |",
+    "| 正式 UI、Figma／截圖／brief／既有 design system | [Tickets](Workflow.md#tickets) | "
+    "[ui-design-handoff](skills/johnny-project-takeover/references/ui-design-handoff.md) |",
+    "| Owner、Agent control、task/worktree、correction | [Role boundary](Workflow.md#role-boundary) | "
+    "[implementation-authority](skills/johnny-project-takeover/references/implementation-authority.md) |",
+    "| TDD、strict type、smoke、completion | [Implementation](Workflow.md#implementation) | "
+    "[implementation-tdd](skills/johnny-project-takeover/references/implementation-tdd.md) |",
+    "| TDD matrix 或獨立 review | [Review](Workflow.md#review-handoff) | "
+    "[review-checks](skills/johnny-project-takeover/references/review-checks.md) + [CodeReview.md](CodeReview.md) |",
+    "| 實作語言決策或驗證 | [SPEC/Tickets](Workflow.md#specification) | "
+    "[language-policy](skills/johnny-project-takeover/references/language-policy.md) |",
+)
+# Ticket 81 item 7: the whole table, header to last row, pinned line for line (the five rows, then the eighteen
+# rows that are lines 77 to 94 of `AGENTS.md` at the baseline commit 31f15b7c).
+INDEX_TABLE: tuple[str, ...] = (INDEX_HEADER, INDEX_SEPARATOR, *INDEX_ROWS, *INDEX_BASE_ROWS)
 # The reference files the five rows name; `copy_texts` copies them so the unmodified copy stays green.
 ROW_REFERENCES: tuple[str, ...] = (
     "skills/johnny-project-takeover/references/specification-ticketing.md",
@@ -103,7 +151,7 @@ OLD_INDEX_SENTENCE = (
 )
 INDEX_SENTENCE = (
     "本插件規則的查詢，使用者未指名確切檔案時，先讀本檔「流程索引」，取情境欄符合問題的一列"
-    "（同時符合 P0 列與其他列時取 P0 列），依該列解析到一份 leaf：第二欄連到本檔一節時即該節，"
+    "（同時符合 P0 列與其他列時取 P0 列；其餘同時符合多列時，取表中較上面的一列），依該列解析到一份 leaf：第二欄連到本檔一節時即該節，"
     "否則為第三欄中含該規則的 reference；只讀含該規則的那一節（已安裝的插件版本），並註明檔案、章節與版本。"
 )
 NO_SEARCH_SENTENCE = (
@@ -150,17 +198,26 @@ DESCRIPTION_LAST_SENTENCE = (
 )
 
 START_HEADING = "## Start"
+GUARD_STEP = (
+    "1. Before anything else, look at the skills this session lists. If one of them belongs to the old plugin "
+    "johnny-ai-skill (its name begins with johnny-ai-skill: or its file lies in a folder named johnny-ai-skill), "
+    "stop: tell the user in plain words that the old 0.4.x plugin is still installed and that its rules conflict "
+    "with this version, give the removal commands in section 5 of this plugin's README.md for the host in use, "
+    "ask the user to open a new session after removing it, and do nothing else in this session. If the session "
+    "lists no skills, go on to step 2."
+)
 START_STEPS = (
-    "1. A read-only question (the content of a document, the state of a ticket, the wording of a rule) is not a "
+    GUARD_STEP + "\n"
+    "2. A read-only question (the content of a document, the state of a ticket, the wording of a rule) is not a "
     "workflow action, unless the target project's own governing files route it otherwise: resolve it as the "
     "[read-only-lookup paragraph](../../AGENTS.md#read-only-lookup) of this plugin's `AGENTS.md` says, answer, "
     "and stop. Do not read `Workflow.md` for it. Asking for the next step, or whether something can be "
     "dispatched, integrated or approved, is a workflow action.\n"
-    "2. Read the target project's own `AGENTS.md` and authority record.\n"
-    "3. Read `../../Workflow.md` only far enough to identify the current stage and its routing row.\n"
-    "4. Read exactly the reference named by that row, plus the minimum committed target artifacts it\n"
+    "3. Read the target project's own `AGENTS.md` and authority record.\n"
+    "4. Read `../../Workflow.md` only far enough to identify the current stage and its routing row.\n"
+    "5. Read exactly the reference named by that row, plus the minimum committed target artifacts it\n"
     "   requires. Do not load unrelated references, the full library or chat history.\n"
-    "5. Execute one legal action, record its typed completion event in the receipt and let the next\n"
+    "6. Execute one legal action, record its typed completion event in the receipt and let the next\n"
     "   gate script read the state files (Revision 04: the Router is the gate scripts over the state\n"
     "   files, not a process to re-enter). Do not select the next stage locally."
 )
@@ -279,6 +336,35 @@ def check_index_rows(lines: list[str], defects: list[str], root: Path) -> None:
         defects.append(f"{AGENTS}: the row that begins {ROW_AFTER_THE_FIVE_START!r} must follow the five rows")
     for row in lines[first:last]:
         defects.extend(link_defects(root, lines, row))
+    check_index_table(lines, heading + 2, defects)
+
+
+def index_table_lines(lines: list[str], header_at: int) -> list[str]:
+    """The lines from the header to the first blank line after it."""
+    end = header_at
+    while end < len(lines) and lines[end] != "":
+        end += 1
+    return lines[header_at:end]
+
+
+def check_index_table(lines: list[str], header_at: int, defects: list[str]) -> None:
+    """The whole table equals `INDEX_TABLE`, and each link to an anchor of `AGENTS.md` itself (a target that
+    begins with `#`, in any cell) appears in exactly one row; links into other files are not counted."""
+    table = index_table_lines(lines, header_at)
+    if table != list(INDEX_TABLE):
+        defects.append(
+            f"{AGENTS}: the 流程索引 table must equal INDEX_TABLE: the header, the separator, the five rows, "
+            "then the eighteen base rows, in that order"
+        )
+    rows_per_anchor: dict[str, int] = {}
+    for row in table[2:]:
+        for target in {target for target in LINK.findall(row) if target.startswith("#")}:
+            rows_per_anchor[target] = rows_per_anchor.get(target, 0) + 1
+    for target, count in sorted(rows_per_anchor.items()):
+        if count != 1:
+            defects.append(
+                f"{AGENTS}: the anchor link ({target}) appears in {count} rows of the 流程索引; it must be in exactly one"
+            )
 
 
 def check_agents(text: str, defects: list[str], root: Path) -> None:
@@ -362,8 +448,8 @@ def check_skill(text: str, defects: list[str]) -> None:
         defects.append(f"{SKILL}: the section {START_HEADING!r} must appear exactly once")
     elif steps != START_STEPS:
         defects.append(
-            f"{SKILL}: {START_HEADING!r} must be the new first step followed by the four original steps "
-            "renumbered 2 to 5, in order, word for word"
+            f"{SKILL}: {START_HEADING!r} must be the guard step, then the read-only step, then the four "
+            "original steps renumbered 3 to 6, in order, word for word"
         )
 
 
@@ -573,9 +659,29 @@ class EntryReadOnlyLookupTests(unittest.TestCase):
         self.assert_red(SKILL, lambda t: t.replace(DESCRIPTION, ""), "description")
 
     def test_the_new_start_step_moved_after_the_original_first_step_is_red(self) -> None:
-        first = START_STEPS.split("\n")[0]
-        second = START_STEPS.split("\n")[1]
+        # Ticket 81: lines 2 and 3 of START_STEPS (indexes 1 and 2) swapped.
+        first = START_STEPS.split("\n")[1]
+        second = START_STEPS.split("\n")[2]
         self.assert_red(SKILL, lambda t: t.replace(first + "\n" + second, second + "\n" + first), "Start")
+
+    def test_the_guard_step_removed_is_red(self) -> None:
+        self.assert_red(SKILL, remove_text(GUARD_STEP + "\n"), "Start")
+
+    def test_the_guard_step_placed_after_the_read_only_step_is_red(self) -> None:
+        guard = START_STEPS.split("\n")[0]
+        read_only = START_STEPS.split("\n")[1]
+        self.assert_red(SKILL, lambda t: t.replace(guard + "\n" + read_only, read_only + "\n" + guard), "Start")
+
+    def test_one_word_of_the_guard_step_changed_is_red(self) -> None:
+        self.assert_red(
+            SKILL, lambda t: t.replace("do nothing else in this session", "do little else in this session"), "Start"
+        )
+
+    def test_the_guard_step_holds_no_path_token_in_backticks(self) -> None:
+        self.assertNotIn("`", GUARD_STEP)
+
+    def test_an_empty_start_section_is_red_and_named(self) -> None:
+        self.assert_red(SKILL, lambda t: t.replace(START_STEPS, ""), "Start")
 
     def test_a_start_order_step_reworded_is_red(self) -> None:
         self.assert_red(AGENTS, lambda t: t.replace("取得唯一 action", "取得 action"), "five steps")
@@ -586,9 +692,58 @@ class EntryReadOnlyLookupTests(unittest.TestCase):
     def test_the_start_steps_not_renumbered_are_red(self) -> None:
         self.assert_red(
             SKILL,
-            lambda t: t.replace("2. Read the target project's own", "1. Read the target project's own"),
+            lambda t: t.replace("3. Read the target project's own", "2. Read the target project's own"),
             "Start",
         )
+
+    def test_the_old_first_index_row_put_back_is_red(self) -> None:
+        old_row = (
+            "| 唯讀查詢（文件內容、票的狀態、規則寫法） | [唯讀查詢](#read-only-lookup) | 不適用：只讀索引指到的那一節 |"
+        )
+        self.assert_red(AGENTS, replace_text(INDEX_ROWS[0], old_row), "five index rows")
+
+    def test_a_duplicate_p0_row_linking_the_same_anchor_is_red(self) -> None:
+        duplicate = (
+            "| P0 原始碼型別（重複） | [P0：原始碼型別](#p0-source-type) | "
+            "[implementation-tdd](skills/johnny-project-takeover/references/implementation-tdd.md) |"
+        )
+        last = INDEX_BASE_ROWS[-1]
+        self.assert_red(AGENTS, replace_text(last, last + "\n" + duplicate), "(#p0-source-type) appears in 2 rows")
+
+    def test_a_duplicate_p0_row_linking_other_files_is_red(self) -> None:
+        duplicate = (
+            "| P0 原始碼型別（重複） | [Tickets](Workflow.md#tickets) | "
+            "[language-policy](skills/johnny-project-takeover/references/language-policy.md) |"
+        )
+        last = INDEX_BASE_ROWS[-1]
+        self.assert_red(AGENTS, replace_text(last, last + "\n" + duplicate), "must equal INDEX_TABLE")
+
+    def test_two_base_rows_swapped_are_red(self) -> None:
+        first, second = INDEX_BASE_ROWS[1], INDEX_BASE_ROWS[2]
+        self.assert_red(
+            AGENTS, lambda t: t.replace(first + "\n" + second, second + "\n" + first), "must equal INDEX_TABLE"
+        )
+
+    def test_the_first_row_widened_back_with_the_rule_wording_is_red(self) -> None:
+        self.assert_red(
+            AGENTS,
+            replace_text("| 唯讀查詢本身的規則（怎麼查、", "| 唯讀查詢本身的規則（規則寫法、怎麼查、"),
+            "five index rows",
+        )
+
+    def test_the_tie_break_clause_removed_is_red(self) -> None:
+        self.assert_red(
+            AGENTS,
+            remove_text("；其餘同時符合多列時，取表中較上面的一列"),
+            "the sentence that sends a rule lookup through the 流程索引",
+        )
+
+    def test_the_table_equals_the_pinned_table_and_each_anchor_link_stands_in_one_row(self) -> None:
+        lines = (REPO / AGENTS).read_bytes().decode("utf-8").replace("\r\n", "\n").split("\n")
+        header_at = lines.index(INDEX_HEADER)
+        self.assertEqual(index_table_lines(lines, header_at), list(INDEX_TABLE))
+        anchors = [target for row in INDEX_TABLE[2:] for target in set(LINK.findall(row)) if target.startswith("#")]
+        self.assertEqual(len(anchors), len(set(anchors)))
 
     def test_a_missing_file_is_red_and_named(self) -> None:
         for name in (AGENTS, SKILL):
