@@ -192,7 +192,7 @@ if args[0:2] == ["plugin", "list"]:
             listed += [{"id": "cc-plugin-" + word + "@builtin", "version": "1.0.0", "scope": "user", "enabled": True}
                        for word in ("agents-md", "privacy")]
         if mode == "extra":
-            listed.append({"id": "other@elsewhere", "version": "1.0.0", "scope": "user", "enabled": True})
+            listed.append({"id": "builtin-helper@elsewhere", "version": "1.0.0", "scope": "user", "enabled": True})
         print(json.dumps(listed))
     else:
         market = args[args.index("--marketplace") + 1]
@@ -907,6 +907,11 @@ class ResidueTests(LifecycleCase):
         self.assertNotEqual(lifecycle.scan_residue(step, "claude", [other]), [])
         write_text(step / ".claude.json", json.dumps({"x": {"declinedPlugins": ["software-factory"]}}, indent=2) + "\n")
         self.assertNotEqual(lifecycle.scan_residue(step, "claude", [entry]), [])
+        # the entry names the file at the step root: a `.claude.json` deeper in the tree is not admitted
+        write_text(step / ".claude.json", json.dumps({"declinedPlugins": ["software-factory@software-factory"]}, indent=2) + "\n")
+        write_text(step / "sub" / ".claude.json", json.dumps({"declinedPlugins": ["software-factory@software-factory"]}, indent=2) + "\n")
+        findings = lifecycle.scan_residue(step, "claude", [entry])
+        self.assertTrue(findings and all(item.startswith("line sub/.claude.json:") for item in findings), findings)
 
     def test_a_malformed_allow_list_entry_is_a_fail_closed_error(self) -> None:
         with self.assertRaises(lifecycle.StepFail):
