@@ -1,0 +1,55 @@
+name: acceptance
+
+# The one cloud run of ticket 77. It is started by hand, after the four conditions of
+# ci/acceptance/README.md hold, and never by a push. It uses no secret and logs in to neither host.
+on:
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: "The commit under acceptance, 40 lower-case hexadecimal characters"
+        required: true
+        type: string
+      expected_publication:
+        description: "The publication commit the build step must regenerate, 40 lower-case hexadecimal characters"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  lifecycle:
+    name: lifecycle (windows)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      PYTHONUTF8: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # actions/checkout v6.1.0
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # actions/setup-python v6.3.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.11"
+      - name: Install the host CLIs at the versions of ci/acceptance/README.md
+        run: |
+          npm install --global @anthropic-ai/claude-code@2.1.332 @openai/codex@0.166.0
+      - name: Run the lifecycle
+        env:
+          CANDIDATE: ${{ inputs.candidate }}
+          EXPECTED_PUBLICATION: ${{ inputs.expected_publication }}
+        run: |
+          python ci/acceptance/lifecycle.py --candidate "$CANDIDATE" --expected-publication "$EXPECTED_PUBLICATION" --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root "$RUNNER_TEMP/acceptance"
+      # actions/upload-artifact v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: acceptance-report
+          path: ${{ runner.temp }}/acceptance/report.jsonl
+          if-no-files-found: warn
