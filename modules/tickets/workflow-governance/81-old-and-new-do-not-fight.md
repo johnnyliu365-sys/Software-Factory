@@ -8,13 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision01 / receipt under `.worktrees/81-coexist-out/` / owner implementation seat / worktree `.worktrees/81-coexist` / branch `cp/wave3-81-coexist` / baseline the `cp/wave3` commit named in the dispatch, after ticket 80 is integrated |
+| Agent Context binding | ticket revision02 / receipt under `.worktrees/81-coexist-out/` / owner implementation seat / worktree `.worktrees/81-coexist` / branch `cp/wave3-81-coexist` / baseline the `cp/wave3` commit named in the dispatch, after ticket 80 is integrated |
 | 實作語言 | Markdown governance text and JSON; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `PLANNED`（revision01; strict tier; rule-only review before dispatch; after ticket 80） |
+| 狀態 | `PLANNED`（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes (`doc/reviews/workflow-governance/81-old-and-new-do-not-fight-ticket-review.md`); after ticket 80） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/81-coexist` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/81-coexist-review` |
@@ -51,8 +51,8 @@ Process tier: strict.
 **The decisions** are quoted in `REQ-20261103-043`, row "Owner decisions 2026-11-26 (host CLI drift: relax; old and new must not fight, "A")". The owner: "放寬,殘留的怎麼清乾淨／使用者更新不能一直讓舊版本跟新版本打架", and "A 0.5.0 加 (Recommended)".
 
 **The risks:**
-- **Both plugins installed.** A user who installs `software-factory` without removing `johnny-ai-skill` has both. Each ships a skill named `johnny-project-takeover`, so an agent may follow the old plugin's Router rules.
-- **The decline record.** After an uninstall, Claude Code writes the host's own decline record (`declinedPlugins`) in the user's host configuration. An explicit install still works, but a project that asks for the plugin may show no prompt.
+- **Both plugins installed.** A user who installs `software-factory` without removing `johnny-ai-skill` has both. Each ships a skill named `johnny-project-takeover`, so an agent may follow the old plugin's Router rules. Rules a project copied from 0.4.x (its `AGENTS.md`, `Workflow.md`, an activation block) are wave 4 T2 (`REQ-20261120-044`), not this guard.
+- **The decline record.** After an uninstall, Claude Code 2.1.332 wrote the host's own decline record (`declinedPlugins`) in the user's host configuration. An explicit install still works, but a project that asks for the plugin may show no prompt.
 - **Version caching.** Both hosts cache an installed plugin by its version. A version published twice reaches users as the stale copy.
 
 After this ticket:
@@ -60,41 +60,41 @@ After this ticket:
 1. **`skills/johnny-project-takeover/SKILL.md`, a new first start step.**
    - Under `## Start`, a new step 1 goes before today's step 1. The old steps 1 to 5 become steps 2 to 6, and their text does not change.
    - The new step is exactly:
-     "1. Before anything else, look at the skills this session lists. If a skill of the old plugin johnny-ai-skill is listed beside this plugin's skills, stop: tell the user in plain words that the old 0.4.x plugin is still installed and that its rules conflict with this version, give the removal commands of README section 5 for the host in use, and do nothing else until the user says it is removed."
+     "1. Before anything else, look at the skills this session lists. If one of them belongs to the old plugin johnny-ai-skill (its name begins with johnny-ai-skill: or its file lies in a folder named johnny-ai-skill), stop: tell the user in plain words that the old 0.4.x plugin is still installed and that its rules conflict with this version, give the removal commands in section 5 of this plugin's README.md for the host in use, ask the user to open a new session after removing it, and do nothing else in this session. If the session lists no skills, go on to step 2."
    - The step holds no path token in backticks.
    - Today's step 1 links `../../AGENTS.md#read-only-lookup`. That link stays.
 2. **README section 5 (從舊版 johnny-ai-skill 換過來).**
-   - After its first paragraph, this paragraph is added exactly:
-     "新舊兩版同時裝著時，新版開工的第一步會停下來，請你先移除舊版；移除之前它不會做任何事。"
-   - After the Codex block, this paragraph is added exactly:
-     "用 uninstall 移除插件後，Claude Code 會在它自己的設定裡記下「已拒絕」這個插件。這筆紀錄不會擋住之後明確的安裝；如果某個專案要求安裝這個插件卻沒有跳出提示，直接執行第 3 節的安裝指令即可。"
+   - After the line that begins 舊版的 plugin id 是, with one blank line on each side, this paragraph is added exactly:
+     "新舊兩版同時裝著時，agent 可能照舊版的規則做事。新版開工的第一步會檢查這件事：看到舊版還在，就停下來請你先移除舊版，移除後再開一個新的 session。"
+   - After the fenced block `codex plugin marketplace remove johnny-ai-skill --json` and before the line that begins 專案裡從早期版本, with one blank line on each side, this paragraph is added exactly:
+     "在 Claude Code 2.1.332 上，用 uninstall 移除插件後，Claude Code 會在它自己的設定裡留下一筆「已拒絕」這個插件的紀錄；這筆紀錄沒有擋住之後明確的安裝。如果某個專案要求安裝 Software Factory 卻沒有跳出提示，直接執行第 3 節的安裝指令即可。"
    - Neither paragraph holds inline code, a path, or a link.
 3. **`doc/runbooks/release.md`, new.** It holds these sections:
-   - **The rule.** It is stated exactly: "A version number is never published twice. Once tag `plugin-vX.Y.Z` is pushed to the publication repository, any change ships as a new version. Before a publish, the publication repository has no tag for the new version, and the plugin `version` is above the last pushed one."
-   - **The order.** It cites, without restating it, ticket 71's release section as amended by ticket 80's 正式環境移植 SOP and by the REQ-043 decisions of 2026-11-26. Each push waits for the owner's confirmation.
-   - **Before release.** One sentence: the local candidate may be rebuilt under the same unreleased version, and every rebuild is reinstalled as ticket 80 item 5 says.
+   - **The rule.** It is stated exactly: "A version number is never published twice. Once tag `plugin-vX.Y.Z` is pushed to the publication repository, any change to the published plugin tree ships as a new version. Before a publish, run `git ls-remote --tags https://github.com/johnnyliu365-sys/software-factory-plugin.git "refs/tags/plugin-v*"`: it must list no `refs/tags/plugin-vX.Y.Z` for the new version, and the new version must be greater, in semantic-version order, than every version it lists. If either check fails, HALT before the push. Tags are immutable as `doc/adr/ADR-20260823-018-version-specific-publication-tag-payloads.md` decides."
+   - **The order.** It names `modules/tickets/workflow-governance/71-publication-0-5.md`, the paragraph that begins "**The release, after review approval**" (steps 1 to 9), and copies none of its steps. It says that the publication commit is the one the released ticket's 正式環境移植 SOP names, in place of ticket 71's, as ticket 80's SOP first did, and that the rule above is checked before step 3. Each push waits for the owner's confirmation.
+   - **Before release.** While the check above lists no tag for the version, the local candidate may be rebuilt under the same version, and every rebuild is reinstalled and its cached copies checked as ticket 80 item 5 says.
 4. **Tests.**
-   - `tests/test_entry_read_only_lookup.py`: `START_STEPS` takes the new step 1 and the renumbered steps. A new injection case checks that the guard step removed, or moved after the read-only step, turns the test red.
+   - `tests/test_entry_read_only_lookup.py`: `START_STEPS` takes the new step 1 and the renumbered steps. A new injection case checks that the guard step removed, or moved after the read-only step, turns the test red. In `test_the_start_steps_not_renumbered_are_red` the edit replaces `3. Read the target project's own` with `2. Read the target project's own`. `test_the_new_start_step_moved_after_the_original_first_step_is_red` swaps lines 2 and 3 of `START_STEPS` (indexes 1 and 2). The `## Start` defect message and the module docstring say: the guard step, then the read-only step, then the four original steps renumbered 3 to 6.
    - `tests/test_plugin_payload_boundary.py`: a check that README section 5 holds both paragraphs word for word.
 5. **The rebuilt publication commit.** `SKILL.md` and `README.md` are in the payload, so the publication commit changes.
    - Rebuild it exactly as ticket 80 item 5 says, through these steps: the temporary ref `refs/heads/publication-0.5.0-t81`, the OLD check, `update-ref` with OLD, then deleting the temporary ref.
-   - OLD is the commit ticket 80 recorded.
-   - The eight registered reasons name the new id.
+   - OLD is the sha that `.claude-plugin/marketplace.json` pins at this ticket's baseline commit (ticket 80's publication commit); in a correction round it is the id the previous round of this ticket recorded in G1. `git rev-parse refs/heads/publication-0.5.0` must print OLD; otherwise HALT. If this ticket is closed without integration, the control plane runs `git update-ref refs/heads/publication-0.5.0 <ticket 80's publication commit> <the id on the ref>`.
+   - Each of the eight occurrences of OLD in `ci/registered-failures.json` becomes the new 40-hex id; no other byte changes.
    - Run `--verify-only`.
    - Check the extracted package. It holds the new step and both paragraphs.
    - Rebuild the local marketplace's plugin tree.
-   - The STATEMENT gives the owner's refresh commands and cache checks, as ticket 80 item 5 does, with the line to look for in the cached `SKILL.md` being the new step 1.
+   - The STATEMENT gives the owner's refresh commands and cache checks, as ticket 80 item 5 does: the owner checks `%USERPROFILE%\.claude\plugins\cache\software-factory\software-factory\0.5.0\skills\johnny-project-takeover\SKILL.md` and `$CODEX_HOME\plugins\cache\software-factory\software-factory\0.5.0\skills\johnny-project-takeover\SKILL.md`, each for a line that begins `1. Before anything else, look at the skills this session lists.`; the rest as ticket 80 item 5.
 6. **`doc/HARNESS-CHANGELOG.md`.**
    - Directly below the ticket 80 row: `| 2026-11-26 | The skill stops when the old plugin johnny-ai-skill is still installed; the README explains the host's decline record; a version is never published twice (ticket 81) | `REQ-20261103-043`, owner decisions 2026-11-26 | `modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md` |`.
-   - In the `## 0.5.0` section, as the last bullet of the part about moving from `johnny-ai-skill`: `- With both plugins installed, the new skill stops at its first step until the old one is removed.`
+   - In the `## 0.5.0` section, as the last bullet of the part about moving from `johnny-ai-skill`: `- With both plugins installed, the new skill stops at its first step and asks the user to remove the old one and open a new session.`
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
 1. Ticket 77 goes to revision04 with the relaxed rules of the 2026-11-26 decision:
    - the host's decline record is in the residue allow-list, with its reason;
    - `@builtin` entries are not counted;
    - a reinstall succeeds while the record is present.
-   Its local lifecycle then reruns with this ticket's publication commit.
-2. **The owner-assisted test** adds the two-versions case: with `johnny-ai-skill` 0.4.14 and `software-factory` 0.5.0 both installed, the session stops at the new step 1 and gives the removal commands.
+   Its local lifecycle then reruns with this ticket's publication commit. Ticket 77's cloud trigger passes `expected_publication` equal to this ticket's publication commit.
+2. **The owner-assisted test** adds the two-versions case: with `johnny-ai-skill` 0.4.14 and `software-factory` 0.5.0 both installed, the session stops at the new step 1 and gives the removal commands. The owner invokes the new plugin's entry by its plugin-qualified name where the host offers one (`/software-factory:johnny-project-takeover` in Claude Code); if the session loads the old plugin's skill instead, the record says so.
 
 ## 實作範圍、依賴與 ticket elements
 
