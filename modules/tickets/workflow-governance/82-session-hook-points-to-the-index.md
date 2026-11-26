@@ -14,7 +14,7 @@
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:8a408acc977a94dd483644529f11cb49601bf5164c62c44836df63933b1e9256 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-4.yaml`)（revision08; strict tier; revisions 02 to 06 as the revision paragraphs and the review records say; revision06 APPROVED `4be37a7a` and integrated at `f0ba4995`; revision07 rewrites item 4b by owner decision 2026-11-26 "A" (REQ-043 row "Owner finding and decision 2026-11-26 (the Codex desktop app does not ask to trust a changed hook, "A")"); revision08 applies the exact fixes of the revision07 rule-only delta review (S82R-26 to S82R-29)） |
+| 狀態 | `REVIEW_APPROVED`; dispatch=sha256:8a408acc977a94dd483644529f11cb49601bf5164c62c44836df63933b1e9256 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-4.yaml`)（candidate `82cd82ab`; initial review of closure revision08 `APPROVED`） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
