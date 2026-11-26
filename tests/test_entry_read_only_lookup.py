@@ -1,4 +1,11 @@
-"""Ticket 79: a read-only question goes from its index straight to its leaf; only a change takes the start order.
+"""Ticket 79 and ticket 80: a read-only question goes from its index straight to its leaf, never by search; only a
+change takes the start order.
+
+Ticket 80 adds to `AGENTS.md` three anchors (`startup-order`, `p0-permissions`, `target-sources`), five rows at the
+top of the 流程索引 table (directly below its separator line, above the row that begins "| 任一事件") and the two
+sentences of the lookup paragraph that say how a rule is located. Every link in the five rows must resolve: a `#name`
+to exactly one line `<a id="name"></a>` of `AGENTS.md`, a path to a file under the root. A missing `AGENTS.md`, or a
+table without its separator line, is a named defect and never a traceback.
 
 Four texts carry the rule, and this test pins each one exactly:
 
@@ -39,6 +46,38 @@ CONDITION = "除下方唯讀查詢外，在讀取 target source、執行工具�
 ANCHOR = '<a id="read-only-lookup"></a>'
 STATE_PARAGRAPH_START = "狀態只保存"
 
+# Ticket 80 item 1: three anchors, each on its own line with a blank line before and after, directly above its heading.
+ANCHORED_HEADINGS: tuple[tuple[str, str], ...] = (
+    ("startup-order", "## 啟動順序"),
+    ("p0-permissions", "## P0：權限與所有權"),
+    ("target-sources", "## Target project 正式來源"),
+)
+
+# Ticket 80 item 2: the five rows, in this order, directly below the separator of the 流程索引 table.
+INDEX_HEADING = "## 流程索引"
+INDEX_HEADER = "| 情境 | Workflow 入口 | Router 指向的詳細 reference |"
+INDEX_SEPARATOR = "| --- | --- | --- |"
+ROW_AFTER_THE_FIVE_START = "| 任一事件"
+INDEX_ROWS: tuple[str, ...] = (
+    "| 唯讀查詢（文件內容、票的狀態、規則寫法） | [唯讀查詢](#read-only-lookup) | 不適用：只讀索引指到的那一節 |",
+    "| P0 原始碼型別（強型別、外部輸入、strict checker） | [P0：原始碼型別](#p0-source-type) | "
+    "[specification-ticketing](skills/johnny-project-takeover/references/specification-ticketing.md) + "
+    "[implementation-tdd](skills/johnny-project-takeover/references/implementation-tdd.md) |",
+    "| P0 權限與所有權（治理文件歸屬、角色、worktree、Secret） | [P0：權限與所有權](#p0-permissions) | "
+    "[implementation-authority](skills/johnny-project-takeover/references/implementation-authority.md) + "
+    "[security-boundary](skills/johnny-project-takeover/references/security-boundary.md) |",
+    "| 啟動順序（動手前的讀取順序） | [啟動順序](#startup-order) | 不適用：規則即本檔該節 |",
+    "| target project 正式來源的標準位置 | [Target project 正式來源](#target-sources) | 不適用：規則即本檔該節 |",
+)
+# The reference files the five rows name; `copy_texts` copies them so the unmodified copy stays green.
+ROW_REFERENCES: tuple[str, ...] = (
+    "skills/johnny-project-takeover/references/specification-ticketing.md",
+    "skills/johnny-project-takeover/references/implementation-tdd.md",
+    "skills/johnny-project-takeover/references/implementation-authority.md",
+    "skills/johnny-project-takeover/references/security-boundary.md",
+)
+LINK = re.compile(r"\[[^\]]*\]\(([^)]*)\)")
+
 # The five steps of the start order, line for line as they are at the base commit 69b4cdfb (ticket item 1:
 # "The five steps stay as they are").
 START_ORDER_STEP_LINES: tuple[str, ...] = (
@@ -59,6 +98,18 @@ NOT_FOUND_SENTENCE = (
     "回答找不到並列出已查的路徑，不掃描、不憑記憶補答、不進入 Wayfinder。"
 )
 STOP_ON_CHANGE_SENTENCE = "查詢中發現需要改動時，回報後停下；只有使用者要求改動，才走上面的啟動順序。"
+OLD_INDEX_SENTENCE = (
+    "本插件規則的查詢以本檔「流程索引」為索引，只讀含該規則的那一份（已安裝的插件版本），並註明檔案與版本。"
+)
+INDEX_SENTENCE = (
+    "本插件規則的查詢，使用者未指名確切檔案時，先讀本檔「流程索引」，取情境欄符合問題的一列"
+    "（同時符合 P0 列與其他列時取 P0 列），依該列解析到一份 leaf：第二欄連到本檔一節時即該節，"
+    "否則為第三欄中含該規則的 reference；只讀含該規則的那一節（已安裝的插件版本），並註明檔案、章節與版本。"
+)
+NO_SEARCH_SENTENCE = (
+    "定位只經索引與其連結，不以關鍵字搜尋（grep、全文搜尋）或逐檔瀏覽來找；"
+    "索引沒有該規則的列時，照本段「找不到該類索引」那一句回答找不到並列出已查的路徑。"
+)
 NEXT_STEP_SENTENCE = "問下一步、能否派工、整合或核准，屬於推進流程，不是唯讀查詢。"
 
 PARAGRAPH = (
@@ -66,7 +117,8 @@ PARAGRAPH = (
     "target project 自己的治理檔另有規定時從其規定。"
     + P0_SENTENCE
     + "使用者指名確切檔案時只讀該檔；否則從該類文件的索引一次解析一條路徑到確切的 leaf。"
-    "本插件規則的查詢以本檔「流程索引」為索引，只讀含該規則的那一份（已安裝的插件版本），並註明檔案與版本。"
+    + INDEX_SENTENCE
+    + NO_SEARCH_SENTENCE
     + NO_PROGRAM_SENTENCE
     + "票的狀態以目前 checkout 已提交的 leaf 為準，不以索引列、其他 worktree 或未提交的檔案為準；"
     "回答附上 leaf 路徑與 commit；需要受據或佇列才能判定時照實說明，不推斷。"
@@ -76,6 +128,8 @@ PARAGRAPH = (
 )
 REQUIRED_SENTENCES: tuple[tuple[str, str], ...] = (
     ("the P0 sentence", P0_SENTENCE),
+    ("the sentence that sends a rule lookup through the 流程索引", INDEX_SENTENCE),
+    ("the sentence that forbids locating a rule by search", NO_SEARCH_SENTENCE),
     ("the sentence that forbids reading Workflow, writing a receipt and running programs", NO_PROGRAM_SENTENCE),
     ("the not-found sentence", NOT_FOUND_SENTENCE),
     ("the stop-on-change sentence", STOP_ON_CHANGE_SENTENCE),
@@ -174,7 +228,60 @@ def read_utf8(root: Path, name: str, defects: list[str]) -> str | None:
         return None
 
 
-def check_agents(text: str, defects: list[str]) -> None:
+def check_anchored_headings(lines: list[str], defects: list[str]) -> None:
+    """Each ticket 80 anchor stands on its own line, once, with a blank line before and after, above its heading."""
+    for name, heading in ANCHORED_HEADINGS:
+        anchor = f'<a id="{name}"></a>'
+        if lines.count(anchor) != 1:
+            defects.append(f"{AGENTS}: the anchor {anchor} must stand on its own line exactly once")
+            continue
+        at = lines.index(anchor)
+        if at == 0 or lines[at - 1] != "" or lines[at + 1 : at + 3] != ["", heading]:
+            defects.append(
+                f"{AGENTS}: the anchor {anchor} must have a blank line before it and after it, "
+                f"and stand directly above {heading!r}"
+            )
+
+
+def link_defects(root: Path, lines: list[str], row: str) -> list[str]:
+    """Name each link of one index row that does not resolve: a `#name` needs exactly one anchor line of
+    `AGENTS.md`, a path needs a file under `root`. An empty link is a defect."""
+    found: list[str] = []
+    for target in LINK.findall(row):
+        if target in ("", "#"):
+            found.append(f"{AGENTS}: the row {row[:40]!r} holds an empty link")
+        elif target.startswith("#"):
+            anchor = f'<a id="{target[1:]}"></a>'
+            if lines.count(anchor) != 1:
+                found.append(f"{AGENTS}: the link ({target}) resolves to no single line {anchor}")
+        elif ".." in Path(target).parts or not (root / target).is_file():
+            found.append(f"{AGENTS}: the link ({target}) names no file under the root")
+    return found
+
+
+def check_index_rows(lines: list[str], defects: list[str], root: Path) -> None:
+    """The five rows stand exactly as written, in order, directly below the separator and above `| 任一事件`;
+    every link in them resolves."""
+    if lines.count(INDEX_HEADING) != 1:
+        defects.append(f"{AGENTS}: the heading {INDEX_HEADING!r} must appear exactly once")
+        return
+    heading = lines.index(INDEX_HEADING)
+    if lines[heading + 1 : heading + 4] != ["", INDEX_HEADER, INDEX_SEPARATOR]:
+        defects.append(f"{AGENTS}: the 流程索引 table must keep its header line and its separator line")
+        return
+    first = heading + 4
+    last = first + len(INDEX_ROWS)
+    if lines[first:last] != list(INDEX_ROWS):
+        defects.append(
+            f"{AGENTS}: the five index rows must stand exactly as written, in order, directly below the separator line"
+        )
+    if not (last < len(lines) and lines[last].startswith(ROW_AFTER_THE_FIVE_START)):
+        defects.append(f"{AGENTS}: the row that begins {ROW_AFTER_THE_FIVE_START!r} must follow the five rows")
+    for row in lines[first:last]:
+        defects.extend(link_defects(root, lines, row))
+
+
+def check_agents(text: str, defects: list[str], root: Path) -> None:
     lines = text.split("\n")
 
     if OLD_CONDITION in lines:
@@ -190,6 +297,10 @@ def check_agents(text: str, defects: list[str]) -> None:
     for label, sentence in REQUIRED_SENTENCES:
         if sentence not in text:
             defects.append(f"{AGENTS}: {label} is missing")
+    if OLD_INDEX_SENTENCE in text:
+        defects.append(f"{AGENTS}: the old index sentence (one file, no section, no ban on search) is back")
+    check_anchored_headings(lines, defects)
+    check_index_rows(lines, defects, root)
 
     if lines.count(START_ORDER_HEADING) != 1:
         defects.append(f"{AGENTS}: the heading {START_ORDER_HEADING!r} must appear exactly once")
@@ -260,7 +371,7 @@ def find_defects(root: Path) -> list[str]:
     defects: list[str] = []
     agents = read_utf8(root, AGENTS, defects)
     if agents is not None:
-        check_agents(agents, defects)
+        check_agents(agents, defects, root)
     skill = read_utf8(root, SKILL, defects)
     if skill is not None:
         check_skill(skill, defects)
@@ -276,8 +387,17 @@ def remove_text(sentence: str) -> Callable[[str], str]:
     return edit
 
 
+def replace_text(old: str, new: str) -> Callable[[str], str]:
+    """An edit that replaces `old` with `new` in a text."""
+
+    def edit(text: str) -> str:
+        return text.replace(old, new)
+
+    return edit
+
+
 def copy_texts(root: Path) -> None:
-    for name in (AGENTS, SKILL):
+    for name in (AGENTS, SKILL, *ROW_REFERENCES):
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes((REPO / name).read_bytes().decode("utf-8").replace("\r\n", "\n").encode("utf-8"))
@@ -369,6 +489,75 @@ class EntryReadOnlyLookupTests(unittest.TestCase):
             return without.replace("## Router 返回規則\n\n", "## Router 返回規則\n\n" + block)
 
         self.assert_red(AGENTS, move, "after step 5")
+
+    def test_each_of_the_five_index_rows_removed_is_red(self) -> None:
+        for row in INDEX_ROWS:
+            with self.subTest(row=row[:30]):
+                self.assert_red(AGENTS, remove_text(row + "\n"), "five index rows")
+
+    def test_two_index_rows_swapped_are_red(self) -> None:
+        first, second = INDEX_ROWS[0], INDEX_ROWS[1]
+        self.assert_red(AGENTS, lambda t: t.replace(first + "\n" + second, second + "\n" + first), "five index rows")
+
+    def test_the_rows_placed_below_the_any_event_row_are_red(self) -> None:
+        block = "\n".join(INDEX_ROWS) + "\n"
+
+        def move(text: str) -> str:
+            lines = text.replace(block, "").split("\n")
+            at = next(i for i, line in enumerate(lines) if line.startswith(ROW_AFTER_THE_FIVE_START))
+            return "\n".join(lines[: at + 1] + block.rstrip("\n").split("\n") + lines[at + 1 :])
+
+        self.assert_red(AGENTS, move, "five index rows")
+
+    def test_an_anchor_removed_renamed_or_detached_is_red(self) -> None:
+        for name, heading in ANCHORED_HEADINGS:
+            anchor = f'<a id="{name}"></a>'
+            with self.subTest(anchor=name, damage="removed"):
+                self.assert_red(AGENTS, remove_text(anchor + "\n\n"), f"the anchor {anchor}")
+            with self.subTest(anchor=name, damage="renamed"):
+                self.assert_red(AGENTS, replace_text(anchor, f'<a id="{name}-x"></a>'), f"the anchor {anchor}")
+            with self.subTest(anchor=name, damage="no blank line before the heading"):
+                self.assert_red(AGENTS, replace_text(anchor + "\n\n" + heading, anchor + "\n" + heading), "blank line")
+
+    def test_a_prefix_anchor_does_not_satisfy_the_link(self) -> None:
+        self.assert_red(
+            AGENTS,
+            lambda t: t.replace('<a id="p0-permissions"></a>', '<a id="p0-permissions-x"></a>'),
+            "(#p0-permissions) resolves to no single line",
+        )
+
+    def test_a_row_link_to_an_anchor_that_does_not_exist_is_red(self) -> None:
+        self.assert_red(
+            AGENTS,
+            lambda t: t.replace("(#startup-order)", "(#start-order)"),
+            "(#start-order) resolves to no single line",
+        )
+
+    def test_a_row_link_to_a_reference_that_does_not_exist_is_red(self) -> None:
+        self.assert_red(
+            AGENTS,
+            lambda t: t.replace("references/implementation-tdd.md)", "references/implementation-tdd-x.md)"),
+            "names no file under the root",
+        )
+
+    def test_a_row_with_an_empty_link_is_red(self) -> None:
+        self.assert_red(AGENTS, lambda t: t.replace("](#startup-order)", "]()"), "empty link")
+
+    def test_the_no_search_sentence_removed_is_red(self) -> None:
+        self.assert_red(AGENTS, remove_text(NO_SEARCH_SENTENCE), "forbids locating a rule by search")
+
+    def test_the_old_index_sentence_put_back_is_red(self) -> None:
+        self.assert_red(AGENTS, lambda t: t.replace(INDEX_SENTENCE, OLD_INDEX_SENTENCE), "old index sentence")
+
+    def test_a_table_without_its_separator_line_is_a_named_defect(self) -> None:
+        self.assert_red(AGENTS, remove_text(INDEX_SEPARATOR + "\n"), "header line and its separator line")
+
+    def test_an_empty_table_is_a_named_defect(self) -> None:
+        def empty(text: str) -> str:
+            head, separator, rest = text.partition(INDEX_SEPARATOR + "\n")
+            return head + separator + "\n" + rest.split("\n\n", 1)[1]
+
+        self.assert_red(AGENTS, empty, "five index rows")
 
     def test_the_description_without_its_last_sentence_is_red(self) -> None:
         self.assert_red(SKILL, lambda t: t.replace(" " + DESCRIPTION_LAST_SENTENCE, ""), "description")
