@@ -14,7 +14,7 @@
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:5c60d9a305ab3f107cee8abd93e15e33ed93a9cf9c608c8d8cb118abbd5b3208 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-2.yaml`)（revision05; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks; revision04 applies the exact fixes of the revision03 delta review (S82R-12 to S82R-18); revision05 adds item 4b, the Codex trust sentence, from the owner finding of 2026-11-26） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:5c60d9a305ab3f107cee8abd93e15e33ed93a9cf9c608c8d8cb118abbd5b3208 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-2.yaml`)（revision05; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks; revision04 applies the exact fixes of the revision03 delta review (S82R-12 to S82R-18); revision05 adds item 4b, the Codex trust sentence, from the owner finding of 2026-11-26, and item 4c, the install-scope sentence of README section 5, by owner decision 2026-11-26 "併進票 82"） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
@@ -98,6 +98,12 @@ After this ticket:
 
    It holds no inline code, no path and no link, and the numbered steps do not change. The new test file checks that section 4 holds it exactly once at that place, and M1 gains "the Codex trust paragraph removed". The changelog row of item 7 gains "; README section 4 tells a Codex user to trust the hook".
 
+4c. **README section 5, revision05.** Directly after the fenced block `claude plugin marketplace remove johnny-ai-skill` and before the line `Codex：`, with one blank line on each side, this paragraph is added exactly:
+
+   "上面的 uninstall 指令針對裝在 user 範圍的舊版（0.4.x 的 README 就是這樣教的）。如果當初裝在 project 或 local 範圍，請到那個專案的資料夾裡執行，並把 --scope user 換成 --scope project 或 --scope local。"
+
+   It holds no inline code, no path and no link. The two paragraphs of section 5 that ticket 81 pins do not change. The new test file checks the paragraph exactly once at that place, and M1 gains "the scope paragraph removed". The changelog row of item 7 gains "; README section 5 names the other install scopes".
+
 5. **Tests.**
    - **New `tests/test_plugin_session_hook.py`:**
      - `hooks/hooks.json` parses and equals item 1;
@@ -120,7 +126,7 @@ After this ticket:
    - the STATEMENT gives the owner's refresh commands. The cache check looks, in each host's `0.5.0` cache folder, for `hooks\hooks.json` holding the text `If this session also lists a skill whose name begins with johnny-ai-skill:`. A cache with no such file, or a file without that text, holds an earlier build (`838bb354` already ships `hooks/hooks.json`), so that host was not refreshed; the owner removes that host's `0.5.0` cache folder and installs again.
    - If this ticket is closed without integration, the control plane runs `git update-ref refs/heads/publication-0.5.0 6d04fa6d0cf0c1e7134a312894adc219f44bf4a9 <the id on the ref>`.
 7. **`doc/HARNESS-CHANGELOG.md`.**
-   - Directly below the ticket 81 row, replacing the revision02 row of ticket 82: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill; README section 4 tells a Codex user to trust the hook (ticket 82) | `REQ-20261103-043`, owner decisions 2026-11-26 "A" and "放進 hook" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
+   - Directly below the ticket 81 row, replacing the revision02 row of ticket 82: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill; README section 4 tells a Codex user to trust the hook; README section 5 names the other install scopes (ticket 82) | `REQ-20261103-043`, owner decisions 2026-11-26 "A" and "放進 hook" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
    - In `## 0.5.0`, replacing the revision02 bullet, as the last bullet of `### What to read instead`: `- Each session receives, from the plugin's SessionStart hook, the path of its rules file, the instruction to start a lookup at the 流程索引, and the instruction to stop when the old plugin johnny-ai-skill is also listed.`
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
