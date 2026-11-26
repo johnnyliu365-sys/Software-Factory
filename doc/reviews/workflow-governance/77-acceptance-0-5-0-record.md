@@ -79,3 +79,25 @@ Not run. The control plane adds the run id, the artifact and the verdicts here a
 ## The owner-assisted Codex session
 
 Not run. The control plane records each step here.
+
+## Control-plane rerun with the final publication commit (2026-11-26)
+
+Tickets 80 and 81 assign this rerun to the control plane, at the first `cp/wave3` commit that holds tickets 77, 80 and 81.
+
+| Field | Value |
+| --- | --- |
+| Commit | `e87bc5cba1f4313b2db0b6bfd55e5ab6eb10fcc1` (ticket 77 integrated after tickets 80 and 81) |
+| Expected publication | `6d04fa6d0cf0c1e7134a312894adc219f44bf4a9` (ticket 81) |
+| Command | `python ci/acceptance/lifecycle.py --candidate e87bc5cb… --expected-publication 6d04fa6d… --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root C:/Temp/claude/cp77-final-L1` |
+| Host CLIs | the host's own `claude` 2.1.332 and `codex` 0.166.0, as pinned in `ci/acceptance/README.md` |
+| Result | exit 0. Every verdict is `PASS`: build; fresh, upgrade, uninstall and recover on both hosts; level2 |
+
+## Owner-assisted local test of the candidate (2026-11-26)
+
+These are the owner's own sessions on this host, recorded from the owner's screenshots:
+- **Codex, local marketplace.** `codex plugin add software-factory@software-factory --json` installed 0.5.0. It went into the owner's default Codex home, not a fresh `CODEX_HOME`.
+- **Claude Code, `--plugin-dir`.** Both skills are listed. Their descriptions still say "Johnny's"; that wording is S71R-25, carried to wave 4.
+- **Claude desktop, plugin installed with `--scope local` into an empty test project.** The first install landed in the development repository, because the Run button gives each block its own shell. The control plane moved it.
+- **Takeover in the empty project.** `/software-factory:johnny-project-takeover` read `SKILL.md` and `delivery-profile.md`. It reported that the project has no `AGENTS.md` or `Workflow.md`, put the project at INTAKE, and named the goal, the authority and the Profile as needed. It returned `WAIT_FOR_HUMAN` and created nothing.
+- **Read-only lookup at publication commit `d355b4a2`.** Asked about P0, the session searched with keywords before it read `AGENTS.md` lines 33 to 43. The owner judged that a defect ("流程索引／很重要"), which led to tickets 80 and 81.
+- **Retest on `6d04fa6d`.** Still to come: the P0 and target-sources lookups, and two versions installed together.
