@@ -12,7 +12,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/johnnyliu365-sys/software-factory-plugin.git",
-        "sha": "838bb3540960f1cbb3a086c411136766235277d5"
+        "sha": "9cda3f9ef53389339f010a8a183c62dadbf3f5c9"
       },
       "description": "A governed project workflow whose gate scripts decide each step, with reusable-module selection.",
       "author": {
