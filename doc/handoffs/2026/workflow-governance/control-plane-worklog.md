@@ -14,18 +14,23 @@ Run it from the repository root.
 
 | id | kind | state | revision | digest | leaf |
 | -- | ---- | ----- | -------- | ------ | ---- |
-| agents | governance | open | git:867ddb53021b79f97afc1ccce3b10d6c6db03555 | sha256:2b53eab4ecf32d07652237d476f25accd51ba260a1d3f265731e326e737ca29d | AGENTS.md |
+| agents | governance | open | git:d7623817149f5625b5998d5f3df00a1fc20f5b2e | sha256:e89b2a2e294998ed0f9b1684fdcb2ed9d830ca949d9d5074bd2315a30f7b9718 | AGENTS.md |
 | workflow | governance | open | git:c2bccb7c0c8de9719cb48c40e49169bc9a2b777b | sha256:e090c065a26c4131aedf737a0161ce2cd62500bcc33a41b15d706acc8a8dba6e | Workflow.md |
 | codereview | governance | open | git:9ae502de5dbbf7e36b39179bcfbbc0a1d380519e | sha256:7665a6e41aba778fb873435841197bd2db2b2fb3a4e062bb78af088d6114dff9 | CodeReview.md |
-| req043 | requirement | open | git:fbff6742a1ad9e256feb5379f343d8d834dab528 | sha256:609913664d53c7e15c975ced75c82d27d5c639ff2eb252fcc7acf0077ed4bf70 | doc/requirements/active/2026/workflow-governance/REQ-20261103-043.md |
-| req044 | requirement | open | git:885cf217a15f424eb388f63f10a175839f6dc13b | sha256:5f42ba408036fe9dcc57e3ee672a81d09e24e69155afcb2399918aa79d447c72 | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
+| req043 | requirement | open | git:12dc603c05d78d47acd1f975489153880be0d780 | sha256:a8782b1c64641ca294b760021e3b8803603960c21df1be4e19fe8852d4264f98 | doc/requirements/active/2026/workflow-governance/REQ-20261103-043.md |
+| req044 | requirement | open | git:f6decb647c578094ff241fac722050719c1bcfea | sha256:a19fbfc88a6b0cbd01d4d32e70686bd1bcdd9cdb232814b452cbe27c5959b454 | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
 | req045 | requirement | open | git:f537c71b15a9182f205a1028f1f04acb0573edec | sha256:267ea89eead7c39721c1f289417aa35d413cf4f8b1b4fe6f73f438b6e0fdb21c | doc/requirements/active/2026/workflow-governance/REQ-20261120-045.md |
-| tickets | index | open | git:fbff6742a1ad9e256feb5379f343d8d834dab528 | sha256:06c8183e173fade784717af0b89ea1490aeda72c5ec02c823d86cf803148724f | modules/tickets/workflow-governance/README.md |
-| t71 | ticket | open | git:fbff6742a1ad9e256feb5379f343d8d834dab528 | sha256:5eb7a73a20b8e2ab15e1893097180b79e3efa0bc587fe9dce2076681efb72eec | modules/tickets/workflow-governance/71-publication-0-5.md |
-| t71review | review | open | git:fbff6742a1ad9e256feb5379f343d8d834dab528 | sha256:98cb331d5a0d0bb7fc28c49fb7ab67dcd33fc2b7b5274865e86d662d573dc331 | doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md |
-| t79 | ticket | open | git:08c5819ef9fc59ab43c3bd024e358bff492cade5 | sha256:9db9648be058adf238c19f30760334a426fdc5128740b106e99ee78b85441e76 | modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md |
-| integration | record | open | git:885cf217a15f424eb388f63f10a175839f6dc13b | sha256:eef317a881e20b0c53758907e244bae0708182cd41c3bc8a630349601373bd19 | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
+| tickets | index | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:d4ce456af9f9e1107c0542b0d33527f9d839eda8cd4c174dea4230ce98f4cb95 | modules/tickets/workflow-governance/README.md |
+| t71 | ticket | open | git:0cfb563b20667af140e21f9d61a8e272aa382466 | sha256:5113d014656bfe1ea805f7edde7a2740699094145abb3213a584bf5a5e77ca41 | modules/tickets/workflow-governance/71-publication-0-5.md |
+| t71review | review | open | git:68795ea281ffdb8a6f7b4340bf9bfc9ef949d108 | sha256:9a86b7e900064523ba14dc700d4458bf2ef9337b32df71c594d8b1f7b3761fe5 | doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md |
+| t79 | ticket | open | git:efa03a7edd6a1a8a9077959228307fc70ac68fa0 | sha256:06b34754e6f2bd2254d6da8729c94321970b484464754bf2a82344753e47f7e5 | modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md |
+| integration | record | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:1b83b83d9ae46498852a9407ed7e4b90610289fcda28cc540f1abb9573fbc77a | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
 | expectation | state | open | git:9ed4ae715cbba28bc3a7d138b389ff99b1c510d3 | sha256:65f3ba13d08cddeae628f5b85bd57618f93f3ff7730af673df7c3421208318d5 | doc/handoffs/2026/workflow-governance/usage-expectation.json |
+| t77 | ticket | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:359b639edb552ee489f37f10e54df570d0a649239d100cf6f99329da05c4df72 | modules/tickets/workflow-governance/77-acceptance-0-5-0.md |
+| t77record | record | open | git:4b6c187f4147e6130cb8eea182a9d8a829ce5b19 | sha256:bccb55324ef85e5877ed4ecd9d75feaf36d7cb619d950fa071894135b9c9f6df | doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md |
+| t80 | ticket | open | git:2a34bce4d267c8655f23e440f0486297ffbb1beb | sha256:fa2668353870a941eb69862250a5acdbaf934a4a2c945510d9fa8dbbc1c86e3b | modules/tickets/workflow-governance/80-lookup-through-the-index.md |
+| t81 | ticket | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:a372e81107b6e95cca035c50cb0861d3f835652ae1b4aa925dc60bd620d2f01a | modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md |
+| release | runbook | open | git:d7623817149f5625b5998d5f3df00a1fc20f5b2e | sha256:fa666771742b6c84c3c7ca63013f190971d4a128b52a04451ec7e8041f163a6f | doc/runbooks/release.md |
 
 ## Gate script pins
 
@@ -73,3 +78,21 @@ Run it from the repository root.
 - Quote owner decisions verbatim, with the question.
 
 The scratchpad tools are listed in `control-plane-resume-2026-11-20.md`, in the shared side-session notes folder outside the repository.
+
+## 2026-11-26 stage summary (pointers only)
+
+**Branch tip:** `cp/wave3`, pushed. All 0.5.0 code tickets are INTEGRATED: 65 to 76, 79, 71, 80, 81, 77. Ticket 78 waits until after the release.
+
+**Publication commit:** `6d04fa6d0cf0c1e7134a312894adc219f44bf4a9`. It is named by the local ref `refs/heads/publication-0.5.0` and was never pushed. The final local lifecycle at `e87bc5cb` passed all ten verdicts (row `t77record`).
+
+**Owner decisions of 2026-11-26.** All are in REQ-043 (rows dated 2026-11-26) and REQ-044 (T8 to T15). Read them, not a summary.
+
+**Resume order** (each push waits for the owner's confirmation):
+1. The owner retests the final candidate on the desktop: the P0 lookup, the PRD lookup, and two versions installed together. Record the result in `t77record`.
+2. Fast-forward the development `main` to `cp/wave3` (decision "B").
+3. Trigger the one cloud run: `gh workflow run acceptance.yml --ref main -f candidate=<main> -f expected_publication=6d04fa6d…`.
+4. The owner renames the publication repository to `software-factory-plugin`.
+5. Release per `doc/runbooks/release.md` and ticket 71's release order, with `6d04fa6d`.
+6. Smoke install.
+7. Remove the eight registered rows.
+8. Tickets 78 and wave 4: T13 to T15 come first.
