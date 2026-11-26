@@ -84,3 +84,87 @@ causes:
   - My scratch `.worktrees/82-hook-review-scratch/` (the clone `clone-R82-1-gen` with its `-r82` ref, the package `pkg-R82-1`, the CI log and the `_R82-1` scripts) was removed, together with the directory itself.
   - I did not touch the host lock, `refs/heads/publication-0.5.0`, the candidate, or the local marketplace.
   - PROCESSES_LEFT=0.
+
+# Revision04 initial review
+
+- **Ticket.** Revision04, read with `git show c263e6f7:modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md`. Its state row at `c3f4b700` carries the dispatch digest `5c60d9a3…5b3208`, and `JAS-82-2.yaml` from `c3f4b700` hashes to that value. Wording sources: the revision03 paragraph, S82R-12 to S82R-18 of the ticket-review record, and the REQ-043 row "放進 hook".
+- **Candidate.** `b629db41624fce07298a110f5e6beedd6096f796`. It is two additive commits on `bea29f4b`:
+  - `bdb942ff` holds the revision04 texts and tests;
+  - `b629db41` holds the repin and the eight rows.
+  - Both are authored `Johnny Liu <johnny.liu365@gmail.com>`, with a `Co-Authored-By: Claude Sonnet 5.5` trailer that matches the dispatch model and USAGE.
+- **Label.** Initial review of closure revision04. It is a new closure revision, so the §5 count restarts. Process tier: strict.
+- **Reviewer.** Independent `ticket-review` seat, run id `R82-2`, worktree `.worktrees/82-hook-review`, detached at the candidate, with porcelain empty before and after.
+- **Publication commit.** `9cda3f9ef53389339f010a8a183c62dadbf3f5c9`.
+- **Captures.** Every capture of this section is in `r04/` beside this file, with the scripts that produced it: `exact_texts_r04.py`, `run_hook_r04.py`, `counter_mutations_r04.py` and `boundary_r04.py`.
+
+## Findings (revision04)
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| S82-01 | `OUT_OF_SCOPE_HARDENING` | Low (non-blocking) | `.worktrees/82-hook-out/`; the residue item of the revision04 STATEMENT; `JAS-82-2.yaml` `residue_limit` | The seat moved the revision02 receipt and captures into `prev-r82b`, a directory carrying its new run id, and then removed it. Those files carried no revision04 run id: `RETURN.md` with the control plane's USAGE section, `P1.txt`, `M1.txt` and the rest. Fixed cell paths (`<out_dir>/P1.txt` …) force a correction round to overwrite the earlier captures, so the candidate is not affected. The revision02 raw blocks survive in `RETURN.as-returned.rev02.md`, which equals the revision02 receipt as returned (446480 bytes). Two things are lost. (1) The revision02 USAGE numbers are no longer recorded on disk. (2) The citations of `82-hook-out/*.txt` in this record's revision02 section now resolve to revision04 files. | STATEMENT residue item ("the previous round's captures prev-r82b (the revision02 receipt and captures, moved there out of 82-hook-out)"). `ls .worktrees/82-hook-out`. The revision02 USAGE values occur in no `.md` outside review worktrees (`grep -rl 9934582`). | No new mechanism. (a) For the record, the revision02 USAGE I read on 2026-11-26 before the correction was: seat `implementation-standard/JAS82R1`, `claude-sonnet-5-5`, effort high, input 152, cache write 190183, cache read 9934582, output 50727. The control plane can copy it next to `RETURN.as-returned.rev02.md`. (b) Revision02 evidence is read from `RETURN.as-returned.rev02.md`. (c) The next correction dispatch names where the previous round's receipt goes before the seat starts, for example `RETURN.revNN.md` made by the control plane. Carried to the control plane's dispatch practice; it does not block this candidate. |
+
+Notes. None of these is a finding.
+
+- **N4. The "777" figure (S82R-17).** 777 is the length of the text between the quotes with both `${CLAUDE_PLUGIN_ROOT}` placeholders unsubstituted (21 characters each). The printed text is 735 + 2 × len(path) characters plus a line feed:
+  - 883 for the seat's scratch path, as its STATEMENT says;
+  - 885 for a 75-character cache path such as `C:/Users/User/.claude/plugins/cache/software-factory/software-factory/0.5.0`;
+  - 837 or 838 for my space paths.
+
+  The figure appears only in the scope paragraph, as a size comparison against option A's 2 to 3 KB and the 10,000-character cap. It is not an exact text, no test reads it, and the candidate cannot be wrong against it. It is not a defect of the candidate. Saying "777 characters before substitution" is optional wording for the control plane's next touch of the ticket; it is not a blocking `TICKET_DEFECT`.
+- **N5. The boundary per commit.** The boundary declares `hooks/hooks.json` and `tests/test_plugin_session_hook.py` as `create` only. `evaluate_changes` on the correction delta by itself (`bea29f4b..b629db41`, or `bdb942ff` alone) therefore gives `MODIFICATION_OUTSIDE_BOUNDARY` for `hooks/hooks.json`. The gate does not judge that range. `admit_document_mutation` diffs from `git merge-base <integration branch> <candidate>`, which is `94acca3a` for `cp/wave3` (`b70ad63d`). From there both files are `CREATE` and the range is admitted. This is expected for a branch that a correction round extends. It matters only if this branch were integrated in pieces, and it is not.
+- **N6. My revision02 notes still hold.** N1 (the payload position is pinned only by A1), N2 (CRLF normalisation in the byte check) and N3 (the docstring wrap) are unchanged in this revision.
+
+## Per-check table (revision04)
+
+| # | Check | Result | Evidence and notes |
+| --- | --- | --- | --- |
+| R1a | `hooks/hooks.json` byte-exact, replaced in place | PASS | The blob equals the revision04 item 1 JSON block plus one LF: 961 bytes, no CR. Against `bea29f4b`, only the `"command"` line differs, and the line count is the same. The command is ASCII, has no matcher, and holds `${CLAUDE_PLUGIN_ROOT}` exactly twice. `r04/exact-texts.txt` |
+| R1b | The tests' `COMMAND` and `EXPECTED_TEXT` | PASS | `COMMAND` (parsed with `ast.literal_eval`) equals the item 1 command. `EXPECTED_TEXT` equals the quoted text with both placeholders as `{root}`. Each is defined once, replaced in place. |
+| R1c | The README section 8 sentence | PASS | The revision04 sentence appears once. It is its own paragraph and the last paragraph of section 8. Exactly one line differs from `bea29f4b`, and no revision02 sentence remains. It holds no backtick, path or link. It names the terminal for `/hooks` (S82R-15). |
+| R1d | The changelog row and bullet | PASS | The row sits directly below the ticket 81 row and cites "A" and "放進 hook" (S82R-18). The bullet is the last bullet of `### What to read instead`. The file has exactly one ticket 82 row and one SessionStart bullet, and exactly two lines differ from `bea29f4b` (S82R-13). |
+| R1e | Untouched files | PASS | Against `bea29f4b`, these are byte-identical: `skills/johnny-project-takeover/SKILL.md`, `AGENTS.md`, `.claude-plugin/plugin.json`, `tests/test_entry_read_only_lookup.py` (which holds the ticket 81 pins of the guard step) and `tests/test_plugin_payload_boundary.py`. README section 5 is identical at `94acca3a`, `bea29f4b` and `b629db41`. A1 (base to `b629db41`) is byte-identical to the receipt's `A1.txt`, with only the anchor lines and the payload line. `r04/A1-review.txt` |
+| R2 | The new command run by hand | PASS | I ran it in `C:\Program Files\Git\bin\bash.exe -c` and in Windows PowerShell 5.1.26100 (`-NoProfile -NonInteractive -Command`) with four paths: forward-slash, backslash, backslash with spaces, and forward-slash with spaces. All 8 runs: exit 0, empty stderr. Each output equals the expected text with the path in both places (`path_count=2`), and no `CLAUDE_PLUGIN_ROOT` or `${` remains. Git Bash ends with LF, PowerShell with CRLF. The guard sentence agrees with `SKILL.md` step 1: same two conditions, same stop, removal commands in README section 5, a new session, nothing else. README section 5 does hold the Claude Code and Codex removal commands. `r04/hook-run.txt` |
+| R3a | The S82R-16 cross-check test | PASS | `check_guard` requires exactly one line of `SKILL.md` that begins `1. Before anything else`. It requires each of `name begins with johnny-ai-skill:` and `file lies in a folder named johnny-ai-skill` exactly once in that line and exactly once in the command. A missing hook command or a missing `SKILL.md` is a named defect. `check_guard` is part of `hook_defects`, and the injection copy now carries five files. `test_the_guard_conditions_match_the_skill_step_word_for_word` checks the repository. Injection cases cover: the sentence removed, each condition changed in the command, a condition changed in `SKILL.md`, and `SKILL.md` missing. |
+| R3b | My counter-mutations on `SKILL.md` only | PASS | Run in a disposable `--no-hardlinks` clone at `b629db41` (a CRLF checkout; line ends kept), with the three hook, payload and lookup test files in full. CM7, condition 1 changed in `SKILL.md` only (`its name begins with` to `its name starts with`): red. CM8, condition 2 changed in `SKILL.md` only (`folder` to `directory`): red. In both, `test_the_guard_conditions_match_the_skill_step_word_for_word` and `test_the_committed_hook_has_no_defect` fail. The ticket 81 pins of the guard step in `test_entry_read_only_lookup.py` also fail (60 or 61 failed in all). Porcelain was empty after each restore. `r04/M1-review.txt` |
+| R4a | The seat's two new M1 mutations | PASS | `M1.txt` has nine blocks, each `exit=1` with a real diff. Mutation 8 removes the whole old-plugin sentence from the command: 11 failed, including the S82R-16 test, both shell tests and `test_the_old_plugin_sentence_removed_from_the_command_is_red`. Mutation 9 drops `-skill` from `folder named johnny-ai-skill` in the command: 10 failed, including the S82R-16 test. Mutations 1 to 7 repeat revision02 and are each red. In every block, the l5 publication test fails and 9 tests are skipped as "pin C is pending", because the clone has no local anchor ref; l5 is a registered base failure. |
+| R4b | My own counter-mutations on the hook | PASS | CM9 drops the second placeholder (`section 5 of README.md`): red, 7 failed, including both shell tests and the byte check. CM10 changes `section 5` to `section 6`: red, 7 failed. `r04/M1-review.txt` |
+| R5a | Rebuild in a disposable clone, `--ref refs/heads/publication-0.5.0-r82` | PASS | Two runs at `b629db41` each print `publication commit 9cda3f9ef53389339f010a8a183c62dadbf3f5c9`, exit 0, and leave porcelain empty. A third run at `bdb942ff` prints the same id and repins `838bb354 → 9cda3f9e`, which is exactly `b629db41`'s marketplace line. The clone's ref names a parentless commit with tree `42d1bdb7…`. The clone and its ref were removed. `r04/G1-review.txt` |
+| R5b | `--verify-only` on the shared ref | PASS | `verified 9cda3f9ef53389339f010a8a183c62dadbf3f5c9`, exit 0. The reflog shows `838bb354` at 15:09:01+08:00, then `9cda3f9e` at 16:10:16+08:00 (08:10:16Z), as the STATEMENT says. No `-t82` or `-r82` ref is left in the shared repository. I did not move the ref. `r04/V1-review.txt` |
+| R5c | The package, the rows and the local marketplace | PASS | `git archive 9cda3f9e`: `hooks/` holds only `hooks.json`, `cmp`-equal to the candidate blob, with the guard text `If this session also lists a skill whose name begins with johnny-ai-skill:` once. The package also has the anchor once and the revision04 README sentence once. Its `plugin.json` has line 43, `software-factory` and `0.5.0`, and its marketplace has forty zeros. It holds no `.codex-plugin`, no Level 2 files and nothing under `local_orchestration`. `ci/registered-failures.json` equals `bea29f4b`'s with the 8 occurrences of `838bb354` changed to `9cda3f9e` and nothing else; no OLD is left. The marketplace likewise differs only in the pin. `diff -r` of the package against `C:/Temp/claude/sf-050-local/plugins/software-factory` prints nothing. Both local marketplace files keep the sha256 values `92a9ab75…` and `72f4e770…`. `r04/K1-review.txt`, `r04/rows-review.txt` |
+| R6 | The STATEMENT's cache check (S82R-12) | PASS | It tells the owner to look, in each host's `0.5.0` cache folder, for `hooks\hooks.json` holding the text `If this session also lists a skill whose name begins with johnny-ai-skill:`. A cache with no such file, or a file without that text, holds an earlier build, since `838bb354` already ships `hooks/hooks.json`. The owner then removes that host's `0.5.0` folder and installs again. That is item 6's wording, with both cache paths given. |
+| R7 | The boundary (`document_mutation_gate`) | PASS | `read_boundary` of the ticket at `c3f4b700` gives `DECLARED`, with the same block as revision02. Merge-base range (`94acca3a..b629db41`, the range `admit_document_mutation` judges): 2 `CREATE` and 8 `MODIFY`, `(None, None)`. `b629db41` alone also gives `(None, None)`. The correction delta by itself is refused, as explained in N5. Controls: `Workflow.md` and `skills/johnny-project-takeover/SKILL.md` both give `PATH_FORBIDDEN`, and the candidate touches neither. `r04/boundary-review.txt` |
+| R8a | P1 and T1 rerun | PASS | P1 (five files, `-rfEs`): 292 passed, 906 subtests passed, exit 0, no skip. T1: mypy 2.3.0 `--strict` on three files reports "no issues", exit 0. Both match the receipt. The hook test file alone has 34 passed and 0 skipped, both shell cases included. `r04/P1-review.txt`, `r04/T1-review.txt`, `r04/hook-tests-verbose.txt` |
+| R8b | CI read back | PASS | Run 45780938741: `headSha` `b629db41…`, branch `cp/wave3-82-hook`, completed `success`, with `test (linux)` and `test (windows)` both `success`. The 14,985-line log has 0 `UNREGISTERED_FAILURE` or `REGISTERED_NOT_FAILING` lines and no `FAILED` line naming `test_plugin_session_hook`. Against run 45773219088 (`bea29f4b`), both jobs have +6 passed with unchanged skips (Windows 18, Linux 80). So the six new tests ran on both, and the PowerShell case still runs on the Windows job. `r04/C1-review.txt`, `r04/ci-counts.txt` |
+| R8c | E1 and F1 | PASS / READ | E1 on the receipt with USAGE appended, `--candidate b629db41`: `cells=11 defects=0`, exit 0 (`r04/E1-review.txt`). F1 was read, not rerun: 1 failed (`test_acr2_linux_requires_an_actual_linux_kernel_and_backend`, registered), 3572 passed and 13 skipped, a subset of the registered base failures. |
+| R8d | The rest of the receipt | PASS with S82-01 | The STATEMENT's numbers, ids, times, sizes (883 characters) and K1, L1 and A1 claims match my reruns. Its residue item is truthful, but it describes the removal recorded in S82-01. |
+
+```review-verdict
+candidate: b629db41624fce07298a110f5e6beedd6096f796
+verdict: APPROVED
+round: initial
+closure_revision: revision04
+reviewer: ticket-review seat R82-2 (claude-opus-5-5)
+reviewed_at: 2026-11-26
+```
+
+```rework-record
+candidate: b629db41624fce07298a110f5e6beedd6096f796
+round: 2
+kind: INITIAL
+verdict: APPROVED
+causes:
+```
+
+## Not done here, and why (revision04)
+
+- **The full suite was not rerun.** It was not asked for. F1 was read.
+- **The control-plane list after integration is unchanged and not done here.** It covers ticket 77's rerun with `9cda3f9e`, the owner-assisted test (including the two-versions case as a plain question), ticket 77's cloud trigger, and the `agents` repin with `index_pins.py --check`.
+- **Until this ticket integrates,** the publication tests on this host fail in any checkout that pins `838bb354` or `6d04fa6d`.
+- **Residue.**
+  - My scratch `.worktrees/82-hook-review-scratch/` was removed, including the clone `clone-R82-2` with its `-r82` ref, the package `pkg-R82-2`, the CI log and the `_R82-2` scripts.
+  - I did not touch the host lock, `refs/heads/publication-0.5.0`, the candidate, the receipt or the local marketplace.
+  - PROCESSES_LEFT=0.
+
+## Control-plane note on S82-01 (2026-11-26)
+
+The seat removed the revision02 receipt with the control plane's appended USAGE section in it. The revision02 round's seat use, as the reviewer recovered it, was claude-sonnet-5-5, effort high: input 152, cache write 190183, cache read 9934582, output 50727. From the next correction on, the dispatch names where the previous round's receipt goes before the seat starts.
