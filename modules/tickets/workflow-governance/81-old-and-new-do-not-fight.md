@@ -8,18 +8,18 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision03 / receipt under `.worktrees/81-coexist-out/` / owner implementation seat / worktree `.worktrees/81-coexist` / branch `cp/wave3-81-coexist` / baseline the `cp/wave3` commit named in the dispatch, after ticket 80 is integrated |
+| Agent Context binding | ticket revision04 / receipt under `.worktrees/81-coexist-out/` / owner implementation seat / worktree `.worktrees/81-coexist` / branch `cp/wave3-81-coexist` / baseline the `cp/wave3` commit named in the dispatch, after ticket 80 is integrated |
 | 實作語言 | Markdown governance text and JSON; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `PLANNED`（revision02; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes (`doc/reviews/workflow-governance/81-old-and-new-do-not-fight-ticket-review.md`); revision03 adds item 7 (owner decision 2026-11-26 "併進票 81 修", from S80-01 and S80-02), with a rule-only review of that item; after ticket 80） |
+| 狀態 | `PLANNED`（revision04; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes (`doc/reviews/workflow-governance/81-old-and-new-do-not-fight-ticket-review.md`); revision03 adds item 7 (owner decision 2026-11-26 "併進票 81 修", from S80-01 and S80-02), with a rule-only review of that item; revision04 applies that review's exact fixes (S81R-14 to S81R-17); after ticket 80） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/81-coexist` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/81-coexist-review` |
-| 責任邊界 | the first 流程索引 row in `AGENTS.md`, one new start step in `SKILL.md`, two paragraphs in README section 5, a release runbook, the tests that pin them, and the marketplace pin, the registered-failure reasons and the changelog for the rebuilt publication commit |
-| 禁止修改 | every other line of `AGENTS.md`; `Workflow.md`, `CodeReview.md`, `library/`, `commands/`, `template/`, `.claude-plugin/plugin.json`, `ci/acceptance/`, `.github/` |
+| 責任邊界 | the first 流程索引 row and one sentence of the lookup paragraph in `AGENTS.md`, one new start step in `SKILL.md`, two paragraphs in README section 5, a release runbook, the tests that pin them, and the marketplace pin, the registered-failure reasons and the changelog for the rebuilt publication commit |
+| 禁止修改 | every other line of `AGENTS.md` (evidence A1); `Workflow.md`, `CodeReview.md`, `library/`, `commands/`, `template/`, `.claude-plugin/plugin.json`, `ci/acceptance/`, `.github/` |
 | 環境 | `LOCAL` and GitHub Actions on the development repository; nothing is pushed to the publication repository |
 
 ## 邊界宣告（機器可讀，整合前由閘門讀取）
@@ -85,16 +85,18 @@ After this ticket:
    - Rebuild the local marketplace's plugin tree.
    - The STATEMENT gives the owner's refresh commands and cache checks, as ticket 80 item 5 does: the owner checks `%USERPROFILE%\.claude\plugins\cache\software-factory\software-factory\0.5.0\skills\johnny-project-takeover\SKILL.md` and `$CODEX_HOME\plugins\cache\software-factory\software-factory\0.5.0\skills\johnny-project-takeover\SKILL.md`, each for a line that begins `1. Before anything else, look at the skills this session lists.`; the rest as ticket 80 item 5.
 6. **`doc/HARNESS-CHANGELOG.md`.**
-   - Directly below the ticket 80 row: `| 2026-11-26 | The skill stops when the old plugin johnny-ai-skill is still installed; the README explains the host's decline record; a version is never published twice (ticket 81) | `REQ-20261103-043`, owner decisions 2026-11-26 | `modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md` |`.
+   - Directly below the ticket 80 row: `| 2026-11-26 | The skill stops when the old plugin johnny-ai-skill is still installed; the README explains the host's decline record; a version is never published twice; the first 流程索引 row is narrowed to the lookup's own rules, with a table-order tie-break (ticket 81) | `REQ-20261103-043`, owner decisions 2026-11-26 | `modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md` |`.
    - In the `## 0.5.0` section, as the last bullet of the part about moving from `johnny-ai-skill`: `- With both plugins installed, the new skill stops at its first step and asks the user to remove the old one and open a new session.`
 7. **`AGENTS.md`, the first 流程索引 row** (owner decision 2026-11-26 "併進票 81 修", quoted in `REQ-20261103-043`; ticket 80 review S80-01 and S80-02).
    - The row `| 唯讀查詢（文件內容、票的狀態、規則寫法） | [唯讀查詢](#read-only-lookup) | 不適用：只讀索引指到的那一節 |` becomes exactly `| 唯讀查詢本身的規則（怎麼查、查不到時怎麼回答） | [唯讀查詢](#read-only-lookup) | 不適用：規則即本檔該節 |`.
-   - No other line of `AGENTS.md` changes.
+   - In the lookup paragraph, 「（同時符合 P0 列與其他列時取 P0 列）」 becomes exactly 「（同時符合 P0 列與其他列時取 P0 列；其餘同時符合多列時，取表中較上面的一列）」; `INDEX_SENTENCE` and `PARAGRAPH` in the test take the new text.
+   - Apart from the first row and that sentence, no line of `AGENTS.md` changes.
    - `tests/test_entry_read_only_lookup.py`:
      - the expected first row takes the new text;
-     - a new check requires each `#anchor` link of the 流程索引 to appear in exactly one row, so a duplicate row that points to an anchor another row already names is red;
-     - the docstring says how many files `copy_texts` copies.
-   - TDD 2 gains three cases: the old first row put back; a duplicate P0 row appended to the table; the first row's 情境 widened back with 「規則寫法」.
+     - a new check counts, in every cell of the 流程索引, each link whose target begins with `#` (an anchor in `AGENTS.md` itself), and requires each such target to appear in exactly one row; links into other files (`Workflow.md#…`, reference paths) are not counted;
+     - a new constant `INDEX_TABLE` holds the header line, the separator line, the five rows of `INDEX_ROWS` (the first as this item gives it), then the eighteen rows that are lines 77 to 94 of `AGENTS.md` at the baseline, in that order; the lines from the header to the first blank line after it must equal `INDEX_TABLE`;
+     - the docstring says that `copy_texts` copies six files: `AGENTS.md`, `SKILL.md` and the four references the rows name.
+   - TDD 2 gains these cases: the old first row put back; a duplicate P0 row appended to the table, once linking `#p0-source-type` and once linking `Workflow.md#tickets` and `language-policy.md` (S80-02 CM5); two base rows swapped; the first row's 情境 widened back with 「規則寫法」; the tie-break clause 「其餘同時符合多列時，取表中較上面的一列」 removed.
    - The extracted package's `AGENTS.md` holds the new first row (item 5's package check).
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
@@ -132,7 +134,8 @@ After this ticket:
    - the guard step placed after the read-only step;
    - one word of the guard step changed;
    - one README paragraph removed;
-   - one README paragraph changed.
+   - one README paragraph changed;
+   - each case of item 7.
 3. 外部失敗／fail-closed：a missing `SKILL.md` or README is a named defect, not a traceback.
 4. 回歸保護：the payload closure test passes; the publication route checks pass; `--verify-only` passes with the new pin.
 
@@ -151,6 +154,7 @@ After this ticket:
 
 - `python -m pytest tests/test_entry_read_only_lookup.py tests/test_plugin_payload_boundary.py tests/test_plugin_publication.py tests/test_governance_consistency.py -q` exits 0 on the host with the local anchor ref, apart from registered base failures; `mypy --strict` on the two changed test files exits 0.
 - **G1**, **V1**, **K1**, **L1** as ticket 80 defines them.
+- **A1**: `git diff --unified=0 <baseline> <candidate> -- AGENTS.md` shows exactly two changed lines, the lookup paragraph and the first 流程索引 row.
 - **反向突變證據**: every case of TDD 2, each restored after it turns a named test red.
 - **CI evidence**: one run on a commit of this branch with both jobs `success`.
 - **Receipt**: R4-7 cells, passing P9 and E1 (E1 runs last).
