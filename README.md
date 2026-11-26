@@ -76,7 +76,7 @@ codex plugin add software-factory@software-factory --json
 codex plugin list --marketplace software-factory --json
 ```
 
-安裝或更新 Software Factory 之後開 Codex 時，如果它詢問是否信任 Software Factory 的 hook，請選信任。沒有信任的話，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。
+安裝或更新 Software Factory 之後，請先在終端機裡進到你平常用 Codex 的專案資料夾，執行一次 codex；它詢問是否信任 Software Factory 的 hook 時請選信任，然後離開，之後就可以照常使用 Codex 桌面 app。目前的 Codex 桌面 app 不會詢問：hook 有變動而還沒在終端機裡重新信任時，這個 hook 不會生效，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。
 
 5. 要移除時，先移除 plugin，再移除 marketplace：
 
