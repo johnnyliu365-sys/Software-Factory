@@ -8,13 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision05 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
+| Agent Context binding | ticket revision06 / receipt under `.worktrees/82-hook-out/` / owner implementation seat / worktree `.worktrees/82-hook` / branch `cp/wave3-82-hook` / baseline the `cp/wave3` commit named in the dispatch |
 | 實作語言 | JSON and Markdown; Python 3.11 for the tests（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:5c60d9a305ab3f107cee8abd93e15e33ed93a9cf9c608c8d8cb118abbd5b3208 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-2.yaml`)（revision05; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks; revision04 applies the exact fixes of the revision03 delta review (S82R-12 to S82R-18); revision05 adds item 4b, the Codex trust sentence, from the owner finding of 2026-11-26, and item 4c, the install-scope sentence of README section 5, by owner decision 2026-11-26 "併進票 82"） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:5c60d9a305ab3f107cee8abd93e15e33ed93a9cf9c608c8d8cb118abbd5b3208 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-2.yaml`)（revision06; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner's answer "接受" on the scope (S82R-02); the initial review of revision02 APPROVED `bea29f4b`; revision03 adds the old-plugin guard to the hook text by owner decision 2026-11-26 "放進 hook", and says the terminal for /hooks; revision04 applies the exact fixes of the revision03 delta review (S82R-12 to S82R-18); revision05 adds item 4b, the Codex trust sentence, from the owner finding of 2026-11-26, and item 4c, the install-scope sentence of README section 5, by owner decision 2026-11-26 "併進票 82"; revision06 applies the exact fixes of the revision05 delta review (S82R-19 to S82R-25)） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |
@@ -94,15 +94,15 @@ After this ticket:
    It holds no inline code, no path and no link.
 4b. **README section 4 (安裝：Codex), revision05.** Directly after the fenced block `codex plugin list --marketplace software-factory --json` and before the line that begins `5. 要移除時`, with one blank line on each side, this paragraph is added exactly:
 
-   "第一次在專案裡開 Codex 時，它會詢問是否信任 Software Factory 的 hook，請選信任。沒有信任的話，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋。"
+   "安裝或更新 Software Factory 之後開 Codex 時，如果它詢問是否信任 Software Factory 的 hook，請選信任。沒有信任的話，Codex 開場時不會知道插件的規則檔在哪裡，查規則時可能改用搜尋，也不會在舊版還裝著時先停下來。"
 
-   It holds no inline code, no path and no link, and the numbered steps do not change. The new test file checks that section 4 holds it exactly once at that place, and M1 gains "the Codex trust paragraph removed". The changelog row of item 7 gains "; README section 4 tells a Codex user to trust the hook".
+   It holds no inline code, no path and no link, and the numbered steps do not change. The new test file checks that section 4 holds it exactly once at that place, and TDD 2 gains the case "the Codex trust paragraph removed". Item 7's row already holds "; README section 4 tells a Codex user to trust the hook"; it is not added again.
 
 4c. **README section 5, revision05.** Directly after the fenced block `claude plugin marketplace remove johnny-ai-skill` and before the line `Codex：`, with one blank line on each side, this paragraph is added exactly:
 
-   "上面的 uninstall 指令針對裝在 user 範圍的舊版（0.4.x 的 README 就是這樣教的）。如果當初裝在 project 或 local 範圍，請到那個專案的資料夾裡執行，並把 --scope user 換成 --scope project 或 --scope local。"
+   "上面的 uninstall 指令針對裝在 user 範圍的舊版（0.4.x 的 README 就是這樣教的）。如果當初裝在 project 或 local 範圍，請到那個專案的資料夾裡執行上面兩個指令，並把 uninstall 的 --scope user 換成 --scope project 或 --scope local。"
 
-   It holds no inline code, no path and no link. The two paragraphs of section 5 that ticket 81 pins do not change. The new test file checks the paragraph exactly once at that place, and M1 gains "the scope paragraph removed". The changelog row of item 7 gains "; README section 5 names the other install scopes".
+   It holds no inline code, no path and no link. The two paragraphs of section 5 that ticket 81 pins do not change. The new test file checks the paragraph exactly once at that place, and TDD 2 gains the case "the scope paragraph removed". Item 7's row already holds "; README section 5 names the other install scopes"; it is not added again.
 
 5. **Tests.**
    - **New `tests/test_plugin_session_hook.py`:**
@@ -111,6 +111,9 @@ After this ticket:
      - each anchor it names stands exactly once in `AGENTS.md`: `read-only-lookup`, and `process-index` directly above `## 流程索引`;
      - the payload declaration lists `hooks/hooks.json`, and `materialise_publication_tree(<repository root>, <payload>, <temporary directory>)` writes `hooks/hooks.json` with the same bytes as the repository's file (the pinned commit is checked by K1, not by this test);
      - README section `## 8. 它怎麼運作` holds the sentence of item 4 exactly once, as its own paragraph and as the section's last paragraph;
+     - README section `## 4. 安裝：Codex` holds the paragraph of item 4b exactly once; the three lines before it are `codex plugin list --marketplace software-factory --json`, ```` ``` ```` and a blank line, and the two lines after it are a blank line and a line that begins `5. 要移除時`;
+     - README section `## 5. 從舊版 johnny-ai-skill 換過來` holds the paragraph of item 4c exactly once; the three lines before it are `claude plugin marketplace remove johnny-ai-skill`, ```` ``` ```` and a blank line, and the two lines after it are a blank line and the line `Codex：`;
+     - neither paragraph holds `` ` ``, `](`, `/` or `\`;
      - the old-plugin sentence of the command holds the two match conditions of `SKILL.md` step 1 word for word: `name begins with johnny-ai-skill:` and `file lies in a folder named johnny-ai-skill` each stand exactly once in the command and once in the line of `skills/johnny-project-takeover/SKILL.md` that begins `1. Before anything else`;
      - with `${CLAUDE_PLUGIN_ROOT}` replaced by a temporary directory (forward slashes for bash, native separators for PowerShell), the command is run and must exit 0, write nothing to stderr, and print the expected text with that path followed by one line feed, after its stdout is decoded as UTF-8 and each CRLF is replaced by LF. The bash case runs `shutil.which("bash")` on Linux. On Windows it runs the file named by `CLAUDE_CODE_GIT_BASH_PATH` when that variable is set, otherwise `C:\Program Files\Git\bin\bash.exe`, and never a bare `bash`. It is skipped with the reason `Git Bash not found` when that file does not exist. On Windows only, the PowerShell case runs `[shutil.which("powershell"), "-NoProfile", "-NonInteractive", "-Command", command]`, and is skipped with the reason `Windows PowerShell not found` when `shutil.which("powershell")` is None.
    - `tests/test_entry_read_only_lookup.py`: `ANCHORED_HEADINGS` gains `("process-index", "## 流程索引")` between the `p0-permissions` and `target-sources` entries, and the module docstring's "three anchors" sentence gains "; ticket 82 adds `process-index` above `## 流程索引`".
@@ -123,10 +126,10 @@ After this ticket:
    - `--verify-only` is run;
    - the extracted package holds `hooks/hooks.json` and the anchor;
    - the local marketplace's plugin tree is rebuilt;
-   - the STATEMENT gives the owner's refresh commands. The cache check looks, in each host's `0.5.0` cache folder, for `hooks\hooks.json` holding the text `If this session also lists a skill whose name begins with johnny-ai-skill:`. A cache with no such file, or a file without that text, holds an earlier build (`838bb354` already ships `hooks/hooks.json`), so that host was not refreshed; the owner removes that host's `0.5.0` cache folder and installs again.
+   - the STATEMENT gives the owner's refresh commands. The cache check looks, in each host's `0.5.0` cache folder, for `README.md` holding a line that begins `上面的 uninstall 指令針對裝在 user 範圍的舊版`. A cache without that line holds an earlier build (`9cda3f9e` already ships the hook with the old-plugin sentence), so that host was not refreshed; the owner removes that host's `0.5.0` cache folder and installs again.
    - If this ticket is closed without integration, the control plane runs `git update-ref refs/heads/publication-0.5.0 6d04fa6d0cf0c1e7134a312894adc219f44bf4a9 <the id on the ref>`.
 7. **`doc/HARNESS-CHANGELOG.md`.**
-   - Directly below the ticket 81 row, replacing the revision02 row of ticket 82: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill; README section 4 tells a Codex user to trust the hook; README section 5 names the other install scopes (ticket 82) | `REQ-20261103-043`, owner decisions 2026-11-26 "A" and "放進 hook" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
+   - Directly below the ticket 81 row, replacing the revision02 row of ticket 82: `| 2026-11-26 | The plugin ships a SessionStart hook that names its rules file, sends a read-only lookup to the 流程索引 first, and stops a session that also lists the old plugin johnny-ai-skill; README section 4 tells a Codex user to trust the hook; README section 5 names the other install scopes (ticket 82) | `REQ-20261103-043`, owner decisions 2026-11-26 "A", "放進 hook" and "併進票 82" | `modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md` |`.
    - In `## 0.5.0`, replacing the revision02 bullet, as the last bullet of `### What to read instead`: `- Each session receives, from the plugin's SessionStart hook, the path of its rules file, the instruction to start a lookup at the 流程索引, and the instruction to stop when the old plugin johnny-ai-skill is also listed.`
 
 **After review approval and integration, control-plane and owner work, not this seat's:**
@@ -134,7 +137,7 @@ After this ticket:
 2. **The owner-assisted test** records:
    - whether the hook's text reaches a desktop session, and whether `/hooks` in the Claude Code terminal lists the hook;
    - the same P0 and PRD questions, with the files the session read. The expected route is the 流程索引, then the one linked section, with no search;
-   - whether Codex runs the plugin's hook, and if it does, the exact text it prints (the path must be the installed plugin directory). Codex 0.166.0 has hooks that need persisted trust. If Codex does not run it, or prints a wrong path, the release waits for a ticket that adds a sentence to README section 4 and rebuilds the publication commit, unless the owner decides to release with that sentence missing;
+   - whether Codex, once the hook is trusted as README section 4 says, prints the hook text with its installed plugin directory as the path (REQ-043 row "Owner finding 2026-11-26 (Codex asks to trust the plugin hook)" records that it ran on `838bb354`), and whether the two-versions case stops in Codex too;
    - the two-versions case of ticket 81, asked as a plain question without invoking the skill: the expected answer is the stop, the removal commands from README section 5, and nothing else.
 3. Ticket 77's cloud trigger passes `expected_publication` equal to this ticket's publication commit.
 4. Repin the `agents` row of `doc/handoffs/2026/workflow-governance/control-plane-worklog.md` and run `index_pins.py --check`.
@@ -168,7 +171,9 @@ After this ticket:
    - the anchor `process-index` removed or moved below `## 流程索引`;
    - the command text changed by one word;
    - the README sentence removed;
-   - the old-plugin sentence removed from the command.
+   - the old-plugin sentence removed from the command;
+   - the Codex trust paragraph removed;
+   - the scope paragraph removed.
 3. 外部失敗／fail-closed：a missing or unparsable `hooks/hooks.json` is a named defect, not a traceback.
 4. 回歸保護：every check of tickets 79, 80 and 81 still passes; `--verify-only` passes with the new pin.
 

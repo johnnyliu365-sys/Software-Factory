@@ -45,6 +45,26 @@ The seat checked three things:
 | S82R-17 | low | The size figure is out of date | 777 printed characters stated |
 | S82R-18 | low | The changelog row cited only "A" | It cites "A" and "放進 hook" |
 
+## Revision05 delta (commit `22ddb00c`), same seat, resumed
+
+**verdict: CHANGES_REQUESTED**
+
+Revision05 adds two README paragraphs:
+- 4b, the Codex trust sentence (owner finding "有");
+- 4c, the install-scope sentence (owner decision "併進票 82").
+
+The seat confirmed that both insertion points are exact and unique, and that every old README route check still passes. It also confirmed 4c's scopes with `claude plugin uninstall --help` on 2.1.332.
+
+| id | severity | finding | revision06 |
+| --- | --- | --- | --- |
+| S82R-19 | major | The cache-check marker is already in the `9cda3f9e` build | The check looks for the new scope paragraph in the cached `README.md` |
+| S82R-20 | minor | "M1" is not defined in the ticket | The cases join TDD 2 |
+| S82R-21 | minor | "Exactly once at that place" was undefined | Exact neighbouring lines and a character check |
+| S82R-22 | minor | 4b claimed more than the evidence shows | The reviewer's wording: after install or update, "if it asks"; the guard is also lost without trust |
+| S82R-23 | low | 4c did not say which commands to run in the folder | The reviewer's wording |
+| S82R-24 | minor | The owner-test bullet still treated Codex hook support as open | Reworded on the recorded evidence |
+| S82R-25 | low | The changelog citation was incomplete, and the "gains" wording could duplicate the row | Cites "併進票 82"; "not added again" |
+
 ## Seat token use
 
 | seat | model | effort | input | cache write | cache read | output |
