@@ -90,6 +90,8 @@ codex plugin marketplace remove software-factory --json
 
 舊版的 plugin id 是 johnny-ai-skill@johnny-ai-skill。先用各 host 自己的 remove 指令移除舊版，再照第 3 與第 4 節安裝新版。
 
+新舊兩版同時裝著時，agent 可能照舊版的規則做事。新版開工的第一步會檢查這件事：看到舊版還在，就停下來請你先移除舊版，移除後再開一個新的 session。
+
 Claude Code：
 
 ```bash
@@ -109,6 +111,8 @@ codex plugin remove johnny-ai-skill@johnny-ai-skill --json
 ```bash
 codex plugin marketplace remove johnny-ai-skill --json
 ```
+
+在 Claude Code 2.1.332 上，用 uninstall 移除插件後，Claude Code 會在它自己的設定裡留下一筆「已拒絕」這個插件的紀錄；這筆紀錄沒有擋住之後明確的安裝。如果某個專案要求安裝 Software Factory 卻沒有跳出提示，直接執行第 3 節的安裝指令即可。
 
 專案裡從早期版本複製過去的 AGENTS.md 與 Workflow.md，要換成 0.5.0 的版本。
 

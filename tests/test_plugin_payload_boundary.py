@@ -774,6 +774,79 @@ def _assert_readme_is_software_factory(readme: str) -> None:
             raise AssertionError(f"a Level 2 install section is back: {heading}")
 
 
+_OLD_AND_NEW_PARAGRAPH: Final[str] = (
+    "新舊兩版同時裝著時，agent 可能照舊版的規則做事。新版開工的第一步會檢查這件事："
+    "看到舊版還在，就停下來請你先移除舊版，移除後再開一個新的 session。"
+)
+_DECLINE_RECORD_PARAGRAPH: Final[str] = (
+    "在 Claude Code 2.1.332 上，用 uninstall 移除插件後，Claude Code 會在它自己的設定裡留下一筆"
+    "「已拒絕」這個插件的紀錄；這筆紀錄沒有擋住之後明確的安裝。如果某個專案要求安裝 Software Factory "
+    "卻沒有跳出提示，直接執行第 3 節的安裝指令即可。"
+)
+_OLD_PLUGIN_ID_LINE_START: Final[str] = "舊版的 plugin id 是"
+_EARLY_VERSION_LINE_START: Final[str] = "專案裡從早期版本"
+_CODEX_MARKETPLACE_REMOVE_FENCE: Final[tuple[str, ...]] = (
+    "```bash",
+    "codex plugin marketplace remove johnny-ai-skill --json",
+    "```",
+)
+
+
+def _read_readme(root: Path) -> str:
+    """The README of `root`; a file that cannot be read or decoded is a named defect, not a traceback."""
+
+    try:
+        return (root / "README.md").read_bytes().decode("utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise AssertionError(f"README.md cannot be read as UTF-8 ({type(error).__name__})") from error
+
+
+def _readme_section_five(readme: str) -> list[str]:
+    """The lines of README section 5, LF-normalised; a missing or repeated section is an error."""
+
+    text = readme.replace("\r\n", "\n")
+    if text.count("\n## 5. ") != 1 or text.count("\n## 6. ") != 1:
+        raise AssertionError("README section 5 must appear exactly once, followed by section 6")
+    start = text.index("\n## 5. ") + 1
+    end = text.index("\n## 6. ")
+    if end < start:
+        raise AssertionError("README section 6 comes before section 5")
+    return text[start:end].split("\n")
+
+
+def _assert_readme_section_five_holds_both_paragraphs(readme: str) -> None:
+    """Both paragraphs of ticket 81 item 2 stand word for word, each alone between blank lines: one directly
+    after the line that begins 舊版的 plugin id 是, the other directly after the closing codex marketplace fence
+    and before the line that begins 專案裡從早期版本."""
+
+    lines = _readme_section_five(readme)
+    if lines.count(_OLD_AND_NEW_PARAGRAPH) != 1:
+        raise AssertionError("README section 5 lacks the old-and-new paragraph, or holds it twice")
+    if lines.count(_DECLINE_RECORD_PARAGRAPH) != 1:
+        raise AssertionError("README section 5 lacks the decline-record paragraph, or holds it twice")
+    first = lines.index(_OLD_AND_NEW_PARAGRAPH)
+    if first < 2 or not lines[first - 2].startswith(_OLD_PLUGIN_ID_LINE_START) or lines[first - 1] != "":
+        raise AssertionError("the old-and-new paragraph must follow the old plugin id line and one blank line")
+    if lines[first + 1] != "":
+        raise AssertionError("the old-and-new paragraph must be followed by one blank line")
+    second = lines.index(_DECLINE_RECORD_PARAGRAPH)
+    if second < 5 or lines[second - 4 : second - 1] != list(_CODEX_MARKETPLACE_REMOVE_FENCE) or lines[second - 1] != "":
+        raise AssertionError(
+            "the decline-record paragraph must follow the codex marketplace remove block and one blank line"
+        )
+    if (
+        second + 2 >= len(lines)
+        or lines[second + 1] != ""
+        or not lines[second + 2].startswith(_EARLY_VERSION_LINE_START)
+    ):
+        raise AssertionError(
+            "the decline-record paragraph must be followed by one blank line and the 專案裡從早期版本 line"
+        )
+    for paragraph in (_OLD_AND_NEW_PARAGRAPH, _DECLINE_RECORD_PARAGRAPH):
+        if "`" in paragraph or "](" in paragraph or "/" in paragraph or "\\" in paragraph:
+            raise AssertionError("a paragraph of README section 5 holds inline code, a path or a link")
+
+
 class ShippedManifestTests(unittest.TestCase):
     """Software Factory 0.5.0: the id, the version, the licence and the author."""
 
@@ -850,6 +923,44 @@ class ShippedManifestTests(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     _assert_readme_is_software_factory(mutated)
         _assert_readme_is_software_factory(self.readme)
+
+    def test_readme_section_five_holds_both_paragraphs_word_for_word(self) -> None:
+        _assert_readme_section_five_holds_both_paragraphs(self.readme)
+
+    def test_a_removed_or_changed_section_five_paragraph_is_red_and_the_real_readme_is_restored_green(self) -> None:
+        moved = self.readme.replace(_OLD_AND_NEW_PARAGRAPH + "\n\n", "").replace(
+            "\n## 6. ", "\n" + _OLD_AND_NEW_PARAGRAPH + "\n\n## 6. ", 1
+        )
+        mutations = (
+            self.readme.replace(_OLD_AND_NEW_PARAGRAPH + "\n\n", ""),
+            self.readme.replace(_DECLINE_RECORD_PARAGRAPH + "\n\n", ""),
+            self.readme.replace("看到舊版還在", "看到舊版不在"),
+            self.readme.replace("沒有擋住之後明確的安裝", "擋住了之後明確的安裝"),
+            self.readme.replace(
+                _OLD_AND_NEW_PARAGRAPH + "\n\n", _OLD_AND_NEW_PARAGRAPH + "\n\n" + _OLD_AND_NEW_PARAGRAPH + "\n\n"
+            ),
+            moved,
+        )
+        for index, mutated in enumerate(mutations):
+            with self.subTest(mutation=index):
+                self.assertNotEqual(mutated, self.readme)
+                with self.assertRaises(AssertionError):
+                    _assert_readme_section_five_holds_both_paragraphs(mutated)
+        _assert_readme_section_five_holds_both_paragraphs(self.readme)
+
+    def test_a_readme_without_section_five_is_a_named_defect(self) -> None:
+        with self.assertRaises(AssertionError) as caught:
+            _assert_readme_section_five_holds_both_paragraphs("# README\n")
+        self.assertIn("section 5", str(caught.exception))
+
+    def test_a_missing_readme_is_a_named_defect_and_not_a_traceback(self) -> None:
+        with TemporaryDirectory() as tmp, self.assertRaises(AssertionError) as caught:
+            _read_readme(Path(tmp))
+        self.assertIn("README.md cannot be read", str(caught.exception))
+        _read_readme(_REPO_ROOT)
+
+    def test_the_committed_readme_is_read_by_the_same_reader(self) -> None:
+        _assert_readme_section_five_holds_both_paragraphs(_read_readme(_REPO_ROOT))
 
     def test_notice_names_the_product_and_the_publication_repository(self) -> None:
         notice = (_REPO_ROOT / "NOTICE").read_text(encoding="utf-8")

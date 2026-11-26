@@ -10,12 +10,13 @@ target project's runtime, CI, hook, import, submodule or symlink dependency.
 
 ## Start
 
-1. A read-only question (the content of a document, the state of a ticket, the wording of a rule) is not a workflow action, unless the target project's own governing files route it otherwise: resolve it as the [read-only-lookup paragraph](../../AGENTS.md#read-only-lookup) of this plugin's `AGENTS.md` says, answer, and stop. Do not read `Workflow.md` for it. Asking for the next step, or whether something can be dispatched, integrated or approved, is a workflow action.
-2. Read the target project's own `AGENTS.md` and authority record.
-3. Read `../../Workflow.md` only far enough to identify the current stage and its routing row.
-4. Read exactly the reference named by that row, plus the minimum committed target artifacts it
+1. Before anything else, look at the skills this session lists. If one of them belongs to the old plugin johnny-ai-skill (its name begins with johnny-ai-skill: or its file lies in a folder named johnny-ai-skill), stop: tell the user in plain words that the old 0.4.x plugin is still installed and that its rules conflict with this version, give the removal commands in section 5 of this plugin's README.md for the host in use, ask the user to open a new session after removing it, and do nothing else in this session. If the session lists no skills, go on to step 2.
+2. A read-only question (the content of a document, the state of a ticket, the wording of a rule) is not a workflow action, unless the target project's own governing files route it otherwise: resolve it as the [read-only-lookup paragraph](../../AGENTS.md#read-only-lookup) of this plugin's `AGENTS.md` says, answer, and stop. Do not read `Workflow.md` for it. Asking for the next step, or whether something can be dispatched, integrated or approved, is a workflow action.
+3. Read the target project's own `AGENTS.md` and authority record.
+4. Read `../../Workflow.md` only far enough to identify the current stage and its routing row.
+5. Read exactly the reference named by that row, plus the minimum committed target artifacts it
    requires. Do not load unrelated references, the full library or chat history.
-5. Execute one legal action, record its typed completion event in the receipt and let the next
+6. Execute one legal action, record its typed completion event in the receipt and let the next
    gate script read the state files (Revision 04: the Router is the gate scripts over the state
    files, not a process to re-enter). Do not select the next stage locally.
 
