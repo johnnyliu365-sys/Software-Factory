@@ -24,6 +24,27 @@ It ran the hook command locally, in Git Bash and in Windows PowerShell 5.1. It u
 | S82R-10 | minor | No correction-round clause for OLD | Added, as in tickets 80 and 81 |
 | S82R-11 | low | The work log's `agents` pin will drift | Control-plane item 4: repin and check |
 
+## Revision03 delta (commit `6eae7d41`), same seat, resumed
+
+**verdict: CHANGES_REQUESTED**
+
+The delta adds the old-plugin guard to the hook text (owner decision "放進 hook") and names the terminal for /hooks.
+
+The seat checked three things:
+- **The guard's conditions.** They match `SKILL.md` step 1.
+- **Conflicts and false firing.** There is no conflict and no false firing: a marketplace that is registered with no plugin installed lists no skills.
+- **The new command in both shells.** It ran with four path forms, and both `${CLAUDE_PLUGIN_ROOT}` places were substituted.
+
+| id | severity | finding | revision04 |
+| --- | --- | --- | --- |
+| S82R-12 | major | The cache check could not tell a stale `838bb354` cache from the refreshed one | The check looks for the guard sentence's text in `hooks\hooks.json` |
+| S82R-13 | minor | "Directly below the ticket 81 row" could add a second row | Replaced in place; the paragraph names what is replaced |
+| S82R-14 | minor | The seat's worktree holds revision02 of the ticket | The seat reads revision04 by `git show` from the named commit |
+| S82R-15 | minor | The owner-test list still expected /hooks in the desktop app, and did not require a plain question | Both reworded |
+| S82R-16 | minor | Two copies of the guard with no test tying them | A cross-check test on the two match conditions |
+| S82R-17 | low | The size figure is out of date | 777 printed characters stated |
+| S82R-18 | low | The changelog row cited only "A" | It cites "A" and "放進 hook" |
+
 ## Seat token use
 
 | seat | model | effort | input | cache write | cache read | output |
