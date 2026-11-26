@@ -51,3 +51,4 @@ The seat walked four questions by hand through the lookup rule. "P0 原始碼型
 | seat | model | effort | input | cache write | cache read | output |
 | --- | --- | --- | --- | --- | --- | --- |
 | rule-only review, revision01 | claude-opus-5-5 | high | 80 | 158926 | 5597102 | 36456 |
+| rule-only review, revision03 item 7 | claude-opus-5-5 | high | 20 | 192896 | 1744403 | 13037 |
