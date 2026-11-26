@@ -35,6 +35,7 @@ Run it from the repository root.
 | t82review | review | open | git:edee7ce9bb8b447c1019d1baba9c4258ee8c3e92 | sha256:40d6211deb39950072e7ceca579ef53d6f367e50f8126ae0c7036ebf52334c67 | doc/reviews/workflow-governance/82-session-hook-points-to-the-index-code-review.md |
 | integration3 | record | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:1b83b83d9ae46498852a9407ed7e4b90610289fcda28cc540f1abb9573fbc77a | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
 | release | runbook | open | git:d7623817149f5625b5998d5f3df00a1fc20f5b2e | sha256:fa666771742b6c84c3c7ca63013f190971d4a128b52a04451ec7e8041f163a6f | doc/runbooks/release.md |
+| installguide | runbook | open | git:0000000000000000000000000000000000000000 | sha256:0000000000000000000000000000000000000000000000000000000000000000 | doc/runbooks/install-guide-0.5.0.md |
 
 ## Gate script pins
 
@@ -82,6 +83,32 @@ Run it from the repository root.
 - Quote owner decisions verbatim, with the question.
 
 The scratchpad tools are listed in `control-plane-resume-2026-11-20.md`, in the shared side-session notes folder outside the repository.
+
+## 2026-11-26 stage summary, late evening (pointers only)
+
+This section replaces the "end of day" summary below, which is kept for history. Every decision is quoted verbatim in REQ-043 (rows dated 2026-11-26) and REQ-044 (Owner decisions; themes T1 to T21). Read them, not this summary.
+
+**Done since the end-of-day summary:**
+- Ticket 82 revision06 was integrated at `f0ba4995`, then reopened by owner decision "A" as revision07 and revision08 (the Codex desktop app does not ask to trust a changed hook). Revision08 was integrated at `9f764a88`, merged forward at `3e54da2c`, CI green on both jobs (row `integration3`).
+- The publication commit is `e08e82d3373547a5448040638fb22b1810dc9cf3`, named by the local ref `refs/heads/publication-0.5.0`; not pushed. The lifecycle passed all ten verdicts at `3e54da2c` with it, and the owner retested both hosts (row `t77record`).
+- `doc/runbooks/install-guide-0.5.0.md` is drafted for an installer other than the owner (row `installguide`); its publication commit line is filled in after the release.
+- REQ-044 grew to T21: T18 (five measurements that decide how far the harness is kept), T19 (context per call; resume or fresh by a water mark), T20 (a ticket is an executable spec bundle; first ticket of wave 4), T21 (translation fidelity; a read-back before dispatch). T4, T8 and T17 gained the protection rules. Issue #16 follows it.
+- The owner's user-level settings gained two hooks for the memory index cap (memory `user-sessionstart-hook`).
+
+**Resume order** (every push waits for the owner's confirmation):
+1. Fast-forward the development `main` to `cp/wave3` (decision "B"); show `git push --dry-run` first.
+2. Trigger the one cloud run: `gh workflow run acceptance.yml --ref main -f candidate=<main> -f expected_publication=e08e82d3373547a5448040638fb22b1810dc9cf3`.
+3. The owner renames the publication repository to `software-factory-plugin`. Check its current name first.
+4. Release per `doc/runbooks/release.md`. Show each push command with `--dry-run` before running it.
+5. Smoke install from the public path by `doc/runbooks/install-guide-0.5.0.md`, fill in its publication commit, then remove the eight registered rows.
+6. Give the owner the guide's link for the outside install (T18 measurement (3)).
+7. Ticket 78, then wave 4: T20 first, in REQ-044's order.
+
+**Practice kept:**
+- Resume or fresh by the water mark of REQ-044 T19 lever (1): after one full round a seat's next round starts fresh unless it is a small fix.
+- Model by difficulty until T18 measurement (4) decides.
+- A correction dispatch tells the seat to copy the previous receipt first, and the control plane renames the old `RETURN.as-returned.md` before appending USAGE.
+
 
 ## 2026-11-26 stage summary, end of day (pointers only)
 

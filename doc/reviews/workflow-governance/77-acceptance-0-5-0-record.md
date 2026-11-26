@@ -145,3 +145,13 @@ Ticket 82 revision08 rebuilt the publication commit again, so the lifecycle was 
 - **Codex desktop app, hook not trusted again.** The P0 and PRD questions were answered by searching the project with `rg`; no hook text had reached the session. `codex exec` in the test project printed `hook: SessionStart Failed` on Codex 0.166.0 and on 0.172.0, while the hook command exits 0 under cmd and Windows PowerShell.
 - **Codex after trusting from the terminal.** The owner ran the terminal `codex` once and was asked to trust the changed hook ("有問要不要信任 然後quit"). Afterwards `codex exec` printed `hook: SessionStart Completed`, and a Codex desktop session answered the P0 and PRD questions from the plugin's `AGENTS.md` alone. Observation, not a violation: Codex searched its own memory file first, which is host behaviour.
 - **Result.** Ticket 82 revision07 and revision08 rewrite README section 4 (owner decision "A"). The owner's retest of `e08e82d3` follows below when it is done.
+
+## Owner-assisted retest of `e08e82d3` (ticket 82 revision08, 2026-11-26)
+
+The owner reinstalled both hosts from the local marketplace. The control plane checked both `0.5.0` cache folders afterwards: each holds the README line that begins `安裝或更新 Software Factory 之後，請先在終端機裡`, and each equals the local marketplace's plugin tree.
+
+- **Claude desktop app, test project, "P0 權限規則是什麼？".** The session read the plugin's `AGENTS.md`, looked for an `AGENTS.md` of the target project by file name (none), and read `plugin.json` for the version. It answered from the section `P0：權限與所有權` and named the file, the anchor `#p0-permissions`, the lines and the version 0.5.0. No grep and no full-text search.
+- **Codex desktop app, test project, the same question.** The session read only the plugin's `AGENTS.md` and answered from the same section, naming the file and the version. No search of the project.
+- **Codex trust.** After the reinstall, Codex's trust record for the hook holds a new content hash while the hook command is unchanged, so a reinstall renews the trust even when the hook text is the same. This agrees with README section 4, which sends the user to the terminal after each install or update.
+- **Result.** The lookups go through the 流程索引 on both hosts with the final publication commit.
+
