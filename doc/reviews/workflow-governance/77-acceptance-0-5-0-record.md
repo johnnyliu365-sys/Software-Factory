@@ -101,3 +101,14 @@ These are the owner's own sessions on this host, recorded from the owner's scree
 - **Takeover in the empty project.** `/software-factory:johnny-project-takeover` read `SKILL.md` and `delivery-profile.md`. It reported that the project has no `AGENTS.md` or `Workflow.md`, put the project at INTAKE, and named the goal, the authority and the Profile as needed. It returned `WAIT_FOR_HUMAN` and created nothing.
 - **Read-only lookup at publication commit `d355b4a2`.** Asked about P0, the session searched with keywords before it read `AGENTS.md` lines 33 to 43. The owner judged that a defect ("流程索引／很重要"), which led to tickets 80 and 81.
 - **Retest on `6d04fa6d`.** Still to come: the P0 and target-sources lookups, and two versions installed together.
+
+## Owner-assisted retest with ticket 82's hook (2026-11-26, local candidate `838bb354`)
+
+This test ran in a desktop session in the empty test project, with the plugin installed `--scope local` from the local marketplace:
+- **The hook runs in the desktop app.** Asked what it received at session start, the session quoted `SessionStart:startup hook success` and the hook text word for word. The path was `C:/Temp/claude/sf-050-local/plugins/software-factory/AGENTS.md`: a plugin from a local-path marketplace loads in place. `/hooks` is not available in the desktop app, so README section 8's sentence holds for the terminal only.
+- **"P0 原始碼型別的規定是什麼？" and "target project 的 PRD 放哪？"** The tool record shows two reads, `AGENTS.md` and `.claude-plugin/plugin.json`, with no grep or search. Both answers went through the 流程索引:
+  - P0 to the row 「P0 原始碼型別」 and `#p0-source-type`;
+  - PRD to the row 「target project 正式來源的標準位置」 and `#target-sources`. The session also said why the PRD／CHG row does not apply to a "where" question.
+
+  Each answer cited the file, the section and version 0.5.0. The owner's finding of the same day ("流程索引／很重要") is closed in use for Claude Code.
+- **Still open:** the two-versions case, and whether Codex runs the plugin's hook.
