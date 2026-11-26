@@ -94,3 +94,81 @@ causes: CONTROL_PLANE_RULE,RETURN_UNTRUE,DESIGN_UNFORESEEN,IMPLEMENTATION_DETAIL
 ### Residue
 
 Removed: `C:/Temp/claude/R77-1-upgrade`, `C:/Temp/claude/R77-1-mypycache`, and every `R77-1-*` entry in `.worktrees/77-acceptance-review-scratch` (the disposable clone `R77-1-m`, the driver and boundary scripts, the CI log, and the captures, which were copied here first without the run id). Nothing carrying `R77-1` is left. The candidate branch, the other worktrees and the out directory of the seat were not modified. `PROCESSES_LEFT=0`.
+
+## Revision03 initial review
+
+- Ticket: revision03, read at `origin/cp/wave3`. The ticket's last change is commit `73338063`.
+- Dispatch: `JAS-77-2.yaml`. Its sha256 is `a5bd4e9d…c8c59bb` (recomputed), the same digest as the state row.
+- Owner decision: the REQ-043 row "Owner decision 2026-11-26 (ticket 77 CHANGE_DETECTED: the Codex upgrade from 0.4.14, "A")".
+- Candidate: `9d4ccf63f1d9632c430d5f50dcb36d567bbda14f`, four additive commits on `504e5177` (`85e0e4ea`, `1617da7d`, `5895815e`, `9d4ccf63`).
+  - All four are authored `Johnny Liu <johnny.liu365@gmail.com>`, with the trailer `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+  - The candidate equals `origin/cp/wave3-77-acceptance`.
+  - `lifecycle.py` is unchanged after `85e0e4ea`. Later commits change only the record and the test, as the record says.
+- Label: the initial review of closure revision03. The count restarts here (CodeReview §5, `rule-review-label`).
+- Reviewer: `ticket-review` seat, run id `R77-2` (claude-opus-5-5).
+
+### Closure of the revision02 findings (diff `504e5177..9d4ccf63`)
+
+| id | status | evidence |
+| --- | --- | --- |
+| S77-01 | Closed | The owner decision is implemented word for word against revision03 item 2. `old_marketplace_source` writes `<step>/marketplace-0414/.claude-plugin/marketplace.json` from `git cat-file blob 01b810f0…:.claude-plugin/marketplace.json` in the build clone. `cat-file` applies no filter, so the bytes are exact (1026 bytes, matching `git cat-file -s` in the main repository). That file is the only one in the directory. Codex adds that directory and installs the plugin. The step records the commit from `git rev-parse HEAD` in `installedPath`, `PASS` needs `OLD_PINNED_COMMIT`, and a refusal is `StepFail`. Claude still uses the public URL at `01b810f0`. In L1, `upgrade codex` is `PASS` with `rev-parse` = `0b3afd36…`. The `01b810f0` blob pins `0b3afd36` with the publication-repository URL, as read in round 1 via `gh api`. `01b810f0` is an ancestor of the candidate, so a `fetch-depth: 0` runner clone holds it. Reviewer RM5 (blob re-serialized) turns `test_codex_installs_0414_from_a_local_marketplace_written_byte_for_byte` red. |
+| S77-02 | Closed | Revision03 adds `modify = doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md`. `document_mutation_gate.read_boundary` → `DECLARED`. `parse_raw_diff(git diff --raw -z --no-renames f53ecc6a 9d4ccf63)` gives five `CREATE 100644` changes, each with `evaluate_change` `None`, and `evaluate_changes` gives `(None, None)`. |
+| S77-03 | Closed | The test pins `ENV_ALLOW_LIST == TICKET_ENV_ALLOW_LIST`, a literal tuple of the ten names. It also injects `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`. Reviewer RM1 now fails `test_no_variable_outside_the_allow_list_reaches_a_host_cli`. |
+| S77-04 | Closed | The scan test now has a `software-factory.old` sibling. Reviewer RM2 now fails `test_the_scan_honours_each_kind_of_allow_entry`. |
+| S77-05 | Closed | Two new fake modes, `disabled` and `flagless`. Reviewer RM4 (`enabled is not False`) now fails `test_an_entry_that_does_not_say_it_is_enabled_is_not_enabled`. |
+| S77-06 | Closed | Ticket item 5 and the dispatch `run_root_rule` now name `C:/Temp/claude/<run id>`. The run roots used were `C:\Temp\claude\jas77-r2-L1` and `-L2`. |
+| S77-07 | Closed | Ticket item 2 now says `JOHNNY_ROOT=<step>/root`, checked empty, with the downloads in `<step>/download`. The code was already correct. |
+| S77-08 | Closed | Ticket item 2 now states the installer's environment. The test asserts the environment's names ⊆ allow-list ∪ {`HOME`, `GIT_*`, `DISABLE_AUTOUPDATER`, `JOHNNY_ROOT`}, with no `USERPROFILE` and `HOME=<step>/home`. Reviewer RM7 (keep `USERPROFILE`) is red. |
+| S77-09 | Closed | The install now runs with `cwd=ctx.step_dir`, and the wrapper is `.resolve()`d. The test asserts the working directory and an absolute wrapper. Reviewer RM6 (back to `cwd=downloads`) is red. |
+| S77-10 | Closed | The STATEMENT names `C:\Temp\claude\jas77-r2-L1` and `-L2`, the same names the raw blocks show. |
+| S77-11 | Carried | Hardening: the residue match is case-sensitive. It is not part of this correction, and it does not block. |
+
+### Findings of this round
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| S77-12 | `EVIDENCE_DEFECT` | Medium | `tests/test_acceptance_lifecycle.py` `LifecycleCase.run_script` (`mock.patch.object` of `LEVEL2_ASSETS`, `OLD_MARKETPLACE_COMMIT`, `OLD_PINNED_COMMIT`); `lifecycle.py` lines 170 and 178–181 | **The ticket's literal identities are not pinned by any test.** Every lifecycle case patches the 0.4.9 sha256 values and the two 0.4.14 commits with fixture values, and no test compares the production constants with the ticket's text. A wrong `OLD_PINNED_COMMIT`, or a changed approved digest of the downloaded installer, stays green. The installer is the executable whose `INSTALL` prompt the script answers. For `0b3afd36` this is a regression made by this correction: in revision02, the fake Claude CLI wrote the literal `0b3afd36…`, so the constant was pinned through it. In revision03 the fake receives the patched value instead. The sha256 door was open already in revision02. My round-1 check 9 confirmed the values by reading them but did not mutate them, so I missed it then. | Reviewer **RM8**: `OLD_PINNED_COMMIT` → `"1"*40` gives **58 passed, exit 0**. Reviewer **RM9**: the zip's approved sha256 `2365b6f7…` → `3365b6f7…` gives **58 passed, exit 0**. Both counts are zero red, judged on unfiltered output (`M-reviewer-rev03.txt`). The source has no other occurrence of `0b3afd36`, `01b810f0`, `2365b6f7` or `906b0672`. | Add one unpatched test, like `TICKET_ENV_ALLOW_LIST`, asserting the ticket's literals: `OLD_PINNED_COMMIT == "0b3afd3645946f97662c336f0e6ac0dcae502e69"`, `OLD_MARKETPLACE_COMMIT == "01b810f096b1201005d26922e2c8a474bdd5a0a0"`, `CLAUDE_OLD_MARKETPLACE_URL` equal to the ticket's URL, and `LEVEL2_ASSETS` equal to the two ticket digests (and `LEVEL2_RELEASE_URL`). No new mechanism. |
+| S77-13 | `OUT_OF_SCOPE_HARDENING` | Low, for the owner before any pin move | ticket item 2 `uninstall` (residue allow-list) and `recover` ("exactly one entry"); `ci/acceptance/README.md` host versions and local-run commands | **Claude Code 2.1.332 behaves differently from the pinned 2.1.316.** Per the seat, `.claude.json` gains `"declinedPlugins": ["software-factory@software-factory"]` after uninstall, and `plugin list --json` lists four `@builtin` entries. This does not violate the current closure. The README and the workflow pin 2.1.316, and the cloud run installs 2.1.316 from npm with `DISABLE_AUTOUPDATER=1`. Both behaviours are host bookkeeping, not plugin residue. They would turn `uninstall claude` and `recover claude` red if the pin moved. A local run on this host now also depends on putting the pinned binary first on `PATH`, which the README's local-run commands do not say. | The reviewer's V2 run (`--host claude --steps build,fresh`, host `claude` 2.1.332, run root `C:/Temp/claude/R77-2-fresh`) gives build and fresh `PASS`. Its `plugin list --json` shows `cc-plugin-agents-md@builtin` beside `software-factory@software-factory` (the rest is cut off by the report's excerpt), which confirms the `@builtin` half. The `declinedPlugins` half is the seat's evidence alone: the reviewer's permission covered `build,fresh` only. | This is not decided here. Before moving the pin, the owner decides two things. First, a `line \| claude \| .claude.json \| <reason>` allow-list entry; note that a `line` entry admits every line of that one file, which is broad, and anything narrower would be a new mechanism. Second, rewording `recover` to "exactly one entry outside the host's `@builtin` plugins", which is a one-line filter in `step_recover`. Until then, `ci/acceptance/README.md` should say that the local run needs the pinned `claude` first on `PATH`. |
+
+### Checks
+
+| # | Check | Result | Evidence |
+| --- | --- | --- | --- |
+| 1 | Codex upgrade against revision03 item 2 | PASS | See S77-01 above. One more point: for Codex, `old_install` keeps the read-back of `johnny-ai-skill` 0.4.14 installed and enabled. |
+| 2 | Level 2 environment and working directory | PASS | `cwd=ctx.step_dir` for both the install and the uninstall, and the wrapper path is absolute. The environment is `build_environment` with `JOHNNY_ROOT` and with `USERPROFILE` omitted. `INSTALL` goes to `stdin` at exactly one call site, after the empty-root check. RM6 and RM7 are red. |
+| 3 | RM1, RM2 and RM4 again | PASS | Each turns one test red (baseline 58 passed). |
+| 4 | New doors | RM5, RM6, RM7 red; RM8, RM9 zero red (S77-12) | Nine reviewer mutations, each run on the full file, in a disposable `--no-hardlinks` clone, with unfiltered output read directly and porcelain 0 after each. The capture is `M-reviewer-rev03.txt`. |
+| 5 | Boundary | PASS | See S77-02 above. |
+| 6 | Local run with the copied 2.1.316 binary | Faithful, and truly stated | The README and the workflow pin 2.1.316, and the ticket requires the run versions to be read and stated. Every L1 `claude` argv is `C:\Temp\claude\jas77-r2-claude316\claude.EXE`, and `--version` prints `2.1.316 (Claude Code)`. The STATEMENT (item 1) and the record name the copy, its source (`~/.local/share/claude/versions/2.1.316`, a program directory and not a configuration directory, which holds `2.1.316` and `2.1.332`), the run-id directory, and the two 2.1.332 failures. Nothing was downloaded. The host's `~/.local/bin/claude.exe` reports `2.1.332`. |
+| 7 | L1, L2 and the record | PASS | L1 exits 0 with ten `PASS` verdicts. Each row carries the read-back its rule needs. Codex upgrade: `cat-file` 1026 bytes, add of `marketplace-0414`, `plugin add` 0.4.14, `rev-parse` `0b3afd36…`, removal, local install, and both lists. L2: build `PASS`, codex-ref `NOT_SUPPORTED` (`invalid marketplace source format`), codex-files `PASS`. The record matches the receipt. |
+| 8 | The foreign pytest at F1 | Acceptable, truly stated | pid 37340 ran a pytest from `C:\Temp\codex\vd2-026-c10\…` against `C:/VerifyPool/slot-6`, a different checkout, so it is not the same-checkout C1/B2 family. The STATEMENT names it, as the F1 assert requires. F1 shows only the one registered failure. |
+| 9 | Receipt truth | PASS | P1 rerun: 169 passed, 392 subtests, the same as the receipt. T1 rerun: `Success: no issues found in 2 source files`. M1: the seat's eight mutations are each red. C1: run 45740935047 has headSha `9d4ccf63`, conclusion success, and both jobs success (`gh run view`). E1 rerun with `--candidate 9d4ccf63`: `cells=9 defects=0`, exit 0. `RETURN.md` differs from `RETURN.as-returned.md` only by the USAGE cell. `items: 13` matches the 13 items. Residue: no `jas77-r2*` under `C:/Temp/claude`, scratch is empty, and there is no host lock. |
+| 10 | P0 types | PASS | `mypy --strict` is clean. There is no `Any` and no `type: ignore`. |
+| 11 | Full suite | Not rerun | No host lock was taken. The seat's F1 and both CI jobs cover it. |
+
+Disclosure: once, outside `lifecycle.py`, I ran `~/.local/bin/claude.exe --version` directly to read the host's version. No other host command ran outside the script. No prompt, session or login ran, and the user's configuration was not read or written.
+
+### Verdict
+
+`CHANGES_REQUESTED`. Every revision02 finding except the carried hardening S77-11 is closed, and L1 now meets condition (3). One gap is open: S77-12. The test does not pin the ticket's commits or the approved installer digests, and the `0b3afd36` pin was lost by this correction. Closing it takes one assertion test, added as an additive commit on the same branch. S77-13 goes to the owner, with no change to this closure.
+
+```review-verdict
+candidate: 9d4ccf63f1d9632c430d5f50dcb36d567bbda14f
+verdict: CHANGES_REQUESTED
+round: initial
+closure_revision: revision03
+reviewer: ticket-review seat R77-2 (claude-opus-5-5)
+reviewed_at: 2026-11-26
+```
+
+```rework-record
+candidate: 9d4ccf63f1d9632c430d5f50dcb36d567bbda14f
+round: 3
+kind: INITIAL
+verdict: CHANGES_REQUESTED
+causes: IMPLEMENTATION_DETAIL
+```
+
+### Residue (R77-2)
+
+Removed: `C:/Temp/claude/R77-2-fresh`, `C:/Temp/claude/R77-2-mypycache`, and every `R77-2-*` entry in `.worktrees/77-acceptance-review-scratch` (the clone `R77-2-m`, the driver and boundary scripts, and the captures, which were copied here first as `M-reviewer-rev03.txt` and `V2-reviewer-rev03.txt`). `PROCESSES_LEFT=0`.

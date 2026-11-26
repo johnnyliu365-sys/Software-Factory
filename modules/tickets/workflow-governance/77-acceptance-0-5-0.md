@@ -8,13 +8,13 @@
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision03 / receipt under `.worktrees/77-acceptance-out/` / owner implementation seat / worktree `.worktrees/77-acceptance` / branch `cp/wave3-77-acceptance` / baseline the wave-3 branch after ticket 71 is integrated |
+| Agent Context binding | ticket revision04 / receipt under `.worktrees/77-acceptance-out/` / owner implementation seat / worktree `.worktrees/77-acceptance` / branch `cp/wave3-77-acceptance` / baseline the wave-3 branch after ticket 71 is integrated |
 | 實作語言 | Python 3.11 for the lifecycle script and its test; YAML for the workflow（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `IN_PROGRESS`; dispatch=sha256:a5bd4e9d8832ce54191ad551f7ad9481253ac00d979094a35073dd99cc8c59bb (`doc/handoffs/2026/workflow-governance/dispatch/JAS-77-2.yaml`)（revision03; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner decision of 2026-11-26 on S77R-01; the seat's CHANGE_DETECTED on revision02 and its initial review (S77-01 to S77-11) give revision03, with the owner decision of 2026-11-26 "A" on the Codex upgrade） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:2d5bb809e9c9f2db6a95a0330bd3d39aa40a3740c619a595b190435e32aeddec (`doc/handoffs/2026/workflow-governance/dispatch/JAS-77-3.yaml`)（revision03; strict tier; rule-only review of revision01 CHANGES_REQUESTED; revision02 applies the reviewer's exact fixes and the owner decision of 2026-11-26 on S77R-01; the seat's CHANGE_DETECTED on revision02 and its initial review (S77-01 to S77-11) give revision03, with the owner decision of 2026-11-26 "A" on the Codex upgrade; the initial review of revision03 (S77-12, S77-13) and the owner decisions of 2026-11-26 on host CLI drift ("放寬") and on old and new versions ("A") give revision04） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/77-acceptance` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/77-acceptance-review` |
@@ -56,6 +56,7 @@ Owner decisions this ticket carries out. Each is quoted in `REQ-20261103-043`, w
 - **2026-11-26 "B":** a `workflow_dispatch` workflow runs only from the default branch, so the development `main` is fast-forwarded to `cp/wave3` before the cloud run. From then on, `main`'s marketplace is 0.5.0's, so the upgrade step reads 0.4.14 at a fixed commit. Until the release, a 0.4.14 user whose marketplace updates from `main` reads the 0.5.0 marketplace, whose source repository is not yet pushed, so that update fails; the owner accepted this (option B).
 - **2026-11-26 "A" on S77R-01:** the 0.4.9 installer asks a person to type `INSTALL` (`v0.4.9` `install.ps1` line 100), and states that an agent's answer is not consent. The owner authorized `lifecycle.py` to answer that prompt on standard input, only for an install into an empty `JOHNNY_ROOT` made for this acceptance, on this host and on the runner. The authorization covers this test use only.
 - **2026-11-26 "A" on the Codex upgrade:** the public 0.4.14 marketplace pins forty zeros, and Codex honours that `sha`, so 0.4.14 cannot be installed through Codex from there. Codex installs 0.4.14 instead from a local marketplace that holds the development repository's marketplace of that time (pin `0b3afd36`, source the public publication repository). This reproduces a user who already has 0.4.14.
+- **2026-11-26 "放寬" on host CLI drift:** the host's Claude Code moved from 2.1.316 to 2.1.332 between two dispatches. Under 2.1.332, an uninstall leaves the host's own decline record (`declinedPlugins`) in its configuration, and `plugin list --json` shows the host's `@builtin` entries. Real users run the newest host, so the rules accept both. The plugin never edits the user's host configuration. A reinstall must still succeed while the record is present.
 
 Ticket 71's rule-only review handed this ticket three checks that only running the CLIs can settle (`doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md`, S71R-19, S71R-20, S71R-21).
 
@@ -83,11 +84,13 @@ After this ticket:
      - the plugin list then shows `software-factory` `0.5.0` and no `johnny-ai-skill` plugin, and the marketplace list shows no `johnny-ai-skill`.
    - **uninstall:**
      - starting from the state of `fresh`, uninstall the plugin and remove the marketplace, with the README's commands;
-     - afterwards no path segment and no line of a `.json` or `.toml` file under the step's directory names `software-factory` as a whole name, except the entries of a fixed allow-list in `ci/acceptance/README.md`, each with its reason; that list is reviewed under condition (4), and anything else is `FAIL`.
+     - afterwards no path segment and no line of a `.json` or `.toml` file under the step's directory names `software-factory` as a whole name, except the entries of a fixed allow-list in `ci/acceptance/README.md`, each with its reason; that list is reviewed under condition (4), and anything else is `FAIL`;
+     - the allow-list admits one host record by key, not by line: the value of the top-level key `declinedPlugins` in `.claude.json` under the step's `CLAUDE_CONFIG_DIR`, with the reason "the host's own decline record (owner decision 2026-11-26, 放寬)"; any other key or line of that file that names `software-factory` is `FAIL`;
+     - then, with the record still present, add the good marketplace and install again; it must exit 0, and the list must show `software-factory@software-factory` `0.5.0`, installed and enabled.
    - **recover:**
      - add a local marketplace named `software-factory` whose plugin source names a missing directory, then install; the first of the two that exits non-zero is the expected failure, and if both exit 0 the step is `FAIL`;
      - then run the README's uninstall and marketplace-remove commands, recording their exits without judging them;
-     - then add the good marketplace and install, which must exit 0, and the list must show exactly one entry, `software-factory@software-factory` `0.5.0`, installed and enabled.
+     - then add the good marketplace and install, which must exit 0, and the list must show exactly one entry outside the host's `@builtin` plugins, `software-factory@software-factory` `0.5.0`, installed and enabled.
    - **level2:**
      - download `https://github.com/johnnyliu365-sys/Software-Factory/releases/download/v0.4.9/johnny-ai-skill-0.4.9.zip` and `…/v0.4.9/johnny-install.cmd` into `<step>/download` with `urllib`, without a token, and require sha256 `2365b6f70a06f00ae0aed008371f7cc0b5afd0cb148a77e7476416bf25854aef` and `906b067238f05841ba87b5c59d88d0a8a5499821d8ebc660df9cee17296f532b`; a mismatch is `FAIL`;
      - run its documented install (`johnny-install.cmd`, its `INSTALL` prompt answered on standard input under the owner decision of 2026-11-26 on S77R-01) with `JOHNNY_ROOT` set to `<step>/root`, a new directory checked empty before the install, then its own `uninstall`. The installer's environment is the allow-list of item 1, `HOME=<step>/home`, no `USERPROFILE` (the `py` launcher exits 109 under a foreign one), and `JOHNNY_ROOT`. The install runs with the step directory as its working directory, and the wrapper is passed by absolute path;
@@ -98,13 +101,14 @@ After this ticket:
    - Its only trigger is `workflow_dispatch`, with inputs `candidate` and `expected_publication`.
    - It runs on `windows-latest`, `timeout-minutes: 60`, and has `permissions: contents: read`.
    - Its checkout is the action and SHA of `ci.yml` with `fetch-depth: 0` and `persist-credentials: false`; every action is pinned to a full SHA with its version in a comment.
-   - It installs the two host CLIs at the exact versions written in `ci/acceptance/README.md`.
+   - It installs the two host CLIs at the exact versions written in `ci/acceptance/README.md`. Those versions are the ones on this host at the local run: the run of item 5 uses the host's own CLIs, with no copied binary, and the README pins what `--version` printed there.
    - It runs `lifecycle.py` with `--host both` and the steps `build,fresh,upgrade,uninstall,recover,level2`. It runs with `--run-root "$RUNNER_TEMP/acceptance"`. It uploads `report.jsonl` as an artifact.
    - It uses no secret and does not log in to either host.
 4. **`ci/acceptance/README.md`.** It holds the host CLI versions, the commands for the local run, and the four conditions with where each one's evidence lives.
 5. **The local run (condition 3).**
    - Before returning, the seat runs `--host both --steps build,fresh,upgrade,uninstall,recover,level2`, which must exit 0 (condition 3), then `--host codex --steps build,codex-ref,codex-files` in a second run root, whose report is recorded; a `NOT_SUPPORTED` there does not block `COMPLETED`. Each run root is a new directory under `C:/Temp/claude/`, named with the seat's run id, outside every Git work tree. The seat runs only `claude --version`, `codex --version` and the `plugin` and `plugin marketplace` subcommands; never a prompt, `-p`, `exec` or a session, and never a login.
    - `report.jsonl` goes into the receipt as a cell.
+   - A test that does not replace them asserts that each fixed value in `lifecycle.py` equals the ticket's literal: `0b3afd3645946f97662c336f0e6ac0dcae502e69`, `01b810f096b1201005d26922e2c8a474bdd5a0a0`, the Claude Code URL of the `upgrade` step, and the two `v0.4.9` sha256 values.
    - Host CLI versions are read with `claude --version` and `codex --version`, and named in the STATEMENT, and, when they differ from `ci/acceptance/README.md`, the STATEMENT says so and the record carries both.
 6. **The acceptance record.** `doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md` starts with the local run. The control plane later adds the cloud run and the owner-assisted Codex session.
 
@@ -116,6 +120,7 @@ After this ticket:
    - The owner starts Codex with `CODEX_HOME` and `JOHNNY_ROOT` set to new empty directories, logs in anew, and installs 0.5.0 from the local marketplace.
    - One test ticket goes through the new flow on a fixture project.
    - The session is ended mid-ticket, and a new session resumes it from the ticket, receipt and queue files alone.
+   - With `johnny-ai-skill` 0.4.14 and `software-factory` 0.5.0 both installed, a session stops at the first start step of ticket 81 and gives the removal commands.
    - The control plane records each step.
 3. Installation by someone other than the owner stays with the owner.
 
