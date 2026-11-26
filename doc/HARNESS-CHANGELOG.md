@@ -14,6 +14,7 @@ One row per change that altered what the plugin does. Working history lives in G
 | 2026-11-26 | The wave-3 rule texts (ticket 74) | `REQ-20261103-043` | `modules/tickets/workflow-governance/74-wave3-rule-texts.md` |
 | 2026-11-26 | Review rounds and the cause of each rework are recorded (ticket 73) | `REQ-20261103-043` | `modules/tickets/workflow-governance/73-review-rounds-and-rework-cause.md` |
 | 2026-11-26 | A read-only lookup goes to the leaf document and does not load the workflow (ticket 79) | `REQ-20261103-043` | `modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md` |
+| 2026-11-26 | A read-only lookup goes through the 流程索引, and the index gains rows for the two P0 sections, the start order and the target project's sources (ticket 80) | `REQ-20261103-043`, owner decision 2026-11-26 "A" | `modules/tickets/workflow-governance/80-lookup-through-the-index.md` |
 | 2026-11-26 | The licence is Apache License 2.0, and the author is Johnny Liu | owner decision 2026-11-18 "2A" | `LICENSE`, `NOTICE` |
 | 2026-11-26 | The plugin is renamed from `johnny-ai-skill` to `software-factory` (Software Factory), version 0.5.0; the marketplace moves into the public publication repository; the README is rewritten | owner decision 2026-11-20 | `modules/tickets/workflow-governance/71-publication-0-5.md` |
 
@@ -33,6 +34,7 @@ Version 0.5.0 is the first release as Software Factory. This section is for read
 
 - The seven router-era SPECs are in `doc/archive/specs/2026/` as `ARCH-SPEC-20261118-001` to `007`, and nine ADRs are `SUPERSEDED`.
 - To learn how the workflow runs now, read `AGENTS.md`, `Workflow.md`, `CodeReview.md` and `modules/spec/workflow-governance.md`.
+- A question about a rule is answered through the 流程索引 of `AGENTS.md`: its row links the one section to read, and a keyword search is not a way to find a rule.
 
 ### The move from `johnny-ai-skill` to `software-factory`
 
