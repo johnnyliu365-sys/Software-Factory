@@ -114,3 +114,15 @@ This test ran in a desktop session in the empty test project, with the plugin in
 - **Still open:** the two-versions case, and whether Codex runs the plugin's hook.
 - **Codex runs the plugin's hook (owner test, 2026-11-26, Codex 0.166.0, local candidate `838bb354`).** In a Codex session in the test project, asked what it received at session start, Codex quoted the hook text word for word. It named the rules file `C:\Users\User\.codex\plugins\cache\software-factory\software-factory\0.5.0\AGENTS.md`. Codex therefore reads `hooks/hooks.json` from a plugin, runs the SessionStart hook, and substitutes `${CLAUDE_PLUGIN_ROOT}` with its own cache path. The rendered answer showed `User.codex`, because the markdown renderer dropped the backslash before `.codex`; the path is right. The release condition of ticket 82 for Codex (S82R-09) holds.
 - **The old-plugin guard fires from the hook on a plain question (owner test, 2026-11-26, Claude desktop, local candidate `9cda3f9e`).** With `johnny-ai-skill` 0.4.14 and `software-factory` 0.5.0 both installed `--scope local` in the test project, the owner asked "這個專案目前有什麼？" in a new session and invoked no skill. The session refused to answer. It named the two old skills it saw, gave the README section 5 removal commands, asked for a new session after removal, and said it would do nothing else. Before the guard joined the hook, the same plain question was answered without a stop (`838bb354`). One gap: README section 5 removes the old plugin with `--scope user`, the scope the 0.4.x README installed it with. This test installed it with `--scope local`, so the command given does not remove it.
+
+## Control-plane rerun with ticket 82's publication commit (2026-11-26)
+
+Ticket 82 rebuilt the publication commit, so the lifecycle was run again at the first `cp/wave3` commit that holds it.
+
+| Field | Value |
+| --- | --- |
+| Commit | `f0ba49952f7846802066a3379a89af3cc94e6808` (ticket 82 integrated) |
+| Expected publication | `3ab86d439f236880db92648ab28724a626dc360b` (ticket 82 revision06) |
+| Command | `python ci/acceptance/lifecycle.py --candidate f0ba4995… --expected-publication 3ab86d43… --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root C:/Temp/claude/cp77-r82-L1`, run in the fresh integration clone |
+| Host CLIs | the host's own `claude` and `codex`, as pinned in `ci/acceptance/README.md` |
+| Result | exit 0. Every verdict is `PASS`: build; fresh, upgrade, uninstall and recover on both hosts; level2 |

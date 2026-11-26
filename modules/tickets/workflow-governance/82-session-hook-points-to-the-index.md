@@ -14,7 +14,7 @@
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `REVIEW_APPROVED`; dispatch=sha256:d0eea2ecafbc56ff696cdbf5f1dc8787ade9bf2705022c7be704fafd44507d70 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-3.yaml`)（candidate `4be37a7a`; initial review of closure revision06 `APPROVED`） |
+| 狀態 | `INTEGRATED`; dispatch=sha256:d0eea2ecafbc56ff696cdbf5f1dc8787ade9bf2705022c7be704fafd44507d70 (`doc/handoffs/2026/workflow-governance/dispatch/JAS-82-3.yaml`)（candidate `4be37a7a`; initial review of closure revision06 `APPROVED`） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/82-hook` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/82-hook-review` |

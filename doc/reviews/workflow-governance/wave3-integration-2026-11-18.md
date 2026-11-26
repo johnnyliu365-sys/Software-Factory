@@ -250,3 +250,19 @@ The integration clone `C:/Temp/claude/jas-integ-80` was made from `4fe5a8ef`.
 | Final local lifecycle | at `e87bc5cb` with `--expected-publication 6d04fa6d…`: exit 0, every verdict `PASS` (`77-acceptance-0-5-0-record.md`) |
 | USAGE | 81: `.worktrees/81-coexist-out/RETURN.md` (sha256 `4e5976fa4032340abe6cfc82eea66786632fb95f1510ef5a2f71e66109de366c`), E1 `cells=11 defects=0`, both seats `WITHIN`. 77: `.worktrees/77-acceptance-out/RETURN.md` (sha256 `a47378c6e859f66a2371b52928a57ce25f94353a9c2458ab58890aa49b5ce18e`), E1 `cells=9 defects=0`, both seats `OVER_OUTPUT,OVER_PROCESSED`, explained in the 77 review record |
 | Rework report over the wave-3 code-review records | `TOTAL tickets=16 rounds=32 CONTROL_PLANE_RULE=6 RETURN_UNTRUE=4 DESIGN_UNFORESEEN=4 IMPLEMENTATION_DETAIL=12`, exit 0 |
+
+## Ticket 82 (2026-11-26)
+
+| Ticket | Approved candidate | Approval | Integration commit |
+| --- | --- | --- | --- |
+| 82 the plugin's SessionStart hook points every session at its rules and the 流程索引, and stops a session that also lists the old plugin | `4be37a7a` | revision06 initial review `APPROVED`, no findings | `f0ba4995` |
+
+| Check | Result |
+| --- | --- |
+| Full suite under the host lock | 5 failed, 3565 passed, 22 skipped. Every failure is a base name, so zero new red |
+| Merged forward | none; the base `6f91e7b5` was still the tip of `cp/wave3` at push |
+| CI readback | run 45800560207 on `f0ba4995`: `test (linux)` and `test (windows)` both `success` |
+| Publication commit | `3ab86d439f236880db92648ab28724a626dc360b`, named by the local ref `refs/heads/publication-0.5.0` since 2026-11-26T09:10:07Z; not pushed |
+| Final local lifecycle | at `f0ba4995` with `--expected-publication 3ab86d43…`: exit 0, every verdict `PASS` (`77-acceptance-0-5-0-record.md`) |
+| USAGE | `.worktrees/82-hook-out/RETURN.md` (sha256 `1fdf8bdf3c869b5fc727caf7471a62409caaaa96886a8dc5f02c27c79e985560`), E1 `cells=11 defects=0`; both seats over one round's expectation because each ran three rounds by resumption, explained in the 82 review record |
+| Rework report over the wave-3 code-review records | `TOTAL tickets=17 rounds=35 CONTROL_PLANE_RULE=6 RETURN_UNTRUE=4 DESIGN_UNFORESEEN=4 IMPLEMENTATION_DETAIL=12`, exit 0 |
