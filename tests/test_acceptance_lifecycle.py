@@ -1099,6 +1099,32 @@ def key_names(block: list[str], indent: int) -> list[str]:
     return [match.group(1) for match in (pattern.match(line) for line in block) if match is not None]
 
 
+DEV_REQUIREMENTS_STEP = "Install development requirements"
+HOST_CLI_STEP = "Install the host CLIs at the versions of ci/acceptance/README.md"
+NPM_PACKAGE = r"@[\w.-]+/[\w.-]+@[\w.-]+"
+
+
+def step_run_lines(text: str, step_name: str) -> list[str]:
+    """The stripped `run:` lines of the step of that name, read from a workflow's text."""
+    lines = text.splitlines()
+    starts = [index for index, line in enumerate(lines) if line == f"      - name: {step_name}"]
+    assert len(starts) == 1, f"the step {step_name!r} is not in the workflow exactly once"
+    assert lines[starts[0] + 1] == "        run: |"
+    run: list[str] = []
+    for line in lines[starts[0] + 2 :]:
+        if not line.startswith("          "):
+            break
+        run.append(line.strip())
+    return run
+
+
+def line_number(text: str, pattern: str) -> int:
+    """The 1-based number of the one line of the text that matches the pattern as a whole line."""
+    found = list(re.finditer(pattern, text, re.MULTILINE))
+    assert len(found) == 1, f"{pattern!r} matches {len(found)} lines"
+    return text.count("\n", 0, found[0].start()) + 1
+
+
 class WorkflowTests(unittest.TestCase):
     def setUp(self) -> None:
         self.text = WORKFLOW.read_text(encoding="utf-8")
@@ -1162,6 +1188,31 @@ class WorkflowTests(unittest.TestCase):
         table = re.findall(r"^\| (claude|codex) \| ([\w.-]+) \|", readme, re.MULTILINE)
         self.assertEqual(sorted(name for name, _ in table), ["claude", "codex"])
 
+    def test_the_step_installing_the_development_requirements_has_the_run_lines_of_ci_yml(self) -> None:
+        self.assertRegex(self.text, r"(?m)^      - name: Install development requirements$")
+        mine = step_run_lines(self.text, DEV_REQUIREMENTS_STEP)
+        theirs = step_run_lines(CI_WORKFLOW.read_text(encoding="utf-8"), DEV_REQUIREMENTS_STEP)
+        self.assertEqual(mine, theirs)
+        self.assertEqual(mine[-1], "python -m pip install -r requirements-dev.txt")
+
+    def test_the_development_requirements_are_installed_after_setup_python_and_before_the_host_clis_and_the_lifecycle(
+        self,
+    ) -> None:
+        setup = line_number(self.text, r"^      - uses: actions/setup-python@[0-9a-f]{40}$")
+        requirements = line_number(self.text, r"^      - name: Install development requirements$")
+        host_clis = line_number(self.text, r"^      - name: " + re.escape(HOST_CLI_STEP) + r"$")
+        lifecycle_step = line_number(self.text, r"^      - name: Run the lifecycle$")
+        self.assertLess(setup, requirements)
+        self.assertLess(requirements, host_clis)
+        self.assertLess(host_clis, lifecycle_step)
+        runs_script = [
+            number
+            for number, line in enumerate(self.text.splitlines(), start=1)
+            if "ci/acceptance/lifecycle.py" in line and line.lstrip().startswith("python ")
+        ]
+        self.assertEqual(len(runs_script), 1)
+        self.assertLess(requirements, runs_script[0])
+
 
 class ReadmeTests(unittest.TestCase):
     def test_the_level2_allow_list_quotes_section_six_of_the_repository_readme(self) -> None:
@@ -1198,6 +1249,32 @@ class ReadmeTests(unittest.TestCase):
             ("codex", lifecycle.marketplace_remove_args("codex", old_market)),
         ):
             self.assertIn(f"{host} {' '.join(args)}", shipped)
+
+    def test_the_local_run_sentence_names_the_packages_of_requirements_dev_and_not_any_python(self) -> None:
+        readme = README.read_text(encoding="utf-8")
+        self.assertIn(
+            "Use an interpreter that holds the packages of `requirements-dev.txt`: the `build` step runs the "
+            "publication generator, which imports `pydantic`, and a Python 3.11 without it fails `build`.",
+            readme,
+        )
+        self.assertNotIn("or any Python 3.11", readme)
+
+    def test_the_parity_run_section_comes_before_isolation_with_the_install_lines_of_the_workflow(self) -> None:
+        readme = README.read_text(encoding="utf-8")
+        heading = line_number(readme, r"^## The parity run$")
+        isolation = line_number(readme, r"^## Isolation$")
+        self.assertLess(heading, isolation)
+        section = readme.split("\n## The parity run\n", 1)[1].split("\n## Isolation\n", 1)[0]
+        self.assertIn("\n<A>/Scripts/python.exe -m pip install -r requirements-dev.txt\n", section)
+        npm_lines = [line for line in section.splitlines() if line.startswith("npm install --prefix <B>")]
+        self.assertEqual(len(npm_lines), 1)
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        global_lines = [line for line in workflow.splitlines() if line.lstrip().startswith("npm install --global ")]
+        self.assertEqual(len(global_lines), 1)
+        in_readme = re.findall(NPM_PACKAGE, npm_lines[0])
+        in_workflow = re.findall(NPM_PACKAGE, global_lines[0])
+        self.assertEqual(len(in_workflow), 2)
+        self.assertEqual(in_readme, in_workflow)
 
 
 if __name__ == "__main__":
