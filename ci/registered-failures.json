@@ -921,26 +921,6 @@
       "follow_up": "environment"
     },
     {
-      "test": "tests/test_plugin_payload_boundary.py::CommittedPinTests::test_the_pinned_sha_exists",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
-      "test": "tests/test_plugin_publication.py::CandidateMetadataTests::test_l5_stale_candidate_pin_is_named_before_generation",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
-      "test": "tests/test_plugin_publication.py::PublicationReachabilityTests::test_deleting_the_actual_publication_anchor_makes_the_marketplace_pin_unreachable",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
-      "test": "tests/test_plugin_publication.py::PublicationReachabilityTests::test_the_marketplace_pin_is_bound_to_the_actual_publication_anchor",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
       "test": "tests/test_refusal_guidance.py::InstallScriptTests::test_a_real_refusal_keeps_status_and_code_where_they_were",
       "reason": "the test launches powershell.exe, which does not exist on the Linux runner (FileNotFoundError)",
       "follow_up": "environment"
@@ -951,26 +931,6 @@
       "test": "tests/test_atomic_conditional_replace_capability.py::test_acr2_linux_requires_an_actual_linux_kernel_and_backend",
       "reason": "the test needs an actual Linux kernel and backend (WSL Ubuntu with renameat2); the Windows runner has none (_PlatformProofUnavailable: LINUX)",
       "follow_up": "environment"
-    },
-    {
-      "test": "tests/test_plugin_payload_boundary.py::CommittedPinTests::test_the_pinned_sha_exists",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
-      "test": "tests/test_plugin_publication.py::CandidateMetadataTests::test_l5_stale_candidate_pin_is_named_before_generation",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
-      "test": "tests/test_plugin_publication.py::PublicationReachabilityTests::test_deleting_the_actual_publication_anchor_makes_the_marketplace_pin_unreachable",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
-    },
-    {
-      "test": "tests/test_plugin_publication.py::PublicationReachabilityTests::test_the_marketplace_pin_is_bound_to_the_actual_publication_anchor",
-      "reason": "the marketplace pin e08e82d3373547a5448040638fb22b1810dc9cf3 is the parentless generated publication commit of the publication repository software-factory-plugin (version 0.5.0); this repository holds no object with that id on any branch until the anchor ref refs/heads/publication-0.5.0 is pushed (PinnedCommitError: the pinned sha names no commit in this repository), and the same test passes on a host that has the local anchor ref. Pushing the anchor is a release step of the control plane after the owner confirms, and the eight rows of the four publication tests are removed in an additive commit after it",
-      "follow_up": "modules/tickets/workflow-governance/62-registered-known-failures.md"
     }
   ]
 }
