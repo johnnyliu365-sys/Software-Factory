@@ -1193,7 +1193,7 @@ class WorkflowTests(unittest.TestCase):
         mine = step_run_lines(self.text, DEV_REQUIREMENTS_STEP)
         theirs = step_run_lines(CI_WORKFLOW.read_text(encoding="utf-8"), DEV_REQUIREMENTS_STEP)
         self.assertEqual(mine, theirs)
-        self.assertEqual(mine[-1], "python -m pip install -r requirements-dev.txt")
+        self.assertRegex(self.text, r"(?m)^      - name: Install development requirements\n        run: \|\n(?:          .*\n)+(?:      - |      # |\Z)")
 
     def test_the_development_requirements_are_installed_after_setup_python_and_before_the_host_clis_and_the_lifecycle(
         self,
