@@ -46,6 +46,14 @@ claude plugin install software-factory@software-factory --scope user
 
 ## 3. 安裝：Codex
 
+只用 Claude Code 的人可以跳過這一節。開始前，先確認終端機找得到 Codex：
+
+```bash
+codex --version
+```
+
+有印出版本號才繼續。出現「無法辨識 'codex' 詞彙」或 `command not found`，請看第 5 節 X0。
+
 依序執行，每行一個指令：
 
 ```bash
@@ -144,6 +152,7 @@ codex plugin marketplace remove johnny-ai-skill --json
 | C1 | Claude 查規則時用搜尋，或回答時沒提到插件的 `AGENTS.md` | session 是在安裝前開的，或插件沒啟用 | `claude plugin list` 確認 enabled；開新的 session 再問一次 |
 | C2 | 指定專案時沒有跳出安裝提示 | Claude Code 移除插件後會留下一筆「已拒絕」紀錄 | 直接執行第 2 節的 install 指令；這筆紀錄不會擋明確的安裝 |
 | C3 | 插件裝到了別的專案，或在錯的資料夾裡生效 | `cd` 和安裝指令分在兩個 Run 按鈕執行，`cd` 沒帶過去 | 把 `cd` 和指令寫在同一行；用 `claude plugin list` 看 Scope 和專案 |
+| X0 | 執行 `codex` 時出現「無法辨識 'codex' 詞彙」或 `command not found` | 這台電腦的終端機找不到 Codex 指令：沒有安裝 Codex、只裝了桌面 app 而它的指令不在 PATH 裡，或剛裝完還沒重開終端機 | 只用 Claude Code 就跳過第 3 節。要用 Codex：先關掉終端機重開，再試 `codex --version`。仍然找不到時，在 PowerShell 執行 `Test-Path "$env:LOCALAPPDATA\Programs\OpenAI\Codexin\codex.exe"`：回 True，就把第 3 節每個指令開頭的 `codex` 換成 `& "$env:LOCALAPPDATA\Programs\OpenAI\Codexin\codex.exe"`；回 False，代表這台電腦沒有 Codex 的指令列工具，請先照 OpenAI 的說明安裝 Codex CLI，再回到第 3 節 |
 | X1 | Codex 查規則時用 `rg` 搜尋；或 `codex exec` 顯示 `hook: SessionStart Failed` | hook 還沒在終端機信任過，或插件更新後要重新信任；桌面 app 不會問 | 照第 3 節「必做」在終端機執行一次 codex 並選信任，再做第 3 節確認 2 |
 | X2 | `codex plugin add` 不存在 | Codex 版本太舊 | 更新 Codex（`codex update`），再確認 `codex --version` |
 | U1 | 更新後行為沒變，還是舊的說明 | 版本號相同時，主機沿用舊的快取 | 先移除插件；再刪除快取資料夾（Claude：`%USERPROFILE%\.claude\plugins\cache\software-factory`，Codex：`%USERPROFILE%\.codex\plugins\cache\software-factory`）；最後重新安裝。Codex 裝好後要再在終端機信任一次 |
