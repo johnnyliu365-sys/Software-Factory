@@ -420,3 +420,123 @@ causes: IMPLEMENTATION_DETAIL
   - The unreferenced tree objects that `git merge-tree --write-tree` wrote to the shared object store (result tree `7da816c3`). They are not referenced by any ref and are removed by `git gc`.
 - **Not touched:** the candidate, the branch, the receipt, `77-acceptance-out-rev04`, the seat's worktree and the shared `publication-0.5.0` ref.
 - PROCESSES_LEFT=0.
+
+## Correction review of closure revision06
+
+- **Ticket.** Revision06, as for the initial review: `git show bc8da7bd:modules/tickets/workflow-governance/77-acceptance-0-5-0.md`. The state row carries the `JAS-77-4.yaml` digest `859c470c…6e72a4d2ec`.
+- **Candidate.** `c983c6ef3e0b7bf1b1750f728939979b39879932`, equal to `origin/cp/wave3-77-acceptance`. It is one additive commit on `ec0c06dc`, the candidate of the initial review. It is authored `Johnny Liu <johnny.liu365@gmail.com>`, and its trailer is `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Both are as before and match the dispatch model and the USAGE cell `seat:implementation-standard/JAS77R6`.
+- **Label.** The correction review of closure revision06, the one §5 allows. CodeReview §5 rule B applies.
+- **Reviewer.** `ticket-review` seat, run id `R77-7` (claude-opus-5-5). After a fetch, the worktree `.worktrees/77-acceptance-review` was detached from `ec0c06dc` to the candidate. Porcelain was empty before and after.
+- **Captures.** Everything is in `.worktrees/77-acceptance-review-out/r06c/`, together with the scripts that produced it:
+  - `M1-review.txt` and `M1-driver.txt` (`counter_mutations_r06c.py`, `counter_mutations_r06c.sh`, which reuse `../r06/counter_mutations_r06.py`);
+  - `P1-review.txt`, `T1-review.txt` and `lock-log.txt` (`p1_t1_r06c.sh`);
+  - `C1-review.txt` and `ci-scan.txt`;
+  - `E1-review.txt`;
+  - `L3-seat-read.txt` (`../r06/l3_read_r06.py`);
+  - `boundary-review.txt` (`boundary_r06c.py`);
+  - `install-cjs-read.txt` (`read_install_cjs_r06c.py`).
+
+### Closure of the revision06 initial-review findings
+
+| id | status | evidence |
+| --- | --- | --- |
+| S77-18 | Closed | `git diff ec0c06dc c983c6ef` changes one line of `tests/test_acceptance_lifecycle.py` (1 insertion, 1 deletion), at line 1196: `self.assertEqual(mine[-1], "python -m pip install -r requirements-dev.txt")` is deleted. `grep "pip install\|requirements-dev"` on the test now finds only the README texts that 7d requires (the 7b sentence, line 1256, and the `<A>` pip line, line 1268). No `ci.yml` run line is written in the test. The comparison `assertEqual(mine, theirs)` still reads both sides from the files. |
+| S77-19 | Closed | The deleted line is replaced by `assertRegex(self.text, r"(?m)^      - name: Install development requirements\n        run: \|\n(?:          .*\n)+(?:      - \|      # \|\Z)")` (the table escapes its pipes; the source line is quoted in `M1-review.txt`). I reran CM8 (`if: ${{ false }}` after the `run` lines) and CM9 (`continue-on-error: true` in the same place). Each is now red: 1 failed, 68 passed. The failing test is `test_the_step_installing_the_development_requirements_has_the_run_lines_of_ci_yml`, with `AssertionError: Regex didn't match: …`, the new assertion and the intended reason. On the unmodified workflow the regex is green in an LF clone (69 passed) and in a CRLF checkout (`core.autocrlf=true`, CR present in `acceptance.yml` and `ci.yml`: 69 passed). It cannot be satisfied by a different step. CM17 (the first-match door: a clean copy of the step placed before setup-python, with the original disabled) is red, 2 failed, because `step_run_lines` and `line_number` each require the name line exactly once. The new regex is anchored to that one name line. The CM16 shape (a comment line before the key) is still open; it is S77-21 below. |
+| S77-20 | Carried | Untouched by this correction, as the initial review proposed. It is `OUT_OF_SCOPE_HARDENING` (§4 item 5). It goes to the follow-up hardening ticket that carries S77-11, S77-16 and S77-17, which the control plane opens as `PLANNED`. It does not block. |
+| S77-11, S77-16, S77-17 | Carried | Hardening from revision04, not touched by revision06. |
+
+### Findings of this round
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| S77-21 | `OUT_OF_SCOPE_HARDENING` | Low | `tests/test_acceptance_lifecycle.py` line 1196 (the new regex) | The regex accepts `      # ` as the end of the step, so that the existing `      # actions/upload-artifact v7.0.2` comments can follow a step. But a comment line does not end a YAML mapping. With `      # the install` after the `run` lines and then `        if: ${{ false }}`, the step is disabled, and all 69 tests stay green. This is the CM8 shape behind one comment line. The candidate's workflow has no such line (R1 of the initial review, and `acceptance.yml` is unchanged since `ec0c06dc`). | CM16 in `M1-review.txt`: `69 passed`, `exit=0`. | In the follow-up hardening ticket, end the alternation with `      # .*\n      - ` in place of `      # `, so that a comment must be followed by a new step. This is one regex and no new mechanism. |
+
+Notes. None of these is a finding.
+
+- **N14, corrected.** The initial review said the claude-code postinstall "does not run" under npm 11.16.0. That was an inference from the `allow-scripts` warning, and it is wrong.
+  - I read `@anthropic-ai/claude-code@2.1.332` from the npm cache that the parity runs filled. I opened the tarball in memory, checked its integrity with `sha512` (verified), and extracted and ran nothing. `install-cjs-read.txt`
+  - The package's `bin` is `bin/claude.exe`. In the tarball, `bin/claude.exe` is a 500-byte shell stub, not a binary (it does not start with `MZ`). It prints "Error: claude native binary not installed." and exits 1.
+  - `install.cjs`'s `placeBinary` tries `linkSync(src, dest)` first, onto `bin/claude.exe` (lines 231–237 and 389–392). It falls back to `copyFileSync` on `EXDEV` or `EPERM` (lines 261–263).
+  - In both L3 captures, `claude.CMD --version` printed `2.1.332 (Claude Code)` four times, and every Claude step passed, which the stub cannot do. So the postinstall ran in those `--prefix` installs, and the warning did not stop it.
+  - The rest is reported by the control plane and not rerun by me, because it needs a new install: that the result is a hard link of `node_modules/@anthropic-ai/claude-code-win32-x64/claude.exe` (link count 2, about 403 MB) rather than the copy fallback. It is what `install.cjs` attempts first.
+  - What stays of N14: the runner's `npm install --global` is a different install path, but the same `install.cjs` decides there.
+- **N18. The seat reran L3 and F1 at the new commit, though this round did not require it.**
+  - L3 is a new parity run at `--candidate c983c6ef…` with `<A>` `jas77r6-c1-venv` and `<B>` `jas77r6-c1-npm`. I read it with my r06 reader: exits `0` ×4, ten `PASS`, the generator under `<A>`, and 35 `claude.CMD` plus 31 `codex.CMD` under `<B>`. The `--version` records are `2.1.332 (Claude Code)` ×4 and `codex-cli 0.166.0` ×4, and there are no defects. `L3-seat-read.txt`
+  - F1 is 1 failed (`test_acr2_linux…`, registered), 3512 passed, 13 skipped.
+  - No `jas77r6*` directory is left under `C:/Temp/claude/`, and the seat's scratch is empty.
+- **N19. The copy door after S77-18 (CM20).** If the last `run` line is removed from `acceptance.yml` and `ci.yml` together, the tests stay green. That is the consequence of 7d's rule that `ci.yml` is the only source, and S77-18 restored that rule. `ci.yml`'s own job needs `requirements-dev.txt` (pytest and mypy), so that co-change would break CI first. No finding.
+- **N12 still applies.** Over `8cf1e387..c983c6ef`, the gate gives `MODIFICATION_OUTSIDE_BOUNDARY` for `acceptance.yml`. Over the dispatch base `f53ecc6a..c983c6ef` it gives `(None, None)`.
+
+### Per-check table (correction of revision06)
+
+| # | Check | Result | Evidence and notes |
+| --- | --- | --- | --- |
+| C1 | Diff, author, trailer | PASS | `git diff --stat ec0c06dc c983c6ef`: `tests/test_acceptance_lifecycle.py`, 1 insertion and 1 deletion, the line of S77-18 replaced by the regex of S77-19. Nothing under `.github`, `ci`, `README.md`, `requirements-dev.txt` or `doc` differs from `ec0c06dc`, so the exact texts of 7a, 7b and 7c, checked in the initial review, stand unchanged. The parent is `ec0c06dc`, and the author and trailer are as before. |
+| C2 | Counter-mutations against the new test | PASS (S77-21) | I ran them in a disposable `--no-hardlinks` clone at `c983c6ef`, using the whole test file, not `-x`, with unfiltered output (pytest run directly with `-rfE`). Porcelain was 0 after each restore. Baseline: 69 passed. **Red:** CM8 and CM9 (the new regex); CM17 (first match, 2 failed); CM18, a key indented ten spaces, which becomes part of the run body (`Lists differ`); CM19, `if:` between `name` and `run` (`'        if: ${{ false }}' == '        run: |'`). **Green:** CM16, the comment door (S77-21), and CM20, the co-change (N19). CRLF baseline: 69 passed. `M1-review.txt` |
+| C3 | P1 and T1, under the host lock | PASS | I held `C:/Temp/claude/jas-fullsuite.lock` as `R77-7`: from 02:57:44Z to 02:58:53Z for P1 and T1, and from 02:59:17Z to 03:08:30Z for the counter-mutations. Each time I released it by rename and remove, after `owner.txt` still named me. At acquisition the other python processes were another project's `repin_parent.py` and `fixidx.py` runs, not pytest, and none ran in this repository. P1: 180 passed, 392 subtests passed, exit 0. T1: `Success: no issues found in 2 source files`, exit 0. `P1-review.txt`, `T1-review.txt`, `lock-log.txt` |
+| C4 | CI read back | PASS | Run 45928087593 (workflow `ci`, branch `cp/wave3-77-acceptance`): `headSha` `c983c6ef…`, conclusion `success`, and both `test (linux)` and `test (windows)` are `success`. The 14,993-line log has 0 `UNREGISTERED_FAILURE`, 0 `REGISTERED_NOT_FAILING`, 0 `REGISTERED_NOW_PASSING` and no `FAILED tests/test_acceptance_lifecycle`. The whole-suite counts equal those of run 45922292427 on both jobs. `C1-review.txt`, `ci-scan.txt` |
+| C5 | E1, P9, D1 and the receipt | PASS | I reran E1 as the dispatch gives it, with `--repo .worktrees/77-acceptance` (at `c983c6ef`, porcelain empty) and `--candidate c983c6ef…`, on the receipt with USAGE: `cells=9 defects=0`, exit 0. All 9 evidence cells name `c983c6ef`. P9 reads `receipt defects: 0`. D1 lists exactly the three files against `8cf1e387`. `RETURN.md` differs from `RETURN.as-returned.md` only by the appended USAGE section. `items: 11` matches the STATEMENT. The seat's M1 has a baseline of 69 passed and mutations 1 to 8 red, mutation 8 being CM8. `77-acceptance-out-rev06-initial/` keeps the initial-round receipt. `E1-review.txt` |
+| C6 | L3 and F1, read from their captures | PASS | See N18. |
+| C7 | The boundary and the revision05 limit | PASS (N12) | `f53ecc6a..c983c6ef`: five `CREATE` entries, `(None, None)`. The forbidden controls give `PATH_FORBIDDEN`. The blobs of `lifecycle.py`, `requirements-dev.txt`, `ci.yml` and the acceptance record are unchanged since `8cf1e387`. `boundary-review.txt` |
+| C8 | Merge into `origin/cp/wave3` (`d9b5f4d6`) | PASS | `git merge-tree --write-tree` exits 0 with no conflict. The result changes only the three files, each equal to the candidate's. Nothing was merged anywhere. `boundary-review.txt` |
+
+### Verdict (correction of revision06)
+
+`APPROVED`. S77-18 is closed: no `ci.yml` run line is written in the test. S77-19 is closed: CM8 and CM9 now fail the new assertion for the intended reason, the assertion is green on the unmodified workflow under LF and CRLF, and no other step can satisfy it. The diff is one test line. P1, T1, CI, E1, D1, the boundary and the merge hold. The open items are hardening, and none blocks under rule B:
+- S77-20 is carried;
+- S77-21 is new;
+- S77-11, S77-16 and S77-17 are carried.
+
+None of them changes an exit-code class or a security or scope boundary, and none violates P0. This is the one correction review of closure revision06.
+
+```review-verdict
+candidate: c983c6ef3e0b7bf1b1750f728939979b39879932
+verdict: APPROVED
+round: correction
+closure_revision: revision06
+reviewer: ticket-review seat R77-7 (claude-opus-5-5)
+reviewed_at: 2026-11-27
+```
+
+```rework-record
+candidate: c983c6ef3e0b7bf1b1750f728939979b39879932
+round: 7
+kind: CORRECTION
+verdict: APPROVED
+causes:
+```
+
+### Not done here, and why (correction of revision06)
+
+- **L3 and F1 were not rerun.** The commit changes one test line; both were read from their captures (N18).
+- **The full suite was not rerun.** It was not asked for.
+- **The hard-link fact of N14 was not checked by a new install.** The tarball and `install.cjs` were read from the npm cache only. The link count and size are the control plane's report.
+- **The control-plane list after integration is not done here.** It covers the parity run at the integrated candidate, the fast-forward of `main`, the second cloud run and the owner-assisted session.
+
+### Residue (R77-7)
+
+- **Removed:**
+  - the clones `R77-7-m` and `R77-7-crlf` and the CI log `R77-7-ci.log` under `.worktrees/77-acceptance-review-scratch/`, which is empty;
+  - `C:/Temp/claude/R77-7-mypycache`;
+  - the host lock, released twice by rename and remove with `owner.txt` naming `R77-7`.
+- **Left, with the reason:**
+  - The unreferenced tree object of `git merge-tree --write-tree` in the shared object store (`724d15c2`). It is not referenced by any ref and is removed by `git gc`.
+  - The npm cache. It was only read, and it does not carry my run id.
+- **Not touched:** the candidate, the branch, the receipt and its copies, and the seat's worktree.
+- PROCESSES_LEFT=0.
+
+## Control-plane notes on revision06 (2026-11-27)
+
+- **N14, the hard link.** In the control plane's parity prefix of 2026-11-27 (`npm install --prefix`, npm 11.16.0), `fsutil hardlink list` on `node_modules/@anthropic-ai/claude-code/bin/claude.exe` names two paths: that file and `node_modules/@anthropic-ai/claude-code-win32-x64/claude.exe`. Both show link count 2 and 403,083,424 bytes. The package's `install.cjs` replaces the stub with a link to the platform binary, so the postinstall did run under this npm, although npm printed an `allow-scripts` notice. The reviewer confirmed that the postinstall ran (the stub exits 1, and `claude.CMD --version` printed the version) and did not rerun the link check.
+- **Usage by round.** Implementation seat `JAS77R6` (claude-sonnet-5-5, high), one seat resumed for the correction: round 1 (the three files, all cells, CI) 92 messages, 12,100,184 processed and 52,565 output tokens; round 2 (one test line, all cells again, CI) 36 messages, 7,661,289 processed and 20,845 output tokens, about 33 minutes. Review seat (claude-opus-5-5, high), fresh for the initial review and resumed for the correction review: the cumulative figures are in the table below. The rule-only delta review of revision05 is in the ticket-review record.
+- **What round 2 is a baseline for.** The correction changed one line of one test file and reran the parity run, the full suite and CI, because every cell must name the last commit. REQ-044 T13 (owner decision 2026-11-27) binds a cell to the digest of its inputs; these numbers are its comparison.
+- **Carried.** S77-20 and S77-21 (hardening) join S77-11, S77-16 and S77-17 in the follow-up hardening work of wave 4. Neither blocks.
+
+## Seat token use (readiness criterion 5)
+
+Host-reported usage per seat, summed per unique message id, against the expectation the owner confirmed on 2026-11-18 ("1A"); appended to the receipt as `USAGE` cells at integration.
+
+| Seat | Model | input | cache write | cache read | output | processed | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `seat:implementation-standard/JAS77R6` | claude-sonnet-5-5 | 260 | 417735 | 19343478 | 73410 | 19761473 | WITHIN |
+| `seat:ticket-review/R77-6` | claude-opus-5-5 | 214 | 474099 | 18091881 | 81713 | 18566194 | WITHIN |
