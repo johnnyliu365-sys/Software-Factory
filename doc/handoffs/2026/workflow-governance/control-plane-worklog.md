@@ -18,7 +18,7 @@ Run it from the repository root.
 | workflow | governance | open | git:c2bccb7c0c8de9719cb48c40e49169bc9a2b777b | sha256:e090c065a26c4131aedf737a0161ce2cd62500bcc33a41b15d706acc8a8dba6e | Workflow.md |
 | codereview | governance | open | git:9ae502de5dbbf7e36b39179bcfbbc0a1d380519e | sha256:7665a6e41aba778fb873435841197bd2db2b2fb3a4e062bb78af088d6114dff9 | CodeReview.md |
 | req043 | requirement | open | git:e6a9eda9e0c903b23c0f71d387417b37ef311d9b | sha256:6fd7ed5e75f3f682a3075cb600e695857fa1e228bbdda9a9000f96f9f0717e62 | doc/requirements/active/2026/workflow-governance/REQ-20261103-043.md |
-| req044 | requirement | open | git:c1fc615a453d12fc1d9450979f0c88044fde21a2 | sha256:b279304d0068e636ac23698d5259a92cf3153ef4366f5cfe7662a9269d39d92b | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
+| req044 | requirement | open | git:aa907d8fc085b575f7f023cc394476e8d979409d | sha256:a646b6cb499c471342f79b06de379dc8791eedad2f4c170b829acfa7d5a2fa91 | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
 | req045 | requirement | open | git:96792d116d414ca618f471d38bf036438cd37622 | sha256:e46179a193a89de0e4e198b275afbcdaedc0acbebdb4a0713ca6cded383505f3 | doc/requirements/active/2026/workflow-governance/REQ-20261120-045.md |
 | tickets | index | open | git:c08ccc84df233d19fda9ef276d83c429894e02bf | sha256:d4363117e901e417bcff518a30a0f089c3f384f2e313e6a15393fca99a1e6738 | modules/tickets/workflow-governance/README.md |
 | t71 | ticket | open | git:0cfb563b20667af140e21f9d61a8e272aa382466 | sha256:5113d014656bfe1ea805f7edde7a2740699094145abb3213a584bf5a5e77ca41 | modules/tickets/workflow-governance/71-publication-0-5.md |
@@ -96,8 +96,8 @@ This section replaces the "end of day" summary below, which is kept for history.
 - The owner's user-level settings gained two hooks for the memory index cap (memory `user-sessionstart-hook`).
 
 **Resume order** (every push waits for the owner's confirmation):
-1. Fast-forward the development `main` to `cp/wave3` (decision "B"); show `git push --dry-run` first.
-2. Trigger the one cloud run: `gh workflow run acceptance.yml --ref main -f candidate=<main> -f expected_publication=e08e82d3373547a5448040638fb22b1810dc9cf3`.
+1. Done: the owner fast-forwarded the development `main` to `f1d04039` on 2026-11-26T15:32:55Z; CI run 45850194264 is green on both jobs. `cp/wave3` is ahead of `main` again by record commits.
+2. Cloud run 1 (45920193720, 2026-11-27) is FAIL at `build`: `acceptance.yml` installs no Python package and the generator needs `pydantic`. Reproduced locally with a clean venv (row `t77record`, section "The cloud run"). Waiting for the owner's decision on the fix and on a second run. After the fix: fast-forward `main` again, then `gh workflow run acceptance.yml --ref main -f candidate=<main> -f expected_publication=e08e82d3373547a5448040638fb22b1810dc9cf3`, each on the owner's confirmation in words.
 3. The owner renames the publication repository to `software-factory-plugin`. Check its current name first.
 4. Release per `doc/runbooks/release.md`. Show each push command with `--dry-run` before running it.
 5. Smoke install from the public path by `doc/runbooks/install-guide-0.5.0.md`, fill in its publication commit, then remove the eight registered rows.

@@ -70,11 +70,23 @@ When both files exist, Codex reads `.agents/plugins/marketplace.json`. Each file
 
 ## Not tested
 
-The acceptance workflow has never run. On a runner, `py -3.11` with the `level2` environment, `claude` and `codex` from `npm install --global` on `PATH`, and the `.cmd` shims of the npm packages are untested.
+The acceptance workflow ran once and stopped at `build` (section "The cloud run"), before any of the following. On a runner, `py -3.11` with the `level2` environment, `claude` and `codex` from `npm install --global` on `PATH`, and the `.cmd` shims of the npm packages are untested.
 
 ## The cloud run
 
-Not run. The control plane adds the run id, the artifact and the verdicts here after the owner's confirmation.
+**The development `main`.** The owner fast-forwarded `main` from `74b658e8` to `f1d04039a10539fb8353d3374faf030054a4f672` on 2026-11-26T15:32:55Z. CI run 45850194264 on that commit ended `success` on both jobs, `test (linux)` and `test (windows)`.
+
+**Run 1, 2026-11-27: FAIL at `build`.** The owner confirmed the trigger in words ("跑"). The control plane first read back the remote `main` (`f1d04039`) and the local ref `refs/heads/publication-0.5.0` (`e08e82d3373547a5448040638fb22b1810dc9cf3`).
+
+- Run id 45920193720, `workflow_dispatch` on `main`, head `f1d04039a10539fb8353d3374faf030054a4f672`, started 2026-11-27T01:01:57Z, ended 01:02:38Z, conclusion `failure`.
+- Inputs: `candidate=f1d04039a10539fb8353d3374faf030054a4f672`, `expected_publication=e08e82d3373547a5448040638fb22b1810dc9cf3`.
+- Artifact `acceptance-report` (`report.jsonl`, ten lines). `build` is `FAIL`; the other nine verdicts are `FAIL: not run, because build did not pass in this run`.
+- The `build` step cloned the repository and checked out the candidate (both exit 0). The publication generator then exited 1 with `ModuleNotFoundError: No module named 'pydantic'`, raised by `library/local_orchestration/contracts.py` line 8.
+- **Cause.** `.github/workflows/acceptance.yml` installs the two host CLIs and no Python package. The generator imports `library.local_orchestration`, which needs `pydantic` (`requirements-dev.txt`). `ci.yml` has the step `python -m pip install -r requirements-dev.txt`; the acceptance workflow has no such step. `ci/acceptance/README.md` says "or any Python 3.11", which is wrong for the `build` step.
+- **Why the local runs passed.** Both local interpreters (the test venv and `py -3.11`) already hold `pydantic`. No local run used an interpreter that holds only what the workflow installs.
+- **Reproduced locally (2026-11-27).** A new venv from `py -3.11` with no package: the generator with `--verify-only --ref refs/heads/publication-0.5.0` exits 1 with the same `ModuleNotFoundError`. After `pip install -r requirements-dev.txt` into that venv, the same command prints `verified e08e82d3373547a5448040638fb22b1810dc9cf3` and exits 0.
+- **What the run did not reach.** No host CLI ran. The items under "Not tested" stay untested: `py -3.11` with the `level2` environment, `claude` and `codex` from `npm install --global` on `PATH`, and the `.cmd` shims.
+- **Not rerun.** The fix to the workflow and a second run wait for the owner's decision.
 
 ## The owner-assisted Codex session
 
