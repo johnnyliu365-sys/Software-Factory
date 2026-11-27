@@ -18,7 +18,7 @@ Run it from the repository root.
 | workflow | governance | open | git:c2bccb7c0c8de9719cb48c40e49169bc9a2b777b | sha256:e090c065a26c4131aedf737a0161ce2cd62500bcc33a41b15d706acc8a8dba6e | Workflow.md |
 | codereview | governance | open | git:9ae502de5dbbf7e36b39179bcfbbc0a1d380519e | sha256:7665a6e41aba778fb873435841197bd2db2b2fb3a4e062bb78af088d6114dff9 | CodeReview.md |
 | req043 | requirement | open | git:68afa9e22c555beedb6a8e49c630f1b9dce4f777 | sha256:4a4b73278f7cab31da3ea4ed10affca7b31fe8eba057d4d44f93aa3adf489cd2 | doc/requirements/active/2026/workflow-governance/REQ-20261103-043.md |
-| req044 | requirement | open | git:c593a94511913192f27616748ced26f625f8aab3 | sha256:ea9e71d596fef1d791e28e3e9a8eaef69e68b014e0c3598457362e7cf57fbc88 | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
+| req044 | requirement | open | git:0c04453451790dd896f85169b02ddf9f1ac15003 | sha256:33a1e763c344a42b0bf633731ff0608bc42b8fbf21b4fcf4b397137b5dfae266 | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
 | req045 | requirement | open | git:96792d116d414ca618f471d38bf036438cd37622 | sha256:e46179a193a89de0e4e198b275afbcdaedc0acbebdb4a0713ca6cded383505f3 | doc/requirements/active/2026/workflow-governance/REQ-20261120-045.md |
 | tickets | index | open | git:fe0b12450eac4a1d13ad018df127ccecedf545ea | sha256:2705edfd827bf914706254d64a245c1cb10549601e338b39d17ae7a762e1c391 | modules/tickets/workflow-governance/README.md |
 | t71 | ticket | open | git:0cfb563b20667af140e21f9d61a8e272aa382466 | sha256:5113d014656bfe1ea805f7edde7a2740699094145abb3213a584bf5a5e77ca41 | modules/tickets/workflow-governance/71-publication-0-5.md |
