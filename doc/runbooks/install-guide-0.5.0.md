@@ -70,7 +70,9 @@ codex plugin add software-factory@software-factory --json
 cd C:\path\to\your-project; codex
 ```
 
-它詢問是否信任 Software Factory 的 hook 時選信任，然後輸入 `/quit` 離開。Codex 桌面 app 不會問這個問題；沒有在終端機信任過，hook 就不會生效。
+它詢問是否信任 Software Factory 的 hook 時選信任，然後輸入 `/quit` 離開。
+
+**只用 Codex 桌面 app 的人，改在 app 裡信任（2026-11-27 補充）：** 打開設定，左側「程式設計」底下點「掛鉤」，在「來自外掛程式」點 Software Factory。它顯示「待審核」時，按「信任」或「全部信任」，旁邊的開關會打開。桌面 app 不會主動跳出來問；不去這一頁按，hook 在桌面 app 裡就不會執行，也不會有任何提示。在終端機信任過，不代表桌面 app 也信任了：重新安裝或更新之後，請回到這一頁看一次。你用哪一個，就在哪一個信任。
 
 **確認成功**
 
@@ -102,11 +104,15 @@ cd C:\path\to\your-project; codex
 claude plugin list
 ```
 
-```bash
-codex plugin list --json
+清單裡有 `johnny-ai-skill@johnny-ai-skill`，就是還裝著舊版。
+
+Codex 請用下面這一行查（PowerShell）。不要用不帶 `--marketplace` 的 `codex plugin list --json`：它會去查所有遠端清單，常常一兩分鐘不回應；卡住時按 Ctrl+C 即可，不會弄壞東西。
+
+```powershell
+Select-String -Path "$env:USERPROFILE\.codex\config.toml" -Pattern "johnny-ai-skill" | ForEach-Object { $_.Line }
 ```
 
-清單裡有 `johnny-ai-skill@johnny-ai-skill`，就是還裝著舊版。
+有印出任何一行，就是還登記著舊版；什麼都沒印，就是沒有。
 
 **移除（Claude Code）**：先看清單上它的 Scope 是 user、project 還是 local。
 
@@ -152,8 +158,9 @@ codex plugin marketplace remove johnny-ai-skill --json
 | C1 | Claude 查規則時用搜尋，或回答時沒提到插件的 `AGENTS.md` | session 是在安裝前開的，或插件沒啟用 | `claude plugin list` 確認 enabled；開新的 session 再問一次 |
 | C2 | 指定專案時沒有跳出安裝提示 | Claude Code 移除插件後會留下一筆「已拒絕」紀錄 | 直接執行第 2 節的 install 指令；這筆紀錄不會擋明確的安裝 |
 | C3 | 插件裝到了別的專案，或在錯的資料夾裡生效 | `cd` 和安裝指令分在兩個 Run 按鈕執行，`cd` 沒帶過去 | 把 `cd` 和指令寫在同一行；用 `claude plugin list` 看 Scope 和專案 |
-| X0 | 執行 `codex` 時出現「無法辨識 'codex' 詞彙」或 `command not found` | 這台電腦的終端機找不到 Codex 指令：沒有安裝 Codex、只裝了桌面 app 而它的指令不在 PATH 裡，或剛裝完還沒重開終端機 | 只用 Claude Code 就跳過第 3 節。要用 Codex：先關掉終端機重開，再試 `codex --version`。仍然找不到時，在 PowerShell 執行 `Test-Path "$env:LOCALAPPDATA\Programs\OpenAI\Codexin\codex.exe"`：回 True，就把第 3 節每個指令開頭的 `codex` 換成 `& "$env:LOCALAPPDATA\Programs\OpenAI\Codexin\codex.exe"`；回 False，代表這台電腦沒有 Codex 的指令列工具，請先照 OpenAI 的說明安裝 Codex CLI，再回到第 3 節 |
-| X1 | Codex 查規則時用 `rg` 搜尋；或 `codex exec` 顯示 `hook: SessionStart Failed` | hook 還沒在終端機信任過，或插件更新後要重新信任；桌面 app 不會問 | 照第 3 節「必做」在終端機執行一次 codex 並選信任，再做第 3 節確認 2 |
+| X0 | 執行 `codex` 時出現「無法辨識 'codex' 詞彙」或 `command not found` | 這台電腦的終端機找不到 Codex 指令：沒有安裝 Codex、只裝了桌面 app 而它的指令不在 PATH 裡，或剛裝完還沒重開終端機 | 只用 Claude Code 就跳過第 3 節。要用 Codex：先關掉終端機重開，再試 `codex --version`。仍然找不到時，在 PowerShell 執行 `Test-Path "$env:LOCALAPPDATA\Programs\OpenAI\Codexin\codex.exe"`：回 True，就把第 3 節每個指令開頭的 `codex` 換成 `& "$env:LOCALAPPDATA\Programs\OpenAI\Codexin\codex.exe"`；回 False，代表這台電腦沒有另外安裝的 Codex 指令列工具。只裝 Microsoft Store 版桌面 app 的電腦就是這種情況：app 自己帶的那一份指令不在 PATH 裡，有的電腦上還無法直接執行。請先安裝 Codex 的指令列工具（有 Node.js 時是 `npm install -g @openai/codex`，裝完重開終端機），再回到第 3 節；裝好插件後，信任 hook 可以改在桌面 app 的設定裡做 |
+| X1 | Codex 查規則時用 `rg` 搜尋；或 `codex exec` 顯示 `hook: SessionStart Failed` | hook 還沒被信任，或重新安裝、更新後要重新信任；桌面 app 不會主動問 | 用桌面 app：設定 →「掛鉤」→ Software Factory → 信任。用終端機：照第 3 節「必做」執行一次 codex 並選信任，再做第 3 節確認 2 |
+| X3 | 不要自己刪 `plugins\cache` 底下的資料夾來「移除」舊版 | 只刪快取不會取消登記，新版仍會偵測到舊版而停下來 | 用第 4 節的移除指令；已經刪了的話，照樣執行那兩個移除指令，再用第 4 節的查法確認 |
 | X2 | `codex plugin add` 不存在 | Codex 版本太舊 | 更新 Codex（`codex update`），再確認 `codex --version` |
 | U1 | 更新後行為沒變，還是舊的說明 | 版本號相同時，主機沿用舊的快取 | 先移除插件；再刪除快取資料夾（Claude：`%USERPROFILE%\.claude\plugins\cache\software-factory`，Codex：`%USERPROFILE%\.codex\plugins\cache\software-factory`）；最後重新安裝。Codex 裝好後要再在終端機信任一次 |
 | W1 | Windows 上 hook 的訊息沒有出現，且電腦沒有 Git Bash | 沒有 Git Bash 時，Claude Code 會改用 Windows PowerShell 執行 hook，這是正常的 | 先照 C1 確認；仍不行再回報 |
