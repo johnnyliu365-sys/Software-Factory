@@ -18,22 +18,22 @@ Run it from the repository root.
 | workflow | governance | open | git:c2bccb7c0c8de9719cb48c40e49169bc9a2b777b | sha256:e090c065a26c4131aedf737a0161ce2cd62500bcc33a41b15d706acc8a8dba6e | Workflow.md |
 | codereview | governance | open | git:9ae502de5dbbf7e36b39179bcfbbc0a1d380519e | sha256:7665a6e41aba778fb873435841197bd2db2b2fb3a4e062bb78af088d6114dff9 | CodeReview.md |
 | req043 | requirement | open | git:e05ca257ffe6813be8d9f8243fe0d840acd03f4d | sha256:978bdb0023887e9cd8c44c493498e04f20e6ab107d65962015d6a593b004b426 | doc/requirements/active/2026/workflow-governance/REQ-20261103-043.md |
-| req044 | requirement | open | git:d9b5f4d614ac1d70b090b62cdb98cc4f2779ef4f | sha256:914d8e3a62245b8ee415c10c60ea701950dd59523a79f075f1ff32e986fb30ea | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
+| req044 | requirement | open | git:fe0b12450eac4a1d13ad018df127ccecedf545ea | sha256:a871cc2d311aba0a3f77f8373bc3ab5acf1d954e45505f34cebe3c1f89d74e56 | doc/requirements/active/2026/workflow-governance/REQ-20261120-044.md |
 | req045 | requirement | open | git:96792d116d414ca618f471d38bf036438cd37622 | sha256:e46179a193a89de0e4e198b275afbcdaedc0acbebdb4a0713ca6cded383505f3 | doc/requirements/active/2026/workflow-governance/REQ-20261120-045.md |
-| tickets | index | open | git:5778172739c3878c72178b3a82b9110b5fd61b5a | sha256:82197956cc04209b909426cfe3e88a85c7cc60334366e779fc9a8dd7c9b51a53 | modules/tickets/workflow-governance/README.md |
+| tickets | index | open | git:fe0b12450eac4a1d13ad018df127ccecedf545ea | sha256:2705edfd827bf914706254d64a245c1cb10549601e338b39d17ae7a762e1c391 | modules/tickets/workflow-governance/README.md |
 | t71 | ticket | open | git:0cfb563b20667af140e21f9d61a8e272aa382466 | sha256:5113d014656bfe1ea805f7edde7a2740699094145abb3213a584bf5a5e77ca41 | modules/tickets/workflow-governance/71-publication-0-5.md |
 | t71review | review | open | git:68795ea281ffdb8a6f7b4340bf9bfc9ef949d108 | sha256:9a86b7e900064523ba14dc700d4458bf2ef9337b32df71c594d8b1f7b3761fe5 | doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md |
 | t79 | ticket | open | git:efa03a7edd6a1a8a9077959228307fc70ac68fa0 | sha256:06b34754e6f2bd2254d6da8729c94321970b484464754bf2a82344753e47f7e5 | modules/tickets/workflow-governance/79-read-only-lookup-goes-to-the-leaf.md |
-| integration | record | open | git:c08ccc84df233d19fda9ef276d83c429894e02bf | sha256:9909f73d5f8af21b4d98918367656762832c2d9a54841174890f6e107b8feab3 | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
+| integration | record | open | git:fe0b12450eac4a1d13ad018df127ccecedf545ea | sha256:f1dc4d4c0f135732b237380ebb873edb8bd517510a404b41f5dbae18b6eea294 | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
 | expectation | state | open | git:9ed4ae715cbba28bc3a7d138b389ff99b1c510d3 | sha256:65f3ba13d08cddeae628f5b85bd57618f93f3ff7730af673df7c3421208318d5 | doc/handoffs/2026/workflow-governance/usage-expectation.json |
-| t77 | ticket | open | git:5778172739c3878c72178b3a82b9110b5fd61b5a | sha256:808cf1a3dd1d3342a9907a9780228897490e966f40436dfd0a67f8148d525e71 | modules/tickets/workflow-governance/77-acceptance-0-5-0.md |
+| t77 | ticket | open | git:fe0b12450eac4a1d13ad018df127ccecedf545ea | sha256:60cff066493b4d3ebfe2e5233a9b4a01d3fd05728254749c94023bc6fe9f1456 | modules/tickets/workflow-governance/77-acceptance-0-5-0.md |
 | t77record | record | open | git:bc8da7bdc79adef480112300e9738d3714ba4817 | sha256:3770894f7658ec576c14251994580c27200f106a30c9a8ee7d853a07a5d8fa6a | doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md |
 | t80 | ticket | open | git:2a34bce4d267c8655f23e440f0486297ffbb1beb | sha256:fa2668353870a941eb69862250a5acdbaf934a4a2c945510d9fa8dbbc1c86e3b | modules/tickets/workflow-governance/80-lookup-through-the-index.md |
 | t81 | ticket | open | git:7bbc28f63541e461eacccb7057f1aac12bba0f1e | sha256:a372e81107b6e95cca035c50cb0861d3f835652ae1b4aa925dc60bd620d2f01a | modules/tickets/workflow-governance/81-old-and-new-do-not-fight.md |
 | t82 | ticket | open | git:c08ccc84df233d19fda9ef276d83c429894e02bf | sha256:7478f1f4c5558c206c58e6c8faa8d9121f59297af9b99878102db82944c5f77c | modules/tickets/workflow-governance/82-session-hook-points-to-the-index.md |
 | t82ticketreview | review | open | git:b4c4b6b3974aa16f3e2b50d9c0483d7d9cfd9be1 | sha256:1d433de913abc0ebf90089421a9cf0ef0fa776ebed7ce81f0aaf74af5a643e29 | doc/reviews/workflow-governance/82-session-hook-points-to-the-index-ticket-review.md |
 | t82review | review | open | git:8f49e10cd6d7895e84191afa9f047a14d5c94474 | sha256:090dc5eb92914c77d431eaca81aaaf7281a7985ba109191b78ee3c95e8cf52e2 | doc/reviews/workflow-governance/82-session-hook-points-to-the-index-code-review.md |
-| integration3 | record | open | git:c08ccc84df233d19fda9ef276d83c429894e02bf | sha256:9909f73d5f8af21b4d98918367656762832c2d9a54841174890f6e107b8feab3 | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
+| integration3 | record | open | git:fe0b12450eac4a1d13ad018df127ccecedf545ea | sha256:f1dc4d4c0f135732b237380ebb873edb8bd517510a404b41f5dbae18b6eea294 | doc/reviews/workflow-governance/wave3-integration-2026-11-18.md |
 | release | runbook | open | git:d7623817149f5625b5998d5f3df00a1fc20f5b2e | sha256:fa666771742b6c84c3c7ca63013f190971d4a128b52a04451ec7e8041f163a6f | doc/runbooks/release.md |
 | installguide | runbook | open | git:0a5d01f2c374f6a3f34b1ea1b1e1760dcd507493 | sha256:5b0daeeeee86e80552602a26d95c264a196cb9395aafa7d2636e4ce476ee1f1a | doc/runbooks/install-guide-0.5.0.md |
 
