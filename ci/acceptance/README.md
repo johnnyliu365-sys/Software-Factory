@@ -27,7 +27,7 @@ The 0.5.0 README says Codex needs the `plugin add` command, which `0.167.0-alpha
 ## The local run (condition 3)
 
 The run root is a new empty directory outside every Git work tree (the 0.4.9 installer refuses to run inside
-one). Use the interpreter that has `mypy` and `pytest` (`requirements-dev.txt`) or any Python 3.11.
+one). Use an interpreter that holds the packages of `requirements-dev.txt`: the `build` step runs the publication generator, which imports `pydantic`, and a Python 3.11 without it fails `build`.
 
 ```
 python ci/acceptance/lifecycle.py --candidate <40 hex> --expected-publication <40 hex> --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root <new empty directory>
@@ -49,6 +49,29 @@ A refused argument exits 2 and starts nothing.
 
 Exit codes: 0 when every requested step is `PASS`; 1 when any step is `FAIL` or `NOT_SUPPORTED`; 2 when an
 argument is refused. `NOT_SUPPORTED` is never a `PASS`.
+
+## The parity run
+
+The local run uses the interpreter and the host CLIs this host already has. The parity run installs the
+Python packages and the host CLI versions that the workflow installs, so a Python package or a host CLI that
+only this host has cannot hide a failure: cloud run 45920193720 failed at `build` because the workflow
+installed no Python package, while every local interpreter already held `pydantic`. The control plane does
+the parity run at the candidate before the cloud run.
+
+`<A>` and `<B>` are two new empty directories outside every Git work tree. Run the commands from the root of
+the work tree at the candidate.
+
+```
+py -3.11 -m venv <A>
+<A>/Scripts/python.exe -m pip install -r requirements-dev.txt
+npm install --prefix <B> --no-audit --no-fund @anthropic-ai/claude-code@2.1.332 @openai/codex@0.166.0
+```
+
+Then put `<B>/node_modules/.bin` first on `PATH` and run the first command of the local run with
+`<A>/Scripts/python.exe`. It must exit 0. In `report.jsonl`, the generator's command names the interpreter
+under `<A>`, and every host command names `claude.CMD` or `codex.CMD` under `<B>`.
+
+The parity run does not cover the runner's `py` launcher, which the `level2` step's installer calls.
 
 ## Isolation
 
