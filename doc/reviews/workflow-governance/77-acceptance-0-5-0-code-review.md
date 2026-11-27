@@ -322,3 +322,101 @@ Each revision reran the full local lifecycle on both hosts, plus a full suite. W
 - S77-11: case-insensitive residue match;
 - S77-16: refusing duplicate JSON keys;
 - S77-17: the record's "differs by this record only" wording.
+
+## Initial review of closure revision06
+
+- **Ticket.** Revision06 of ticket 77, read with `git show bc8da7bd:modules/tickets/workflow-governance/77-acceptance-0-5-0.md`. At `62ebc5fb` (and at `bfc02590`) the ticket differs only in its state row, which carries the dispatch digest `859c470c…6e72a4d2ec`. `JAS-77-4.yaml` from `62ebc5fb` hashes to that value. Sections read: the Revision05 paragraph, item 7 (7a to 7e and the indent rule), the Owner override record, TDD item 4, the revision05 mutations, L3, D1, the boundary block and 禁止修改; items 3 to 5 for context. Revision05 reopens the ticket after `INTEGRATED` by owner override, so this is a new closure revision and the §5 count restarts.
+- **Candidate.** `ec0c06dcc0d92663617067d3cd79819575c67905`, equal to `origin/cp/wave3-77-acceptance`. It is one commit on `8cf1e387` (the revision04 approval, integrated at `e87bc5cb`), and `f53ecc6a` (the dispatch base) is its ancestor. The commit is authored `Johnny Liu <johnny.liu365@gmail.com>`. Its subject is the dispatch's commit line, and its trailer `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` matches the dispatch model `claude-sonnet-5-5` and the USAGE cell `seat:implementation-standard/JAS77R6`.
+- **Label.** Initial review of closure revision06. Process tier: strict.
+- **Reviewer.** Independent `ticket-review` seat, run id `R77-6` (claude-opus-5-5). After a fetch, the worktree `.worktrees/77-acceptance-review` was detached from `8cf1e387` to the candidate. Porcelain was empty before and after.
+- **Captures.** Everything is in `.worktrees/77-acceptance-review-out/r06/`, together with the scripts that produced it:
+  - `exact-texts.txt` (`exact_texts_r06.py`);
+  - `M1-review.txt` and `M1-driver.txt` (`counter_mutations_r06.py`, `counter_mutations_r06.sh`);
+  - `P1-review.txt`, `T1-review.txt` and `lock-log.txt` (`p1_t1_r06.sh`);
+  - `C1-review.txt` and `ci-scan.txt`;
+  - `E1-review.txt`;
+  - `L3-seat-read.txt` and `L3-review-read.txt` (`l3_read_r06.py`), `L3-review.txt` and `parity-after.txt` (`parity_r06.sh`);
+  - `boundary-review.txt` (`boundary_r06.py`).
+
+### Findings (revision06)
+
+| id | §4 class | severity | location | finding | evidence | smallest fix |
+| --- | --- | --- | --- | --- | --- | --- |
+| S77-18 | `IMPLEMENTATION_DEFECT` | Low | `tests/test_acceptance_lifecycle.py` line 1196, in `test_the_step_installing_the_development_requirements_has_the_run_lines_of_ci_yml` | Item 7d says the step's `run` lines equal those of `ci.yml`'s step, "read from `ci.yml` and not written a second time in the test". The test does read them from `ci.yml`. Then it adds `self.assertEqual(mine[-1], "python -m pip install -r requirements-dev.txt")`, which writes one of those `run` lines in the test a second time. That is a second source for the line. If `ci.yml` changes its install line and `acceptance.yml` follows, the test goes red, though 7d makes `ci.yml` the only source. The candidate's behaviour is correct, and the extra line makes no test weaker. The deviation is from the frozen wording of 7d. | The line quoted. The equality alone already turns every mutation of the frozen list red. Seat mutation 4 and my CM10 (only `ci.yml` changed) are red through `assertEqual(mine, theirs)` (`M1-review.txt`). | Delete line 1196. If the control plane wants to keep a literal pin on `requirements-dev.txt`, that is a change to 7d (a ticket edit), not to the candidate. |
+| S77-19 | `OUT_OF_SCOPE_HARDENING` | Low | `tests/test_acceptance_lifecycle.py` lines 1107–1118 (`step_run_lines`) and 1191–1214 | Item 7a says the step is exactly its four lines and "Nothing else in the workflow changes". The tests pin the step's name, its `run` lines and its place, but not that the step has no other key. Adding `if: ${{ false }}` after the `run` lines disables the install, and all 69 tests stay green (CM8). So does `continue-on-error: true` (CM9). At this candidate the step is byte-exact (check R1). The gap is only regression protection: if this regressed, a workflow that does not install `requirements-dev.txt`, the failure of run 45920193720, would pass. | CM8 and CM9 in `M1-review.txt`: each shows `69 passed`, `exit=0`. | In the same test, assert that the line after the last `run` line starts a new step (`      - ` or `      # `) or ends the file, so the step holds no key beyond `name` and `run`. This is one assertion and no new mechanism. It can ride with S77-18's correction. |
+| S77-20 | `OUT_OF_SCOPE_HARDENING` | Low | `tests/test_acceptance_lifecycle.py` lines 1253–1277 | Two properties of the frozen README text are not pinned. First, 7b's place: the sentence must stay on the line that begins `one). `, in section "The local run (condition 3)", but `assertIn` on the whole text accepts the sentence anywhere. Moving it to the Isolation section stays green (CM7). The ticket chose `assertIn` itself ("the 7d test checks it with `assertIn` on the README text as read"), so the candidate meets 7d. Second, 7c's first install line: removing `py -3.11 -m venv <A>` from the parity block stays green (CM12). 7d does not list it. | CM7 and CM12 in `M1-review.txt`: each shows `69 passed`, `exit=0`. | Carry the item to the follow-up hardening ticket. There, match `^one\). ` followed by the escaped sentence and `$` as a whole line, and add `"\npy -3.11 -m venv <A>\n"` to the section's `assertIn`s. |
+
+Notes. None of these is a finding.
+
+- **N12. The merge base has moved, as for ticket 82 (N10 there).** The candidate's merge base with `origin/cp/wave3` (`bfc02590`) is now `8cf1e387`. Over `8cf1e387..ec0c06dc`, `evaluate_changes` gives `MODIFICATION_OUTSIDE_BOUNDARY` for `.github/workflows/acceptance.yml`, because the boundary lists the three files under `create` only. The Owner override record says the `create =` lines "still describe the diff from that base" (`f53ecc6a`). Over `f53ecc6a..ec0c06dc` the gate gives `(None, None)`: five `CREATE` entries. I judged that range. If the gate must judge this reopened ticket against `cp/wave3`, the fix is in the ticket: add the three files to `modify`.
+- **N13. `tool_digest` also names `dispatch_lint.py`.** E1 names only `index_pins.py` and `receipt_fence_check.py`. All three digests equal the blobs at the candidate. The revision04 receipt carries the same three. E1 accepts it.
+- **N14. The npm postinstall is not covered.** Under this host's npm 11.16.0, the `--prefix` line prints an `allow-scripts` warning, and `@anthropic-ai/claude-code@2.1.332`'s `postinstall: node install.cjs` does not run. That happened in both the seat's run and mine. `claude.CMD` still printed `2.1.332 (Claude Code)` and passed every step. The runner's `npm install --global` may run that script. 7c and 7e do not ask about it, and the parity run cannot show the difference. The control plane may want to name it next to the README's `py` launcher sentence.
+- **N15. The seat's discarded first parity run.** The STATEMENT says the first run resolved the host's own `claude.EXE` and `codex.EXE` (codex 0.172.0) because of the `PATH` form. It says that run was removed and redone. L3 holds only the second run, and my reading of it agrees (check R6).
+- **N16. The seat's mutation 5 appends rather than restores.** It adds " This or any Python 3.11 will do." after the 7b sentence, so only the `assertNotIn` fires. TDD item 4's other half, "the 7b sentence removed", is covered by my CM6 (the revision04 sentence restored): red on the `assertIn`.
+- **N17. `requirements-dev.txt` pins `pydantic>=2.12.2,<3`, not one version.** My parity venv got `pydantic 2.14.4`. The runner gets whatever is newest in that range. That is `ci.yml`'s own state, and revision05 does not touch it.
+
+### Per-check table (revision06)
+
+| # | Check | Result | Evidence and notes |
+| --- | --- | --- | --- |
+| R1 | Diff and exact texts (D1, 7a, 7b, 7c) | PASS | `git diff 8cf1e387 ec0c06dc` changes exactly `.github/workflows/acceptance.yml` (+4), `ci/acceptance/README.md` (+24 −1) and `tests/test_acceptance_lifecycle.py` (+77). I took the 7a and 7c blocks from the ticket blob and removed the five-space list indent. The candidate workflow equals the revision04 file with the 7a block inserted after setup-python's `with:` block (lines 37–39). The block is lines 40–43 and the host-CLI step follows at line 44. The step's `- name:` line has six spaces. Those four lines equal `ci.yml` lines 45–48. The candidate README equals the revision04 README with two changes and nothing else: the old sentence is replaced in place by 7b, and the 7c block plus one blank line is inserted before `## Isolation`. 7b is line 30, the only line that begins `one). `, unwrapped, inside `## The local run (condition 3)`. `## The parity run` is line 53 at column 1, once, and `## Isolation` is line 76. "or any Python 3.11" is absent. Neither file has a CR. `exact-texts.txt` |
+| R2 | The four new tests against 7d | PASS (S77-18) | The first test reads `run` lines from both workflows with `step_run_lines`, which requires the name line once, then `        run: |`, then the 10-space body. It compares them with `assertEqual`. The second test compares the line numbers of setup-python, the step, the host-CLI step, `Run the lifecycle` and the one `python ci/acceptance/lifecycle.py` line. Each comes from `line_number`, which requires exactly one whole-line `re.MULTILINE` match. The third test uses `assertIn` on the 7b sentence and `assertNotIn` on "or any Python 3.11". The fourth test checks heading before Isolation as whole lines, the `<A>` pip line as a whole line inside the section, exactly one `npm install --prefix <B>` line, and its two `package@version` items. Those items must equal, in order, the two of the workflow's one `npm install --global` line, which is read from the workflow. Line 1196 is the extra literal of S77-18. |
+| R3a | The seat's M1 | PASS | Baseline 69 passed. Mutations 1 to 7 each show `exit=1`, the intended test names, an `AssertionError` for the intended reason and `porcelain-lines-after-restore=0` (read in full in `77-acceptance-out/M1.txt`). |
+| R3b | My counter-mutations | PASS with S77-19, S77-20 | I ran them in a disposable `git clone --no-hardlinks` copy at `ec0c06dc`, using the whole test file, not `-x`. The output was unfiltered: I ran pytest directly with `-rfE` and no wrapper. The unmutated baseline is 69 passed. Porcelain was 0 after each restore. **Red:** CM1, the step's `run` body emptied (`Lists differ: [] != [...]`). CM2, the step duplicated after the lifecycle step (2 failed, "matches 2 lines" and "not in the workflow exactly once"). CM3, the 7b sentence wrapped. CM4, the heading indented ("matches 0 lines"). CM5, the codex package dropped from the `--prefix` line. CM6, the revision04 sentence restored. CM10, the copy door: only `ci.yml` changed, which proves the comparison reads `ci.yml`. CM11, the first-match door: a second `--prefix` line with codex 0.165.0 (`2 != 1`). CM13, the `<A>` pip line pointed at `requirements.txt`. CM14, a trailing space on the step's name line. CM15, the step moved before setup-python (`41 not less than 36`). **Green**, and each matters: CM7, the sentence moved out of its section (S77-20); CM8, `if: ${{ false }}` (S77-19); CM9, `continue-on-error: true` (S77-19); CM12, the venv line removed (S77-20). Environment door: a CRLF checkout (`core.autocrlf=true`, CR present in both files) gives 69 passed. `M1-review.txt` |
+| R4 | P1 and T1 rerun, under the host lock | PASS | I held `C:/Temp/claude/jas-fullsuite.lock` as `R77-6`. I acquired it at 02:01:13Z and released it at 02:02:13Z by rename and remove, after `owner.txt` still named me. I took it again for the counter-mutations and released it at 02:18:03Z. At both acquisitions, the only other python processes were another project's (`test_week_templates_sql_020r.py`, PID 33784, and a `vita360 staging` guard, PID 40044). Neither runs in this repository's runtime root. The interpreter was `C:/Temp/claude/jas-venv/Scripts/python.exe` with `PYTHONUTF8=1`. P1 (four files, `-rfEs`): 180 passed, 392 subtests passed, exit 0, no skip, the same as the receipt. T1: mypy `--strict --python-version 3.11` on the two files gives "Success: no issues found in 2 source files", exit 0. `P1-review.txt`, `T1-review.txt`, `lock-log.txt` |
+| R5 | CI read back | PASS | Run 45922292427 (workflow `ci`, branch `cp/wave3-77-acceptance`): `headSha` `ec0c06dc…`, conclusion `success`, and both `test (windows)` and `test (linux)` are `success`. The 14,993-line log has 0 `UNREGISTERED_FAILURE`, 0 `REGISTERED_NOT_FAILING`, 0 `REGISTERED_NOW_PASSING` and no `FAILED tests/test_acceptance_lifecycle`. The comparison step passed on both jobs. `C1-review.txt`, `ci-scan.txt` |
+| R6 | L3 against 7e, the seat's cell and my own parity run | PASS | **Seat's cell:** the exits are `0,0,0,0` (the three install lines, then the lifecycle), and the 10 records are all `PASS`. The generator's `argv[0]` is `C:\Temp\claude\jas77r6-a1-venv\Scripts\python.exe` (under `<A>`). All 66 host commands are `claude.CMD` (35) or `codex.CMD` (31) under `C:\Temp\claude\jas77r6-a1-npm\node_modules\.bin`, each `--version` or `plugin …`. The `--version` records are `2.1.332 (Claude Code)` ×4 and `codex-cli 0.166.0` ×4. `L3-seat-read.txt`. **My parity run** followed README "The parity run" in the review worktree at the candidate. I used `<A>` `C:/Temp/claude/R77-6-A`, `<B>` `C:/Temp/claude/R77-6-B`, the run root `C:/Temp/claude/R77-6-run`, `--candidate ec0c06dc…` and `--expected-publication d355b4a2…`. `PATH` was exported inside the one script in the `/c/…` form. `command -v` and `shutil.which` from `<A>` both resolved the `.CMD` shims under `<B>` before the run. The three install lines exited 0, the lifecycle exited 0 with ten `PASS`, and `report.jsonl` has the same shape: the generator under `<A>`, 35 + 31 `.CMD` host commands under `<B>`, and the same versions. The publication commit regenerated as `d355b4a2…`. I then removed the three directories. `L3-review.txt`, `L3-review-read.txt`, `parity-after.txt` |
+| R7 | E1, P9 and the receipt | PASS | I reran E1 as the dispatch gives it, with `--repo .worktrees/77-acceptance` (at `ec0c06dc`, porcelain empty) and `--candidate ec0c06dc…`, on the receipt as it stands with USAGE: `cells=9 defects=0`, exit 0 (`E1-review.txt`). All 9 evidence cells name the candidate. P9's capture reads `receipt defects: 0`, exit 0. `RETURN.md` differs from `RETURN.as-returned.md` only by the appended USAGE section. `items: 12` matches the 12 STATEMENT items. F1 was read, not rerun: 1 failed (`test_acr2_linux…`, registered), 3512 passed, 13 skipped. `77-acceptance-out-rev04/` holds the revision04 receipt (9 cells at `8cf1e387`), with every file timed at the 09:20:54 copy. No `jas77r6*` directory is left under `C:/Temp/claude/`, and the seat's scratch is empty. |
+| R8 | The boundary and the revision05 limit | PASS (N12) | `git diff --name-status f53ecc6a ec0c06dc` shows five `A` entries, each a `create =` line of the boundary block. `read_boundary` at `bc8da7bd` and at `62ebc5fb` gives `DECLARED`, and the range gives `(None, None)`. The controls (`ci.yml`, `README.md`, `library/`, `skills/`, `CodeReview.md`) give `PATH_FORBIDDEN`. The blobs of `ci/acceptance/lifecycle.py`, `requirements-dev.txt`, `.github/workflows/ci.yml` and the acceptance record are unchanged since `8cf1e387`. `boundary-review.txt` |
+| R9 | Merge into `origin/cp/wave3` | PASS | `git merge-tree --write-tree origin/cp/wave3 ec0c06dc` exits 0 with no conflict. Against `origin/cp/wave3` (`bfc02590`), the result changes only the three files, each equal to the candidate's. `cp/wave3` still holds `8cf1e387`'s copies of the six relevant files. Nothing was merged anywhere. `boundary-review.txt` |
+
+Applicable references: `CodeReview.md`; `review-checks.md` (test truthfulness, with the reviewer counter-mutation, points 1 to 5). XSS: not applicable (no browser, WebView or DOM). Secret and external effect: the workflow holds no secret, and I did not run or dispatch it.
+
+### Verdict (revision06)
+
+`CHANGES_REQUESTED`. The fix itself holds under every independent rerun:
+- the step is byte-exact and in its place;
+- the README sentence and section are exact;
+- the parity run passes with only what the workflow installs;
+- P1, T1, CI and E1 hold;
+- the diff stays inside D1 and the boundary.
+
+The one item that asks for a correction is S77-18: the test writes a `ci.yml` run line a second time, which 7d forbids. The fix is to delete one line. S77-19 and S77-20 are hardening and do not block. S77-19's assertion is cheap enough to take in the same correction. Under the review label rule this is the initial review of closure revision06, and its correction review is the one that remains.
+
+```review-verdict
+candidate: ec0c06dcc0d92663617067d3cd79819575c67905
+verdict: CHANGES_REQUESTED
+round: initial
+closure_revision: revision06
+reviewer: ticket-review seat R77-6 (claude-opus-5-5)
+reviewed_at: 2026-11-27
+```
+
+```rework-record
+candidate: ec0c06dcc0d92663617067d3cd79819575c67905
+round: 6
+kind: INITIAL
+verdict: CHANGES_REQUESTED
+causes: IMPLEMENTATION_DETAIL
+```
+
+### Not done here, and why (revision06)
+
+- **The full suite was not rerun.** It was not asked for; F1 was read from its capture.
+- **The revision04 mutations were not rerun.** The ticket says three of them target `lifecycle.py`, which is unchanged, and that the push-trigger test is unchanged.
+- **L1 and L2 were not rerun.** The ticket says they are not rerun in revision05. My parity run stands for the lifecycle at this candidate.
+- **The control-plane list after integration is not done here.** It covers the control plane's own parity run at the integrated candidate, the fast-forward of `main`, the second cloud run and the owner-assisted session.
+
+### Residue (R77-6)
+
+- **Removed:**
+  - `C:/Temp/claude/R77-6-A`, `R77-6-B` and `R77-6-run` (the parity run);
+  - `C:/Temp/claude/R77-6-mypycache`;
+  - the clones `R77-6-m` and `R77-6-crlf` and the CI log `R77-6-ci.log` under `.worktrees/77-acceptance-review-scratch/`, which is empty now;
+  - the host lock, released twice by rename and remove, each time with `owner.txt` naming `R77-6`.
+- **Left, with the reason:**
+  - The npm cache (`%LOCALAPPDATA%\npm-cache`) and the pip cache (`%LOCALAPPDATA%\pip\Cache`), which the install lines and the 0.4.9 installer wrote. They do not carry my run id.
+  - `%TEMP%` staging, which the installer removes itself.
+  - The unreferenced tree objects that `git merge-tree --write-tree` wrote to the shared object store (result tree `7da816c3`). They are not referenced by any ref and are removed by `git gc`.
+- **Not touched:** the candidate, the branch, the receipt, `77-acceptance-out-rev04`, the seat's worktree and the shared `publication-0.5.0` ref.
+- PROCESSES_LEFT=0.
