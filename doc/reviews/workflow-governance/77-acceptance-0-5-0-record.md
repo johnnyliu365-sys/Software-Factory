@@ -70,7 +70,7 @@ When both files exist, Codex reads `.agents/plugins/marketplace.json`. Each file
 
 ## Not tested
 
-The acceptance workflow ran once and stopped at `build` (section "The cloud run"), before any of the following. On a runner, `py -3.11` with the `level2` environment, `claude` and `codex` from `npm install --global` on `PATH`, and the `.cmd` shims of the npm packages are untested.
+Run 1 of the acceptance workflow stopped at `build`, before any of the following. Run 2 (section "The cloud run") passed all ten verdicts on the runner, so the three items below are now tested there. On a runner, `py -3.11` with the `level2` environment, `claude` and `codex` from `npm install --global` on `PATH`, and the `.cmd` shims of the npm packages are untested.
 
 ## The cloud run
 
@@ -97,6 +97,23 @@ The acceptance workflow ran once and stopped at `build` (section "The cloud run"
 - Verdicts, from `report.jsonl`: `build` `PASS`; `fresh`, `upgrade`, `uninstall` and `recover` `PASS` for `claude` and for `codex`; `level2` `PASS`. Ten of ten.
 - Resolved commands, from `report.jsonl`: the generator ran as `C:\Temp\claude\acc-clean-venv-20261127\Scripts\python.exe -m library.local_orchestration.plugin_publication` and printed `publication commit e08e82d3373547a5448040638fb22b1810dc9cf3`. Every Claude Code command ran as `C:\Temp\claude\acc-parity-npm-20261127\node_modules\.bin\claude.CMD` (`--version`: `2.1.332 (Claude Code)`), and every Codex command as `…\node_modules\.bin\codex.CMD` (`--version`: `codex-cli 0.166.0`).
 - Not covered: `git`, `node`, `npm` and the `py` launcher are this host's. The runner's `py` launcher, which the `level2` step's installer calls, stays untested.
+
+**Ticket 77 revision06.** The fix was integrated at `34583ba2` (the workflow installs `requirements-dev.txt` before the host CLIs; `wave3-integration-2026-11-18.md`, section "Ticket 77 revision06"). The record commit `fe0b12450eac4a1d13ad018df127ccecedf545ea` followed, with CI run 45938394711 `success` on both jobs.
+
+**Parity run at `fe0b1245` (2026-11-27, control plane).** Done as `ci/acceptance/README.md`, section "The parity run", says, with a new venv, a new npm prefix and a new run root under `C:/Temp/claude/` (removed afterwards; the report is kept by the control plane). Started 2026-11-27T04:11:21Z, ended 04:12:05Z, exit 0. Ten of ten verdicts `PASS`. The generator ran under the venv's interpreter, and every host command ran as `claude.CMD` (`2.1.332 (Claude Code)`) or `codex.CMD` (`codex-cli 0.166.0`) under the npm prefix.
+
+**The development `main`, second fast-forward.** The control plane showed the rehearsal (`f1d04039..fe0b1245`) and the command in a runnable block once CI on `fe0b1245` was green (REQ-044 T4 rule (d) as rewritten on 2026-11-27). The owner ran it; the control plane read back `refs/heads/main` as `fe0b12450eac4a1d13ad018df127ccecedf545ea` at 2026-11-27T04:41:28Z.
+
+**Run 2, 2026-11-27: PASS, ten of ten.** The owner started it from a runnable block after the control plane had read back the remote `main`, the install step in `main`'s workflow file and the local publication ref.
+
+- Run id 45941477324, `workflow_dispatch` on `main`, head `fe0b12450eac4a1d13ad018df127ccecedf545ea`, started 2026-11-27T04:42:12Z, ended 04:44:40Z, conclusion `success`. Every step of the job is `success`, the new step `Install development requirements` among them.
+- Inputs: `candidate=fe0b12450eac4a1d13ad018df127ccecedf545ea`, `expected_publication=e08e82d3373547a5448040638fb22b1810dc9cf3`.
+- Artifact `acceptance-report` (`report.jsonl`, ten lines, sha256 `29eb38c5b9ff0d39946c1e2897311e6d4048054e4b0427772d0afa7b039825ab`). Verdicts: `build` `PASS`; `fresh`, `upgrade`, `uninstall` and `recover` `PASS` for `claude` and for `codex`; `level2` `PASS`.
+- `build`: the clone checked out `fe0b1245`, and the generator printed `publication commit e08e82d3373547a5448040638fb22b1810dc9cf3`, the expected one. The runner regenerated the same package from the candidate.
+- Resolved commands on the runner: the generator under `C:\hostedtoolcache\windows\Python\3.11.9\x64\python.exe`; the host CLIs as `C:\npm\prefix\claude.CMD` (`2.1.332 (Claude Code)`) and `C:\npm\prefix\codex.CMD` (`codex-cli 0.166.0`), the shims of `npm install --global`.
+- `level2`: both 0.4.9 assets matched their approved sha256 values; the install exited 0 and `JOHNNY_ROOT` held 3523 paths; after the uninstall `JOHNNY_ROOT` held no file outside the allow-list. So the runner's `py` launcher works for the 0.4.9 installer.
+- Conditions (1) to (4) of `ci/acceptance/README.md` held at the trigger. The acceptance of ticket 77 on a GitHub-hosted Windows runner is met.
+- The rule that the cloud run happens once: run 1 failed and run 2 followed the owner decision of 2026-11-27 ("A"). No third run was needed, so decision 2 of that day stays unanswered and unused.
 
 ## The owner-assisted Codex session
 
