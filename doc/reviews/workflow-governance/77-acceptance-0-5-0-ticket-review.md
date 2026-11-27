@@ -49,8 +49,36 @@ The owner answered "A 你預先授權腳本代答 (Recommended)". It is recorded
 | S77R-22 | Low (note) | Local and runner CLI versions may differ | The STATEMENT and the record carry both |
 | S77R-23 | Low (note) | Template rows missing | Closure revision, Strict checker, Profile / resource and XSS classification added |
 
+## Revision05 delta (commit `e05ca257`), independent `ticket-review` seat, fresh
+
+**verdict: CHANGES_REQUESTED**
+
+Revision05 reopens the ticket after `INTEGRATED`, because the one cloud run (45920193720) failed at `build`: the workflow installs no Python package and the generator needs `pydantic` (owner decision 2026-11-27 "A"). The seat was started fresh, as the water mark of REQ-044 T19 says, and read the diff, the files item 7 changes, the record and the rules on reopening. The seat confirmed:
+- the files item 7 changes are the same on the branch tip `8cf1e387` and on `cp/wave3`, and `f53ecc6a` is the branch's base;
+- with the list indent removed, 7a's lines equal `ci.yml` lines 45 to 48, and no existing test pins "or any Python 3.11";
+- `lifecycle.py` records the resolved path as `argv[0]` and runs the generator with `sys.executable`, so the 7c and 7e checks can be read from `report.jsonl`;
+- the payload excludes `.github/`, `ci/` and `tests/`, so `d355b4a2` stays the expected publication at the seat's new commit;
+- the `IN_PROGRESS` state row with the revision04 digest and the Owner override record follow the ticket 82 revision07 precedent.
+
+| id | severity | finding | revision06 |
+| --- | --- | --- | --- |
+| S77R-24 | major | The Revision05 paragraph cited a control-plane parity run that no committed file recorded, while the record said the `.cmd` shims stay untested; "So the one defect is" claimed more than one run shows | The record gains the entry "Parity run (2026-11-27, control plane)" with the directories, the install lines, the verdicts and the resolved commands from that run's `report.jsonl`; the paragraph cites it and says "The one defect found is" |
+| S77R-25 | minor | "before each cloud run" assumed a run count the owner has not decided, and the parity run is not in the owner's option text | "before the cloud run"; the paragraph says the parity run is the control plane's evidence and sets no rule on the number of runs |
+| S77R-26 | minor | The README section used `<A>` and `<B>` without defining them, and did not say where the commands run | The definition and the working directory are inside the README block |
+| S77R-27 | minor | "builds both from the workflow's own install lines" claimed more than the commands do (`--prefix`, no pip upgrade, the host's `git`, `node` and `py`) | "installs the Python packages and the host CLI versions that the workflow installs" |
+| S77R-28 | minor | The 7b sentence is longer than the README's wrap, and the test's `assertIn` would break on a wrapped sentence | The sentence stays unwrapped on the line that begins `one). ` |
+| S77R-29 | minor | 7d did not pin the placement before the host-CLI step | The upper bound is the host-CLI step's line, with one more TDD case and one more mutation |
+| S77R-30 | minor | The 7a and 7c blocks carry the list's five-space indent, and nothing said to remove it | The indent rule is stated, and the step's line and the heading are matched as whole lines |
+| S77R-31 | minor | 7e allowed only item 5's commands yet required the three install lines; an install failure was unrouted; the comparison pointed at an L1 that is not rerun | The seat runs `lifecycle.py` and the three install lines only; an install failure is `BLOCKED`, a step that is not `PASS` is `CHANGE_DETECTED`; the STATEMENT names the versions |
+| S77R-32 | minor | 7e had no residue rule | `<A>`, `<B>` and the run root are removed; the npm and pip caches stay and are named |
+| S77R-33 | minor | The boundary block cannot show a revision05 edit to `lifecycle.py` or the record | Cell D1: `git diff --name-only 8cf1e387 <candidate>` lists only the three files |
+| S77R-34 | minor | The reason for not rerunning the four old mutations was wrong for the push-trigger one | The reason names the three that target `lifecycle.py` and the unchanged push-trigger test |
+
+Revision06 (the commit after this section) applies each fix as worded by the seat. The control plane changed one detail: the npm cache path in S77R-32 was checked on this host with `npm config get cache` before it was written.
+
 ## Seat token use
 
 | seat | model | effort | input | cache write | cache read | output |
 | --- | --- | --- | --- | --- | --- | --- |
 | rule-only review, revision01 | claude-opus-5-5 | high | 100 | 177613 | 6123376 | 52575 |
+| rule-only delta review, revision05 (fresh seat) | claude-opus-5-5 | high | 58 | 131577 | 2873984 | 36422 |

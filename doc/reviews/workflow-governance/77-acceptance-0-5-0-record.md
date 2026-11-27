@@ -85,8 +85,18 @@ The acceptance workflow ran once and stopped at `build` (section "The cloud run"
 - **Cause.** `.github/workflows/acceptance.yml` installs the two host CLIs and no Python package. The generator imports `library.local_orchestration`, which needs `pydantic` (`requirements-dev.txt`). `ci.yml` has the step `python -m pip install -r requirements-dev.txt`; the acceptance workflow has no such step. `ci/acceptance/README.md` says "or any Python 3.11", which is wrong for the `build` step.
 - **Why the local runs passed.** Both local interpreters (the test venv and `py -3.11`) already hold `pydantic`. No local run used an interpreter that holds only what the workflow installs.
 - **Reproduced locally (2026-11-27).** A new venv from `py -3.11` with no package: the generator with `--verify-only --ref refs/heads/publication-0.5.0` exits 1 with the same `ModuleNotFoundError`. After `pip install -r requirements-dev.txt` into that venv, the same command prints `verified e08e82d3373547a5448040638fb22b1810dc9cf3` and exits 0.
-- **What the run did not reach.** No host CLI ran. The items under "Not tested" stay untested: `py -3.11` with the `level2` environment, `claude` and `codex` from `npm install --global` on `PATH`, and the `.cmd` shims.
+- **What the run did not reach.** No host CLI ran on the runner. Of the items under "Not tested", the parity run below covers the `.cmd` shims of the npm packages on this host. `py -3.11` with the `level2` environment on a runner, and `claude` and `codex` from `npm install --global` on the runner's `PATH`, stay untested.
 - **Not rerun.** The fix to the workflow and a second run wait for the owner's decision.
+
+**Parity run (2026-11-27, control plane).** The local runs above used this host's own `claude.exe` and `codex.exe` (`where claude codex` names two `.exe` files outside npm) and interpreters that already held `pydantic`. This run installs the Python packages and the host CLI versions that the workflow installs.
+
+- Candidate `f1d04039a10539fb8353d3374faf030054a4f672`, expected publication `e08e82d3373547a5448040638fb22b1810dc9cf3`, started 2026-11-27T01:07:33Z, ended 01:08:08Z.
+- Directories: venv `C:/Temp/claude/acc-clean-venv-20261127`, npm prefix `C:/Temp/claude/acc-parity-npm-20261127`, run root `C:/Temp/claude/acc-parity-run-20261127`.
+- Install lines: `py -3.11 -m venv <venv>`; `<venv>/Scripts/python.exe -m pip install -r requirements-dev.txt`; `npm install --prefix <npm prefix> --no-audit --no-fund @anthropic-ai/claude-code@2.1.332 @openai/codex@0.166.0`. The host's npm is 11.16.0 on node 24.18.0; it did not run the `claude-code` package's postinstall script and printed a notice about it.
+- Command: `<venv>/Scripts/python.exe ci/acceptance/lifecycle.py --candidate <candidate> --expected-publication <expected> --host both --steps build,fresh,upgrade,uninstall,recover,level2 --run-root <run root>`, with `<npm prefix>/node_modules/.bin` first on `PATH`. Exit 0.
+- Verdicts, from `report.jsonl`: `build` `PASS`; `fresh`, `upgrade`, `uninstall` and `recover` `PASS` for `claude` and for `codex`; `level2` `PASS`. Ten of ten.
+- Resolved commands, from `report.jsonl`: the generator ran as `C:\Temp\claude\acc-clean-venv-20261127\Scripts\python.exe -m library.local_orchestration.plugin_publication` and printed `publication commit e08e82d3373547a5448040638fb22b1810dc9cf3`. Every Claude Code command ran as `C:\Temp\claude\acc-parity-npm-20261127\node_modules\.bin\claude.CMD` (`--version`: `2.1.332 (Claude Code)`), and every Codex command as `…\node_modules\.bin\codex.CMD` (`--version`: `codex-cli 0.166.0`).
+- Not covered: `git`, `node`, `npm` and the `py` launcher are this host's. The runner's `py` launcher, which the `level2` step's installer calls, stays untested.
 
 ## The owner-assisted Codex session
 
