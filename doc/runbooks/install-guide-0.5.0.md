@@ -3,7 +3,7 @@
 給第一次安裝 Software Factory 的人。照順序做，每一步都有「怎麼確認成功」。遇到問題時，先看第 5 節的對照表。
 
 - 版本：0.5.0
-- 發佈 commit：`<發佈後填入>`
+- 發佈 commit：`e08e82d3373547a5448040638fb22b1810dc9cf3`（發佈 repo 的標籤 `plugin-v0.5.0`，2026-11-27 發佈）
 - 插件包 repo：`johnnyliu365-sys/software-factory-plugin`
 - 這份指南不在插件包裡。插件包自己的 README 是正式說明；兩邊不一致時，以插件包的 README 為準，並請回報給作者。
 
@@ -12,7 +12,7 @@
 | 項目 | 要求 | 怎麼確認 |
 | --- | --- | --- |
 | Git | 已安裝。Windows 請裝 Git for Windows（含 Git Bash） | `git --version` |
-| Claude Code（要用 Claude 時） | 已安裝並登入。作者測試的版本是 2.1.332 | `claude --version` |
+| Claude Code（要用 Claude 時） | 已安裝並登入。作者測試的版本是 2.1.332；公開路徑試裝時也在 2.1.325 上通過 | `claude --version` |
 | Codex（要用 Codex 時） | 已安裝並登入，而且有 `codex plugin add` 指令。作者測試的版本是 0.166.0 與 0.172.0 | `codex --version` |
 | 網路 | 能連到 github.com 與 raw.githubusercontent.com | 用瀏覽器開這兩個網址 |
 | 舊版 | 如果裝過 johnny-ai-skill（0.4.x），先照第 4 節移除 | 第 4 節的檢查指令 |
