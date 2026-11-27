@@ -284,3 +284,21 @@ Revision06 was integrated at `f0ba4995`. The owner then found that the Codex des
 | Final local lifecycle | at `3e54da2c` with `--expected-publication e08e82d3…`: exit 0, every verdict `PASS` (`77-acceptance-0-5-0-record.md`) |
 | USAGE | `.worktrees/82-hook-out/RETURN.md` (sha256 `4160aef06bd827b4cb731576a314fec5821fb8b3a17f0fec67a40fefd3f87d0b`), E1 `cells=11 defects=0`; the implementation seat's row is a four-round total, and the fresh review seat is `WITHIN`, both explained in the 82 review record |
 | Rework report over the wave-3 code-review records | `TOTAL tickets=17 rounds=36 CONTROL_PLANE_RULE=6 RETURN_UNTRUE=4 DESIGN_UNFORESEEN=4 IMPLEMENTATION_DETAIL=12`, exit 0 |
+
+## Ticket 77 revision06 (2026-11-27)
+
+Revision04 was integrated at `e87bc5cb`. The one cloud run (45920193720) failed at `build` because the acceptance workflow installed no Python package, and the owner decided "A" (REQ-043, 2026-11-27); revision05 and revision06 reopen the ticket with the owner override recorded in it.
+
+| Ticket | Approved candidate | Approval | Integration commit |
+| --- | --- | --- | --- |
+| 77 revision06: the acceptance workflow installs `requirements-dev.txt`, the README sentence is corrected, the parity run is written down | `c983c6ef` | revision06 initial review `CHANGES_REQUESTED` on `ec0c06dc` (S77-18), correction review `APPROVED` (S77-20, S77-21 carried to wave 4) | `34583ba2` |
+
+| Check | Result |
+| --- | --- |
+| Full suite under the host lock | 5 failed, 3569 passed, 22 skipped. Every failure is a base name, so zero new red |
+| Merged forward | Nothing landed on `cp/wave3` during the run |
+| CI readback | run 45935267364 on `34583ba2`: `test (linux)` and `test (windows)` both `success` |
+| Publication commit | unchanged: `e08e82d3373547a5448040638fb22b1810dc9cf3`. The candidate changes `.github/`, `ci/` and `tests/` only, none of which is in the payload |
+| USAGE | `.worktrees/77-acceptance-out/RETURN.md` (sha256 `bbdece1a2ffb57f714c519a1a5c690b3ca5af948d4799ada365a3ff51c39eab2`), E1 `cells=9 defects=0`; both seats `WITHIN`, by round in the 77 review record |
+| Rework report over the wave-3 code-review records | `TOTAL tickets=17 rounds=38 CONTROL_PLANE_RULE=6 RETURN_UNTRUE=4 DESIGN_UNFORESEEN=4 IMPLEMENTATION_DETAIL=13`, exit 0 |
+| Time | owner decision to integration: about 4 hours on 2026-11-27, of which the one-line correction round took about 1.5 hours (the seat's rerun of every cell, the correction review, this integration). REQ-044 T13 takes it as its baseline |
