@@ -2,24 +2,24 @@
 
 | 欄位 | 內容 |
 | --- | --- |
-| 對應規格 ID | `SPEC-AI-WORKFLOW-WORKFLOW-GOVERNANCE-20260805-01KZ6T8V2R4Y6B8D0F2H4J6M8P`（REQ-20261103-043, owner decisions 2026-11-19 "A" with conditions "1.2.3.4", 2026-11-19 on Level 2 and the Codex install path, 2026-11-20 on the release order and the rename, 2026-11-26 "B" on the cloud trigger） |
+| 對應規格 ID | `SPEC-AI-WORKFLOW-WORKFLOW-GOVERNANCE-20260805-01KZ6T8V2R4Y6B8D0F2H4J6M8P`（REQ-20261103-043, owner decisions 2026-11-19 "A" with conditions "1.2.3.4", 2026-11-19 on Level 2 and the Codex install path, 2026-11-20 on the release order and the rename, 2026-11-26 "B" on the cloud trigger, 2026-11-27 "A" on the failed cloud run） |
 | 規格撰寫 AI | control plane |
 | 第一步排查起點 | `doc/context/workflow-governance/main.md` |
 | PRD 索引 | `PRD-20261103-043` |
 | 需求變更 | `CHG-20261103-043` |
 | Sealed Context binding | 不適用 |
-| Agent Context binding | ticket revision04 / receipt under `.worktrees/77-acceptance-out/` / owner implementation seat / worktree `.worktrees/77-acceptance` / branch `cp/wave3-77-acceptance` / baseline the wave-3 branch after ticket 71 is integrated |
+| Agent Context binding | ticket revision05 / receipt under `.worktrees/77-acceptance-out/` / owner implementation seat / worktree `.worktrees/77-acceptance` / branch `cp/wave3-77-acceptance` / baseline the wave-3 branch after ticket 71 is integrated |
 | 實作語言 | Python 3.11 for the lifecycle script and its test; YAML for the workflow（CONTEXT.md Implementation language） |
 | Closure revision | 不適用 |
 | Strict checker | `mypy --strict --python-version 3.11` (mypy 2.3.0) |
 | Profile / resource | the dispatch's `profile:` line (`doc/runbooks/dispatch-model-profile.md`) |
 | XSS classification | 不適用：no browser, WebView or DOM input |
-| 狀態 | `INTEGRATED`; dispatch=sha256:2d5bb809e9c9f2db6a95a0330bd3d39aa40a3740c619a595b190435e32aeddec (`doc/handoffs/2026/workflow-governance/dispatch/JAS-77-3.yaml`)（candidate `8cf1e387`; correction review `APPROVED`） |
+| 狀態 | `IN_PROGRESS`; dispatch=sha256:2d5bb809e9c9f2db6a95a0330bd3d39aa40a3740c619a595b190435e32aeddec (`doc/handoffs/2026/workflow-governance/dispatch/JAS-77-3.yaml`)（revision05; strict tier; revision04 APPROVED `8cf1e387` and integrated at `e87bc5cb`; reopened by the owner decision of 2026-11-27 "A", as the Revision05 paragraph and the Owner override record say） |
 | 共同基準 | the `cp/wave3` commit named in the dispatch |
 | 實作者 | `implementation-standard` seat, worktree `.worktrees/77-acceptance` |
 | 審閱者 | `ticket-review` seat, worktree `.worktrees/77-acceptance-review` |
 | 責任邊界 | one lifecycle script, its test, one `workflow_dispatch` workflow, and the acceptance record |
-| 禁止修改 | the shipped manifests, `README.md`, `library/`, the gate scripts, the governance documents, `.github/workflows/ci.yml` |
+| 禁止修改 | the shipped manifests, `README.md`, `library/`, the gate scripts, the governance documents, `.github/workflows/ci.yml`; in revision05 also `ci/acceptance/lifecycle.py`, `requirements-dev.txt` and the acceptance record |
 | 環境 | `LOCAL` in isolated directories; one GitHub-hosted Windows run, triggered by hand after the four conditions hold |
 
 ## 邊界宣告（機器可讀，整合前由閘門讀取）
@@ -57,6 +57,8 @@ Owner decisions this ticket carries out. Each is quoted in `REQ-20261103-043`, w
 - **2026-11-26 "A" on S77R-01:** the 0.4.9 installer asks a person to type `INSTALL` (`v0.4.9` `install.ps1` line 100), and states that an agent's answer is not consent. The owner authorized `lifecycle.py` to answer that prompt on standard input, only for an install into an empty `JOHNNY_ROOT` made for this acceptance, on this host and on the runner. The authorization covers this test use only.
 - **2026-11-26 "A" on the Codex upgrade:** the public 0.4.14 marketplace pins forty zeros, and Codex honours that `sha`, so 0.4.14 cannot be installed through Codex from there. Codex installs 0.4.14 instead from a local marketplace that holds the development repository's marketplace of that time (pin `0b3afd36`, source the public publication repository). This reproduces a user who already has 0.4.14.
 - **2026-11-26 "放寬" on host CLI drift:** the host's Claude Code moved from 2.1.316 to 2.1.332 between two dispatches. Under 2.1.332, an uninstall leaves the host's own decline record (`declinedPlugins`) in its configuration, and `plugin list --json` shows the host's `@builtin` entries. Real users run the newest host, so the rules accept both. The plugin never edits the user's host configuration. A reinstall must still succeed while the record is present.
+
+- **2026-11-27 "A" on the failed cloud run:** the one cloud run (45920193720, `main` `f1d04039`) failed at `build` with `ModuleNotFoundError: No module named 'pydantic'`, because the workflow installs no Python package. The owner chose "A（建議）：重開票 77，出一個新修訂": the workflow gains the install step, the README sentence is corrected and a test pins the order.
 
 Ticket 71's rule-only review handed this ticket three checks that only running the CLIs can settle (`doc/reviews/workflow-governance/71-publication-0-5-ticket-review.md`, S71R-19, S71R-20, S71R-21).
 
@@ -112,9 +114,53 @@ After this ticket:
    - Host CLI versions are read with `claude --version` and `codex --version`, and named in the STATEMENT, and, when they differ from `ci/acceptance/README.md`, the STATEMENT says so and the record carries both.
 6. **The acceptance record.** `doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md` starts with the local run. The control plane later adds the cloud run and the owner-assisted Codex session.
 
+**Revision05.** Revision04 was approved at `8cf1e387` and integrated at `e87bc5cb`. The owner fast-forwarded the development `main` to `f1d04039` and confirmed the cloud run. Run 45920193720 ended `failure` in 40 seconds: `build` cloned and checked out the candidate, then the publication generator exited 1 with `ModuleNotFoundError: No module named 'pydantic'` (`library/local_orchestration/contracts.py` line 8), and the other nine steps did not run. `.github/workflows/acceptance.yml` installs the two host CLIs and no Python package; `ci.yml` installs `requirements-dev.txt`, which holds `pydantic`. `ci/acceptance/README.md` says "or any Python 3.11", which is wrong for `build`. Every local run had used an interpreter that already held `pydantic`, and the host's own `claude.exe` and `codex.exe`, not the `.cmd` shims that `npm install --global` makes on the runner. On 2026-11-27 the control plane built both from the workflow's install lines (a new venv with `requirements-dev.txt`; `npm install --prefix` of the two pinned packages, first on `PATH`) and ran the six steps at `f1d04039`: all ten verdicts `PASS`, with every host command started through `claude.CMD` or `codex.CMD`. So the one defect is the missing install step, and revision05 is item 7. `ci/acceptance/lifecycle.py`, `requirements-dev.txt` and the acceptance record do not change in revision05; items 1, 2, 5 and 6 stay as revision04 left them. The record of the run is `doc/reviews/workflow-governance/77-acceptance-0-5-0-record.md`, section "The cloud run", on `cp/wave3`.
+
+7. **Revision05: the workflow installs the Python packages, and the parity run is written down.**
+   - **7a, the workflow.** `.github/workflows/acceptance.yml` gains one step, placed after the `actions/setup-python` step and before the step `Install the host CLIs at the versions of ci/acceptance/README.md`. Its `name` and its `run` lines are those of the step `Install development requirements` of `.github/workflows/ci.yml`:
+
+     ```
+           - name: Install development requirements
+             run: |
+               python -m pip install --upgrade pip
+               python -m pip install -r requirements-dev.txt
+     ```
+
+     Nothing else in the workflow changes.
+   - **7b, the README sentence.** In `ci/acceptance/README.md`, section "The local run (condition 3)", the sentence "Use the interpreter that has `mypy` and `pytest` (`requirements-dev.txt`) or any Python 3.11." is replaced by: "Use an interpreter that holds the packages of `requirements-dev.txt`: the `build` step runs the publication generator, which imports `pydantic`, and a Python 3.11 without it fails `build`."
+   - **7c, the parity run.** `ci/acceptance/README.md` gains this section, directly before `## Isolation`. `<A>` and `<B>` are two new empty directories outside every Git work tree:
+
+     ````
+     ## The parity run
+
+     The local run uses the interpreter and the host CLIs this host already has. The parity run builds both from
+     the workflow's own install lines, so a package or a binary that only this host has cannot hide a failure:
+     cloud run 45920193720 failed at `build` because the workflow installed no Python package, while every local
+     interpreter already held `pydantic`. The control plane does the parity run at the candidate before each
+     cloud run.
+
+     ```
+     py -3.11 -m venv <A>
+     <A>/Scripts/python.exe -m pip install -r requirements-dev.txt
+     npm install --prefix <B> --no-audit --no-fund @anthropic-ai/claude-code@2.1.332 @openai/codex@0.166.0
+     ```
+
+     Then put `<B>/node_modules/.bin` first on `PATH` and run the first command of the local run with
+     `<A>/Scripts/python.exe`. It must exit 0. In `report.jsonl`, the generator's command names the interpreter
+     under `<A>`, and every host command names `claude.CMD` or `codex.CMD` under `<B>`.
+
+     The parity run does not cover the runner's `py` launcher, which the `level2` step's installer calls.
+     ````
+
+   - **7d, the tests**, in `tests/test_acceptance_lifecycle.py`, each a new method:
+     - the workflow holds a step named `Install development requirements`; its `run` lines equal the `run` lines of the step of that name in `ci.yml`, read from `ci.yml` and not written a second time in the test; that step's line number is greater than the `actions/setup-python` line's and less than the line that runs `ci/acceptance/lifecycle.py`;
+     - the README holds the 7b sentence and does not hold "or any Python 3.11";
+     - the README holds the heading `## The parity run` before `## Isolation`, the line `<A>/Scripts/python.exe -m pip install -r requirements-dev.txt`, and an `npm install --prefix <B>` line whose two `package@version` items equal the two in the workflow's `npm install --global` line, read from the workflow.
+   - **7e, the parity run by the seat (cell L3).** The seat follows 7c as written, with `<A>`, `<B>` and the run root new directories under `C:/Temp/claude/` named with its run id, at `--candidate` its last commit and `--expected-publication d355b4a26336cebbe4e8e28650ce0120d4c39a13` (the publication commit of this branch's payload, as in revision04). It must exit 0 with all ten verdicts `PASS`, the generator's command naming the interpreter under `<A>`, and every host command naming a `.CMD` under `<B>`. The seat runs only what item 5 allows: `--version` and the `plugin` and `plugin marketplace` subcommands, through `lifecycle.py`. A step that fails in the parity run and passes in the local run is a `CHANGE_DETECTED` return naming the step, the command and its output; the seat does not edit `lifecycle.py`.
+
 **After review approval and integration, control-plane and owner work, not this seat's:**
 
-1. With conditions (1), (2) and (4) checked and (3) in the receipt, the control plane asks the owner to confirm two things: the fast-forward push of the development `main` to `cp/wave3`, and then the one cloud run. It triggers that run with `gh workflow run acceptance.yml --ref main -f candidate=<the main commit after the fast-forward> -f expected_publication=<ticket 71's publication commit>`, and records the run id and the artifact. A failed run is recorded and reported to the owner; it is not re-run without a new owner decision.
+1. With conditions (1), (2) and (4) checked and (3) in the receipt, the control plane asks the owner to confirm two things: the fast-forward push of the development `main` to `cp/wave3`, and then the one cloud run. It triggers that run with `gh workflow run acceptance.yml --ref main -f candidate=<the main commit after the fast-forward> -f expected_publication=<ticket 71's publication commit>`, and records the run id and the artifact. A failed run is recorded and reported to the owner; it is not re-run without a new owner decision. Run 1 (45920193720) failed at `build`. After revision05 is integrated, the control plane does the parity run of item 7c at the new candidate and records it, then asks the owner to confirm the fast-forward of `main` and the second run, each in words.
 2. **The owner-assisted session on this host:**
    - The control plane tells the owner first.
    - The owner starts Codex with `CODEX_HOME` and `JOHNNY_ROOT` set to new empty directories, logs in anew, and installs 0.5.0 from the local marketplace.
@@ -131,7 +177,7 @@ After this ticket:
 - 流程／Grill／ticket owner：control plane.
 - implementation owner：`implementation-standard` seat in `.worktrees/77-acceptance`.
 - reviewer：`ticket-review` seat in `.worktrees/77-acceptance-review`.
-- **Owner override record**：the cloud run and the Codex session wait for the owner in chat.
+- **Owner override record**：the cloud run and the Codex session wait for the owner in chat. Revision05 reopens this ticket after `INTEGRATED` (`8cf1e387` at `e87bc5cb`). `specification-ticketing.md` "Records" lists no transition out of `INTEGRATED`, and `CodeReview.md` §4 would send a change after closure to a new `PLANNED` ticket; the owner chose "A（建議）：重開票 77，出一個新修訂" (REQ-043 row "Owner decision 2026-11-27 (the cloud run failed at `build`; ticket 77 is reopened, "A")"). Revision05 is a new closure revision: its first code review is an initial review (`CodeReview.md` rule-review-label), and the revision04 review and integration records stay as written. The seat continues the branch `cp/wave3-77-acceptance` at `8cf1e387` on its base `f53ecc6a`, so the `create =` lines of the boundary block still describe the diff from that base.
 - `ImplementationHandoff`：this ticket; ticket 71 and its local marketplace; `library/local_orchestration/plugin_publication.py`.
 - `ImplementationReturn`：`COMPLETED → ACTION_COMPLETED`／`BLOCKED → HALT`／`CHANGE_DETECTED → REQUIREMENT_CHANGED → Grill`。A host command that behaves other than the README says is a `CHANGE_DETECTED` return naming the step, the command and its output.
 
@@ -154,7 +200,8 @@ After this ticket:
    - a fake CLI that exits non-zero fails the step;
    - a missing subcommand gives `NOT_SUPPORTED`, and the script exits non-zero;
    - the `recover` step fails when the broken install exits 0.
-4. 回歸保護：the workflow file is parsed. Its only trigger is `workflow_dispatch`; it holds none of `secrets.`, `GITHUB_TOKEN`, `github.token`, `id-token`; every `uses:` is a full SHA; its permissions are `contents: read`. The test passes on both runners of `ci.yml` without a new row in `ci/registered-failures.json`; fake CLIs are Python files started through `sys.executable`; a case that needs Windows is skipped elsewhere, with its reason.
+4. Revision05, each a named test that goes red: the step `Install development requirements` removed from the workflow; that step moved after the step that runs `lifecycle.py`; its `run` lines made to differ from `ci.yml`'s; the 7b sentence removed from the README or "or any Python 3.11" put back; the parity-run section removed; a package version in the README's `npm install --prefix` line made to differ from the workflow's.
+5. 回歸保護：the workflow file is parsed. Its only trigger is `workflow_dispatch`; it holds none of `secrets.`, `GITHUB_TOKEN`, `github.token`, `id-token`; every `uses:` is a full SHA; its permissions are `contents: read`. The test passes on both runners of `ci.yml` without a new row in `ci/registered-failures.json`; fake CLIs are Python files started through `sys.executable`; a case that needs Windows is skipped elsewhere, with its reason.
 
 ### 適用的缺陷類別
 
@@ -176,6 +223,14 @@ After this ticket:
   - let `NOT_SUPPORTED` count as a pass;
   - add a `push` trigger to the workflow;
   - drop the expected-publication comparison.
+- **Revision05 mutations (cell M1; the four above are not rerun, because the script does not change)**：
+  - the step `Install development requirements` removed from `acceptance.yml`;
+  - that step moved after the step that runs `lifecycle.py`;
+  - `requirements-dev.txt` in that step replaced by another file name;
+  - "or any Python 3.11" put back into the README sentence;
+  - the section `## The parity run` removed from the README;
+  - one package version in the README's `npm install --prefix` line changed.
+- **L3 (revision05)**: the parity run of item 7e, with `report.jsonl` as the raw block. L1 and L2 are not rerun in revision05.
 - **CI evidence**: one run of `ci.yml` on a commit of this branch, with both jobs `success`. The acceptance workflow is not run by the seat.
 - **Receipt**: R4-7 cells, passing P9 and E1 (E1 runs last).
 
